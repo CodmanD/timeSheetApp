@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    >
+    <item
+        android:id="@+id/action_home"
+        android:title="@string/home"
+        android:orderInCategory="100"
+        app:showAsAction="always"
+        android:icon="@drawable/ic_alarm_white_36dp"
+        />
+    <item
+        android:id="@+id/action_settings"
+        android:title="@string/settings"
+        android:orderInCategory="100"
+        app:showAsAction="always"
+        android:icon="@drawable/ic_build_white_36dp"
+    />
+    <item
+        android:id="@+id/action_export"
+        android:title="@string/export"
+        android:orderInCategory="110"
+        app:showAsAction="always"
+        android:icon="@drawable/ic_email_white_36dp"
+        />
+    <item
+        android:id="@+id/action_share"
+        android:title="@string/share"
+        android:orderInCategory="120"
+        app:showAsAction="always"
+        android:icon="@drawable/ic_share_white_36dp"
+        />
+
+</menu>
