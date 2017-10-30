@@ -8,4 +8,21 @@
     <string name="myName">My name:</string>
     <string name="MyGoogleCalendar">My google calendar</string>
     <string name="save">Save</string>
+    <string name="nothing">Nothing</string>
+    <string name="relaxing">Relaxing</string>
+    <string name="sleeping">Sleeping</string>
+    <string name="working">Working</string>
+    <string name="exercising">Exercising</string>
+    <string name="reading">Reading</string>
+    <string name="travelling">Travelling</string>
+    <string name="eating">Eating</string>
+    <string name="washing">Washing</string>
+    <string name="newButton">+ NEW</string>
+    <string name="cleanLog">Clean log</string>
+    <string name="undo">Undo</string>
+    <string name="timeSinceLastTap">Time since last tap: </string>
+    <string name="activityLog">Activity Log</string>
+    <string name="date">Date</string>
+    <string name="startTime">start time</string>
+    <string name="acrivity">Activity</string>
 </resources>

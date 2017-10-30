@@ -5,4 +5,15 @@
     <color name="colorAccent">#FF4081</color>
     <color name="colorText">#ffffff</color>
     <color name="colorButton">#60b741</color>
+    <color name="colorNothing">#cdd1cb</color>
+    <color name="colorRelaxing">#a8afa5</color>
+    <color name="colorSleeping">#727372</color>
+    <color name="colorWorking">#5d66e7</color>
+    <color name="colorExercising">#9de285</color>
+    <color name="colorReading">#a669e2</color>
+    <color name="colorTravelling">#d9b35c</color>
+    <color name="colorEating">#f4c59d</color>
+    <color name="colorWashing">#d0fcc1</color>
+    <color name="colorActiveIcon">#535353</color>
+    <color name="colorNoActiveIcon">#ffffff</color>
 </resources>
