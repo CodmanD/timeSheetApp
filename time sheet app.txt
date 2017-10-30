@@ -1,0 +1,208 @@
+Variable list of activity buttons .Pressing any of these buttons will trigger 2 action
+A) Create new entry to the activity log. Data added to the log is Date,Time, and
+name button
+B) Do the following
+1)Edit last entry(made by this app )to google diary.Change end time of Event to current time
+2) Create new event in google diary.Event name is Button name,start time is current time
+
+------------------------------------------------------
+Переменный список кнопок активности. Нажатие любой из этих кнопок вызывает 2 действия
+A) Создайте новую запись в журнале активности. Данные, добавленные в журнал, - это дата, время и
+кнопка имени
+B) Сделайте следующее
+1) Изменить последнюю запись (сделанное этим приложением) в дневник Google. Изменить время окончания события на текущее время
+2) Создайте новое событие в диалоге google.Event - это имя кнопки, время начала - текущее время
+====================================================================================================================================================
+
+undo button ,undoes actions A) b)   
+отменить действие, отменяет действия A) b)
+
+================================================
+Time since last tap is time differnce (in minutes) between current time and start time last logged activity
+
+
+Tapping on any time data,allows user to edit that time (but must be betweenthe start times of previous and subsequent activies)(edits both app log and google calendar)
+
+Tapping on any activity in the log allows the user to edit the activity (either change the activity or delete it. If deleting the a )there must be a confirmation pop-up "Confirm delete activity:[Yes ][Cancel]",b) if confirmed the whole record must be deleted (date,time,activity etc).Editing affects both the log and google calendar
+
+Swipping up reveals more log entries
+The app should be able to record thousands of log entries(probably requires SQLite)
+-----------------------------------------------------------------------
+Время, прошедшее с последнего крана, зависит от времени (в минутах) между текущим временем и временем начала последней зарегистрированной активности
+
+
+Нажатие на данные в любое время позволяет пользователю отредактировать это время (но должно быть между начальными и предыдущими действиями)
+ (редактирует как журнал приложений, так и календарь Google)
+
+Нажатие на любую активность в журнале позволяет пользователю отредактировать действие (либо изменить действие, либо удалить его. При удалении a)
+ должно появиться всплывающее подтверждение «Подтвердить операцию удаления: [Да] [Отмена]», b ),
+ если подтверждено, что вся запись должна быть удалена (дата, время, активность и т. д.) .Editing влияет как на журнал, так и на календарь Google
+
+Подсказка показывает больше записей в журнале
+Приложение должно иметь возможность записывать тысячи записей в журнале (возможно, требуется SQLite)
+=========================================================================================================================================================
+
+
+
+
+Simple Time logging app
+i am looking for an android developer to develop a simple android app that allows the user to log the activity he is currently doing (by pressing a button : one button for each defined activity).This information is then stored both within the app`s memory and on Google calendar
+
+I have some experience writing android apps and therefore will want the code to be well document: at lease one explanatory comment for every 6 lines of code.
+
+i have a detailed specification which i will share with a shortlist of the 6 best candidates.
+
+Data is also entered in users google calendar
+
+
+If google calendar cant be updated(perhaps because of no internet connection) then the update should occur at a later time when possible.
+
+=========
+
+
+
+
+
+
+
+
+
+Простое приложение регистрации времени
+Я ищу разработчика Android для разработки простого приложения для Android, которое позволяет пользователю регистрировать деятельность,
+ которую он сейчас делает (нажав кнопку: по одной кнопке для каждого определенного действия). 
+Эта информация затем сохраняется как в приложении, памяти и в календаре Google
+
+У меня есть опыт написания приложений для Android и, следовательно, я хочу, чтобы код был хорошо документирован:
+ в аренду один пояснительный комментарий для каждых 6 строк кода.
+
+У меня есть подробная спецификация, которую я поделюсь с кратким списком из 6 лучших кандидатов.
+
+Данные также вводятся в пользовательский календарь Google
+
+
+Если календар Google не может быть обновлен (возможно, из-за отсутствия подключения к Интернету),
+ обновление должно происходить позднее, когда это возможно.
+
+
+--------------------------------------------------
+
+SETTINGS SCREEN (This is the first screen the user sees of My name field is blank)
+
+Text field to allow user to enter a name (max 40 characters)
+
+"My google calendar" field is the data required to link to the user google calendar
+
+Tapping any activity button allows user to change the name and /or  the colour of the button ,or delete the button (deleting will trigger a pop-up "Confirm DELETE button[Yes][Cancel]")
+
+
+"+New" button allows user to add a new button ,up to a maximum of 21 buttons.User must define name and colour of button.
+
+Max characters  in name is 20.Use this code to determine text colour
+// Counting the perceptive luminance - human eye favors green color
+
+Clear log button triggers a pop-up "ARE YOU SURE YOU WANT TO CLEAR THE LOG?"
+(YES/CANCEL) on tapping 'YES',the whole log is deleted(but not on Google Calendear)
+
+
+
+SETTINGS SCREEN (Это первый экран, который пользователь видит в поле «Мои имена»)
+
+Текстовое поле, позволяющее пользователю вводить имя (не более 40 символов)
+
+«Мой календарь Google» - это данные, необходимые для связи с календаря Google
+
+Нажатие любой кнопки активности позволяет пользователю изменить имя и / или цвет кнопки или удалить кнопку
+ (удаление приведет к появлению всплывающего окна «Подтвердить кнопку DELETE [Да] [Отмена]»)
+
+
+Кнопка «+ Новый» позволяет пользователю добавить новую кнопку, максимум до 21 кнопки. Пользователь должен определить имя и цвет кнопки.
+
+Максимальное число символов - 20. Используйте этот код для определения цвета текста
+// Подсчет проницательной яркости - человеческий глаз благоприятствует зеленому цвету
+
+Кнопка «Очистить журнал» вызывает всплывающее окно «УВЕРЕНЫ, ЧТО ВЫ ХОТИТЕ СМОТРЕТЬ ЛОГОС?»
+(ДА / ОТМЕНА) при нажатии «ДА», весь журнал удаляется (но не в Google Calendear)
+
+
+Поля предварительно заполнены записями, которые использовались в предыдущий раз, когда экран был заполнен
+
+
+---------------------------------------------------------------------------------------------------------------------------------------
+Export SCREEN
+Fields are pre-filled with entries that were used the previous time the screen was filled in.
+When "Email" button is tapped,the users preferred email client is opened and all the field are pre-filled with the fields from this screen,
+together with a CSV attachment
+
+Tapping on date fields or icons opens up a mini calendar to help user select date
+
+The CSV attachment will contain a table with the following data:
+
+Date
+Activity
+Start time
+End Time(end time is the start time of the next activity)
+For all the records from the days between start date and  end date 
+Exclude activity records for which check box is not checked
+Name of attached fire will be(user name)+"timesheet.csv"
+
+
+
+
+Экспорт ЭКРАН
+Поля предварительно заполнены записями, которые использовались в предыдущий раз, когда экран был заполнен.
+Когда нажата кнопка «Электронная почта», пользователь предпочитает почтовый клиент, и все поля предварительно заполняются полями этого экрана
+вместе с вложением в CSV
+
+Нажатие на поля или значки даты открывает мини-календарь, чтобы помочь пользователю выбрать дату
+
+Вставка CSV будет содержать таблицу со следующими данными:
+
+Дата
+Мероприятия
+Время начала
+End Time (конечное время - это время начала следующего действия)
+Для всех записей из дней между датой начала и датой окончания
+Исключить записи активности, для которых флажок не установлен.
+Имя прикрепленного огня будет (имя пользователя) + "timesheet.csv"
+
+----------------------------------------------------------------------------------------------------------------------------------------------
+
+
+Share Screen
+Generates the usual android share app with other users(email,sms etc)
+
+
+Поделиться экраном
+Создает обычное приложение для Android с другими пользователями (электронная почта, смс и т. Д.)
+------------------------------------------------------------------------------
+отменить действие, отменяет действия A) b)
+
+
+
+Время, прошедшее с последнего крана, зависит от времени (в минутах) между текущим временем и временем начала последней зарегистрированной активности
+Нажатие на данные в любое время позволяет пользователю отредактировать это время (но должно быть между начальными и предыдущими действиями)
+ (редактирует как журнал приложений, так и календарь Google)
+
+Нажатие на любую активность в журнале позволяет пользователю отредактировать действие (либо изменить действие, либо удалить его. При удалении a)
+ должно появиться всплывающее подтверждение «Подтвердить операцию удаления: [Да] [Отмена]», b ),
+ если подтверждено, что вся запись должна быть удалена (дата, время, активность и т. д.) .Editing влияет как на журнал, так и на календарь Google
+
+Подсказка показывает больше записей в журнале
+Приложение должно иметь возможность записывать тысячи записей в журнале (возможно, требуется SQLite)
+
+
+Простое приложение регистрации времени
+Я ищу разработчика Android для разработки простого приложения для Android, которое позволяет пользователю регистрировать деятельность,
+ которую он сейчас делает (нажав кнопку: по одной кнопке для каждого определенного действия). 
+Эта информация затем сохраняется как в приложении, памяти и в календаре Google
+
+У меня есть опыт написания приложений для Android и, следовательно, я хочу, чтобы код был хорошо документирован:
+ в аренду один пояснительный комментарий для каждых 6 строк кода.
+
+У меня есть подробная спецификация, которую я поделюсь с кратким списком из 6 лучших кандидатов.
+
+Данные также вводятся в пользовательский календарь Google
+
+
+Если календар Google не может быть обновлен (возможно, из-за отсутствия подключения к Интернету),
+ обновление должно происходить позднее, когда это возможно.
