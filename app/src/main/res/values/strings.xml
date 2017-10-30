@@ -25,4 +25,10 @@
     <string name="date">Date</string>
     <string name="startTime">start time</string>
     <string name="acrivity">Activity</string>
+    <string name="emailReportTo">Email report to:</string>
+    <string name="subject">Subject:</string>
+    <string name="message">Message:</string>
+    <string name="reportStartDate">Report start date</string>
+    <string name="reportEndDate">Report end date</string>
+    <string name="email">Email</string>
 </resources>

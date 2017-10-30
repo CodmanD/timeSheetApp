@@ -253,10 +253,12 @@ public class MainActivity extends AppCompatActivity {
 //-- android.widget.ListView ---------------------
         this.lvActivity.setAdapter(adapter);
         Log.d(TAG," start setListHeigth");
-        getListViewSize(lvActivity);
+       getListViewSize(lvActivity);
         //setListViewHeightBasedOnChildren(lvActivity);
        // this.lvActivity.
     }
+
+
     public static void getListViewSize(ListView myListView) {
         ListAdapter myListAdapter = myListView.getAdapter();
         if (myListAdapter == null) {
@@ -363,6 +365,14 @@ public class MainActivity extends AppCompatActivity {
                 return true;
             case R.id.action_export:
                 this.status=2;
+                this.setContentView(R.layout.screen_email);
+                toolbar= (Toolbar)this.findViewById(R.id.toolBar_MainActivity);
+
+                toolbar.setTitleTextColor(Color.WHITE);
+                toolbar.setSubtitleTextColor(Color.WHITE);
+
+                this.setSupportActionBar(toolbar);
+
                 Toast.makeText(this, "Export", Toast.LENGTH_SHORT).show();
                 return true;
             case R.id.action_share:
