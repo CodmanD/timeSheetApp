@@ -23,7 +23,10 @@ import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AbsListView;
+import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
+import android.widget.GridLayout;
+import android.widget.GridView;
 import android.widget.LinearLayout;
 import android.widget.ListAdapter;
 import android.widget.ListView;
@@ -39,7 +42,7 @@ import java.util.Date;
 
 public class MainActivity extends AppCompatActivity {
 
-    ArrayList<ButtonActivity> listActivity= new ArrayList<>();
+    ArrayList<ButtonActivity> listActivity= new ArrayList<>();//All buttons activity for current  time
     Resources res;
     ListView lvActivity;
     Time startTime=new Time();
@@ -125,11 +128,57 @@ public class MainActivity extends AppCompatActivity {
 
 
     //add  widgets To Layout for Current Activity
-    private void addToLayotButtonsActivity()
+    private void addToGridViewButtonsActivity()
     {
+        GridView gv=(GridView)this.findViewById(R.id.gridView);
+
+        ArrayAdapter<ButtonActivity> adapter =
+                new ArrayAdapter<ButtonActivity>(this,R.layout.gridview_item,
+                R.id.btnItem, this.listActivity)
+        {
+            @Override
+            public View getView(int position,
+            View convertView, ViewGroup parent)
+            {
+                //-- Виджет для элемента списка подготовит метод
+                //-- родительского класса ------------------------
+                View view = super.getView(
+                        position, convertView, parent);
+                //-- Получение ссылки на отображаемый в виджете
+                //-- объект GridViewItem -------------------------
+               ButtonActivity ba = this.
+                        getItem(position);
+                //-- Размести данные элемента в виджете ----------
+               Button btn=(Button)view.findViewById(R.id.btnItem);
+               btn.setBackgroundColor(ba.getColor(ba.name));
+                btn.setText(ba.name);
+                Log.d(TAG,"getItem For GridView");
+                return view;
+            }
+        };
+        //-- Назначаем Адаптер данных видж
+
+
+        gv.setAdapter(adapter);
+
+        gv.setOnItemClickListener(new
+                                             AdapterView.OnItemClickListener()
+                                             {
+                                                 @Override
+                                                 public void onItemClick(AdapterView<?> parent,
+                                                                         View view, int position, long id)
+                                                 {
+                                                     String item = parent.getAdapter().
+                                                             getItem(position).toString();
+                                                     Toast.makeText(MainActivity.this,
+                                                             "Выбран : " +
+                                                                     item, Toast.LENGTH_SHORT).show();
+                                                 }
+                                             });
        // if(status!=1)return;
-        TableLayout tl= (TableLayout)this.findViewById(R.id.tableLayout2);
+     //   TableLayout tl= (TableLayout)this.findViewById(R.id.tableLayout2);
         //int i=0;
+        /*
         TableRow tr=new TableRow(this);;
         for(int i=0,j=0;i<this.listActivity.size();i++)
         //for(ButtonActivity ba:this.listActivity)
@@ -150,6 +199,7 @@ public class MainActivity extends AppCompatActivity {
                 if(i%3==0)
                     tl.addView(tr);
         }
+        */
 
     }
 
@@ -187,7 +237,7 @@ public class MainActivity extends AppCompatActivity {
         });
 
         this.createList();
-        this.addToLayotButtonsActivity();
+        this.addToGridViewButtonsActivity();
         this.createActivityLog();
 
        // this.lvActivity.
@@ -322,6 +372,8 @@ public class MainActivity extends AppCompatActivity {
         this.menu=menu;
 
         //Change colour for selected icon
+        if (Build.VERSION.SDK_INT >= 21)
+        {
         for(int i=0;i<menu.size();i++)
         {
             MenuItem mItem=this.menu.getItem(i);
@@ -330,6 +382,7 @@ public class MainActivity extends AppCompatActivity {
                 icon.setTint(getResources().getColor(R.color.colorActiveIcon));
             else
                 icon.setTint(getResources().getColor(R.color.colorNoActiveIcon));
+        }
         }
          return true;
     }
@@ -349,7 +402,8 @@ public class MainActivity extends AppCompatActivity {
                 toolbar.setSubtitleTextColor(Color.WHITE);
 
                 this.setSupportActionBar(toolbar);
-                this.addToLayotButtonsActivity();
+                this.addToGridViewButtonsActivity();
+
                 this.createActivityLog();
                 Toast.makeText(this, "Home", Toast.LENGTH_SHORT).show();
                 return true;
