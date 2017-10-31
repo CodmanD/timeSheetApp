@@ -43,6 +43,10 @@ import java.util.Date;
 public class MainActivity extends AppCompatActivity {
 
     ArrayList<ButtonActivity> listActivity= new ArrayList<>();//All buttons activity for current  time
+    ArrayList<ButtonActivity> listLogActivity= new ArrayList<>();
+    ArrayAdapter<ButtonActivity> adapterListLogActivity;
+    ArrayList<ButtonActivity> listSetActivity= new ArrayList<>();
+
     Resources res;
     ListView lvActivity;
     Time startTime=new Time();
@@ -50,37 +54,28 @@ public class MainActivity extends AppCompatActivity {
     DateFormat df= new DateFormat();
     class ButtonActivity
     {
-       // Button btn;
-
-        String name;
+       String name;
         int color;
-        String time=new SimpleDateFormat("HH:mm:ss:ms").format(startDate);
+        String time=new SimpleDateFormat("HH:mm:ss").format(startDate);
         String date=new SimpleDateFormat("dd.MM.yyyy").format(startDate);;
 
         public ButtonActivity()
         {
-            //btn=new Button(MainActivity.this);
+
         }
         public ButtonActivity(String name)
         {
-           // this.btn=new Button(MainActivity.this);
+
             this.name=name;
             this.color=getColor(this.name);
-           // this.btn.setBackgroundColor(this.color);
-           // this.btn.setText(this.name);
 
-           // this.btn.setWidth(100);
-           // this.btn.setHeight(100);
         }
         public ButtonActivity(String name,int color)
         {
-           // btn=new Button(MainActivity.this);
+
             this.name=name;
             this.color=color;
-           // this.btn.setBackgroundColor(this.color);
-           // this.btn.setText(this.name);
-           // this.btn.setWidth(100);
-           // this.btn.setHeight(100);
+
         }
         private int getColor(String name)
         {
@@ -123,10 +118,29 @@ public class MainActivity extends AppCompatActivity {
         this.listActivity.add(new ButtonActivity(res.getString(R.string.travelling)) );
         this.listActivity.add(new ButtonActivity(res.getString(R.string.eating)) );
         this.listActivity.add(new ButtonActivity(res.getString(R.string.washing)) );
-        this.listActivity.add(new ButtonActivity(res.getString(R.string.newButton)) );
+        //this.listActivity.add(new ButtonActivity(res.getString(R.string.newButton)) );
     }
 
 
+    public void undoClick(View view)
+    {
+        ButtonActivity ba=MainActivity.this.listLogActivity.remove(MainActivity.this.listLogActivity.size()-1);
+        MainActivity.this.adapterListLogActivity.remove(ba);
+        MainActivity.this.adapterListLogActivity.notifyDataSetChanged();
+        getListViewSize(MainActivity.this.lvActivity);
+        MainActivity.this.removeGoogleDiary(ba);
+    }
+    //for work with Google Diary
+private void addGoogleDiary(ButtonActivity ba)
+{
+    Toast.makeText(MainActivity.this,
+            "Add To Google Diary "+ba.name+" "+ba.date+"/"+ba.time, Toast.LENGTH_SHORT).show();
+ Log.d(TAG,"Add to Google Diary");
+}
+private void removeGoogleDiary(ButtonActivity ba)
+{
+    Log.d(TAG,"Remove from Google Diary");
+}
     //add  widgets To Layout for Current Activity
     private void addToGridViewButtonsActivity()
     {
@@ -140,19 +154,33 @@ public class MainActivity extends AppCompatActivity {
             public View getView(int position,
             View convertView, ViewGroup parent)
             {
-                //-- Виджет для элемента списка подготовит метод
-                //-- родительского класса ------------------------
                 View view = super.getView(
                         position, convertView, parent);
-                //-- Получение ссылки на отображаемый в виджете
-                //-- объект GridViewItem -------------------------
-               ButtonActivity ba = this.
-                        getItem(position);
-                //-- Размести данные элемента в виджете ----------
-               Button btn=(Button)view.findViewById(R.id.btnItem);
-               btn.setBackgroundColor(ba.getColor(ba.name));
+
+               final ButtonActivity ba = this.getItem(position);
+
+                Button btn=(Button)view.findViewById(R.id.btnItem);
+                btn.setBackgroundColor(ba.getColor(ba.name));
                 btn.setText(ba.name);
-                Log.d(TAG,"getItem For GridView");
+                btn.setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View v)
+                    {
+                        Date date= new Date();
+                        ba.date=new SimpleDateFormat("dd.MM.yyyy").format(date);
+                        ba.time=new SimpleDateFormat("HH:mm:ss").format(date);
+                        MainActivity.this.listLogActivity.add(ba);
+
+                        MainActivity.this.adapterListLogActivity.notifyDataSetChanged();
+                        getListViewSize(MainActivity.this.lvActivity);
+                        MainActivity.this.addGoogleDiary(ba);
+
+                        Toast.makeText(MainActivity.this,
+                                "Выбран : " +
+                                        ba.name+"lisLog Size="+adapterListLogActivity.getCount(), Toast.LENGTH_SHORT).show();
+                    }
+                });
+              // Log.d(TAG,"getItem For GridView");
                 return view;
             }
         };
@@ -160,7 +188,7 @@ public class MainActivity extends AppCompatActivity {
 
 
         gv.setAdapter(adapter);
-
+/*
         gv.setOnItemClickListener(new
                                              AdapterView.OnItemClickListener()
                                              {
@@ -175,32 +203,8 @@ public class MainActivity extends AppCompatActivity {
                                                                      item, Toast.LENGTH_SHORT).show();
                                                  }
                                              });
-       // if(status!=1)return;
-     //   TableLayout tl= (TableLayout)this.findViewById(R.id.tableLayout2);
-        //int i=0;
-        /*
-        TableRow tr=new TableRow(this);;
-        for(int i=0,j=0;i<this.listActivity.size();i++)
-        //for(ButtonActivity ba:this.listActivity)
-        {
 
-            if(i==0||i%3==0)
-            {
-                tr=new TableRow(this);
-            }
-            Button btn= new Button(this);
-            btn.setText(listActivity.get(i).name);
-            btn.setBackgroundColor(listActivity.get(i).getColor(listActivity.get(i).name));
-
-            tr.addView(btn);
-            //tr.addView(listActivity.get(i).btn,j++);
-                if(j%3==0)
-                    j=0;
-                if(i%3==0)
-                    tl.addView(tr);
-        }
-        */
-
+*/
     }
 
     private static final String TAG="------Activity Say";
@@ -247,9 +251,9 @@ public class MainActivity extends AppCompatActivity {
     private void createActivityLog()
     {
         this.lvActivity=(ListView)this.findViewById(R.id.lvActivity);
-        ArrayAdapter<ButtonActivity> adapter =
+       adapterListLogActivity =
                 new ArrayAdapter<ButtonActivity>(this,
-                        R.layout.list_item, R.id.tvForDate, listActivity)
+                        R.layout.list_item, R.id.tvForDate, listLogActivity)
                 {
                     @Override
                     public View getView(int position,
@@ -301,7 +305,7 @@ public class MainActivity extends AppCompatActivity {
                 };
         //-- Назначение Адаптера Данных списку
 //-- android.widget.ListView ---------------------
-        this.lvActivity.setAdapter(adapter);
+        this.lvActivity.setAdapter(adapterListLogActivity);
         Log.d(TAG," start setListHeigth");
        getListViewSize(lvActivity);
         //setListViewHeightBasedOnChildren(lvActivity);
