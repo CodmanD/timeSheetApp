@@ -1,5 +1,7 @@
 package kodman.timesheetapp;
 
+import android.content.Context;
+import android.content.DialogInterface;
 import android.content.pm.ActivityInfo;
 import android.content.res.Resources;
 import android.graphics.Color;
@@ -13,11 +15,13 @@ import android.support.v7.widget.Toolbar;
 import android.text.format.DateFormat;
 import android.text.format.Time;
 import android.util.Log;
+import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
+import android.widget.EditText;
 import android.widget.GridView;
 import android.widget.LinearLayout;
 import android.widget.ListAdapter;
@@ -265,7 +269,7 @@ private void removeGoogleDiary(ButtonActivity ba)
                             public void onClick(View v) {
 
 
-                                createDialogForLogActivity(btnA);
+                                createDialogForLogActivity(ba,btnA);
                             }
                         });
                         if(llForBA.getChildCount()==0)
@@ -288,13 +292,50 @@ private void removeGoogleDiary(ButtonActivity ba)
     }
 
     //Метод для изменения Activity Log
-    private void createDialogForLogActivity(Button btnA)
+    private void createDialogForLogActivity(final ButtonActivity ba,final Button btn)
     {
 
-        Toast.makeText(MainActivity.this,"Click "+btnA.getText(),Toast.LENGTH_SHORT).show();
-     //  AlertDialog dialog=
+       // Toast.makeText(MainActivity.this,"Click "+btnA.getText(),Toast.LENGTH_SHORT).show();
+        Toast.makeText(MainActivity.this,"Click "+ba.name,Toast.LENGTH_SHORT).show();
 
+    AlertDialog.Builder builder= new AlertDialog.Builder(this);
+        builder.setMessage(R.string.dialogLogActivityTitle);
+        LayoutInflater inflater = MainActivity.this.getLayoutInflater();
+        View view=inflater.inflate(R.layout.dialog, null);
+        final EditText editText=(EditText)view.findViewById(R.id.editTextDialog);
+        editText.setText(ba.name);
+        builder.setView(view)
+                .setPositiveButton("Change", new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int id) {
+                ba.name=editText.getText().toString();
+                btn.setText(ba.name);
+                btn.setBackgroundColor(ba.getColor(ba.name));
+                MainActivity.this.adapterListLogActivity.notifyDataSetChanged();
+                MainActivity.this.getListViewSize(MainActivity.this.lvActivity);
+                dialog.dismiss();
+                Toast.makeText(MainActivity.this,ba.name,Toast.LENGTH_SHORT).show();
+            }
+        })
+                .setNeutralButton("Cancel", new DialogInterface.OnClickListener() {
+                    public void onClick(DialogInterface dialog, int id) {
+                        dialog.dismiss();
+                    }
+                })
+                .setNegativeButton("Delete", new DialogInterface.OnClickListener() {
+                    public void onClick(DialogInterface dialog, int id) {
+                        MainActivity.this.listLogActivity.remove(ba);
+                        MainActivity.this.adapterListLogActivity.remove(ba);
+                        MainActivity.this.getListViewSize(MainActivity.this.lvActivity);
+                        dialog.dismiss();
+                    }
+                });;
+        AlertDialog dialog=builder.create();
+        dialog.setCancelable(true);
+        dialog.show();
     }
+
+    //МЕтод растягивает ListView
     public static void getListViewSize(ListView myListView) {
         ListAdapter myListAdapter = myListView.getAdapter();
         if (myListAdapter == null) {
@@ -317,39 +358,6 @@ private void removeGoogleDiary(ButtonActivity ba)
     }
 
 
-
-/*
-    //МЕтод растягивает
-    public  void setListViewHeightBasedOnChildren(ListView listView) {
-        Log.d(TAG,"setListHeigth");
-
-        ListAdapter listAdapter = listView.getAdapter();
-        if (listAdapter == null)
-        {
-            Log.d(TAG,"request Heigth  NULL");
-            return;
-        }
-
-        int desiredWidth = View.MeasureSpec.makeMeasureSpec(listView.getWidth(), View.MeasureSpec.UNSPECIFIED);
-        int totalHeight = 0;
-        View view = null;
-        Log.d(TAG,"request Heigth");
-        for (int i = 0; i < listAdapter.getCount(); i++)
-        {
-            view = listAdapter.getView(i, view, listView);
-            if (i == 0)
-                view.setLayoutParams(new ViewGroup.LayoutParams(desiredWidth, LayoutParams.WRAP_CONTENT));
-
-            view.measure(desiredWidth, View.MeasureSpec.UNSPECIFIED);
-            totalHeight += view.getMeasuredHeight();
-            Log.d(TAG,"total Heigth"+totalHeight);
-        }
-        ViewGroup.LayoutParams params = listView.getLayoutParams();
-        params.height = totalHeight + (listView.getDividerHeight() * (listAdapter.getCount() - 1));
-        listView.setLayoutParams(params);
-        listView.requestLayout();
-    }
-    */
     @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
     @Override
     public boolean onCreateOptionsMenu(Menu menu)

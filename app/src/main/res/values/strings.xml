@@ -31,4 +31,8 @@
     <string name="reportStartDate">Report start date</string>
     <string name="reportEndDate">Report end date</string>
     <string name="email">Email</string>
+    <string name="changeActivity">Change activity</string>
+    <string name="delete">Delete</string>
+    <string name="cancel">Cancel</string>
+    <string name="dialogLogActivityTitle">Your choice</string>
 </resources>
