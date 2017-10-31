@@ -1,17 +1,12 @@
 package kodman.timesheetapp;
 
-import android.content.Context;
+import android.content.pm.ActivityInfo;
 import android.content.res.Resources;
-import android.graphics.Canvas;
 import android.graphics.Color;
-import android.graphics.ColorFilter;
 import android.graphics.drawable.Drawable;
-import android.graphics.drawable.Icon;
 import android.os.Build;
-import android.support.annotation.NonNull;
-import android.support.annotation.Nullable;
 import android.support.annotation.RequiresApi;
-import android.support.constraint.ConstraintLayout;
+import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.support.v7.widget.Toolbar;
@@ -22,16 +17,11 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.AbsListView;
-import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
-import android.widget.GridLayout;
 import android.widget.GridView;
 import android.widget.LinearLayout;
 import android.widget.ListAdapter;
 import android.widget.ListView;
-import android.widget.TableLayout;
-import android.widget.TableRow;
 import android.widget.TextView;
 import android.widget.Toast;
 import	android.widget.Button;
@@ -124,9 +114,10 @@ public class MainActivity extends AppCompatActivity {
 
     public void undoClick(View view)
     {
-        ButtonActivity ba=MainActivity.this.listLogActivity.remove(MainActivity.this.listLogActivity.size()-1);
+        ButtonActivity ba=MainActivity.this.listLogActivity.remove(0);
         MainActivity.this.adapterListLogActivity.remove(ba);
-        MainActivity.this.adapterListLogActivity.notifyDataSetChanged();
+       createActivityLog();
+        // MainActivity.this.adapterListLogActivity.notifyDataSetChanged();
         getListViewSize(MainActivity.this.lvActivity);
         MainActivity.this.removeGoogleDiary(ba);
     }
@@ -169,9 +160,10 @@ private void removeGoogleDiary(ButtonActivity ba)
                         Date date= new Date();
                         ba.date=new SimpleDateFormat("dd.MM.yyyy").format(date);
                         ba.time=new SimpleDateFormat("HH:mm:ss").format(date);
-                        MainActivity.this.listLogActivity.add(ba);
+                        MainActivity.this.listLogActivity.add(0,ba);
 
-                        MainActivity.this.adapterListLogActivity.notifyDataSetChanged();
+                        createActivityLog();
+                       // MainActivity.this.adapterListLogActivity.notifyDataSetChanged();
                         getListViewSize(MainActivity.this.lvActivity);
                         MainActivity.this.addGoogleDiary(ba);
 
@@ -184,27 +176,7 @@ private void removeGoogleDiary(ButtonActivity ba)
                 return view;
             }
         };
-        //-- Назначаем Адаптер данных видж
-
-
-        gv.setAdapter(adapter);
-/*
-        gv.setOnItemClickListener(new
-                                             AdapterView.OnItemClickListener()
-                                             {
-                                                 @Override
-                                                 public void onItemClick(AdapterView<?> parent,
-                                                                         View view, int position, long id)
-                                                 {
-                                                     String item = parent.getAdapter().
-                                                             getItem(position).toString();
-                                                     Toast.makeText(MainActivity.this,
-                                                             "Выбран : " +
-                                                                     item, Toast.LENGTH_SHORT).show();
-                                                 }
-                                             });
-
-*/
+         gv.setAdapter(adapter);
     }
 
     private static final String TAG="------Activity Say";
@@ -218,6 +190,7 @@ private void removeGoogleDiary(ButtonActivity ba)
         System.out.println(TAG+"onCreate");
         super.onCreate(savedInstanceState);
        setContentView(R.layout.activity_main);
+        setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
        this.res= this.getResources();
       //  setContentView(R.layout.screen_settings);
       toolbar= (Toolbar)this.findViewById(R.id.toolBar_MainActivity);
@@ -251,8 +224,7 @@ private void removeGoogleDiary(ButtonActivity ba)
     private void createActivityLog()
     {
         this.lvActivity=(ListView)this.findViewById(R.id.lvActivity);
-       adapterListLogActivity =
-                new ArrayAdapter<ButtonActivity>(this,
+       adapterListLogActivity =new ArrayAdapter<ButtonActivity>(this,
                         R.layout.list_item, R.id.tvForDate, listLogActivity)
                 {
                     @Override
@@ -265,10 +237,10 @@ private void removeGoogleDiary(ButtonActivity ba)
                             convertView = getLayoutInflater().inflate(R.layout.list_item, parent, false);
                         }
 
-                        View view = super.getView(position,
+                        View view = super.getView( position,
                                 convertView, parent);
 
-                        ButtonActivity  ba= this.getItem(position);
+                        final ButtonActivity  ba= this.getItem(position);
 
                         TextView tvDate = (TextView) view.
                                 findViewById(R.id.tvForDate);
@@ -285,14 +257,15 @@ private void removeGoogleDiary(ButtonActivity ba)
                         tvDate.setText(ba.date);
                         tvStartTime.setText(ba.time);
                         final String name=ba.name;
-                        Button btnA=new Button(MainActivity.this);
+                        final Button btnA=new Button(MainActivity.this);
                         btnA.setText(ba.name);
                         btnA.setBackgroundColor(ba.getColor(ba.name));
                         btnA.setOnClickListener(new View.OnClickListener() {
                             @Override
                             public void onClick(View v) {
 
-                                Toast.makeText(MainActivity.this,"Click "+name,Toast.LENGTH_SHORT).show();
+
+                                createDialogForLogActivity(btnA);
                             }
                         });
                         if(llForBA.getChildCount()==0)
@@ -306,13 +279,22 @@ private void removeGoogleDiary(ButtonActivity ba)
         //-- Назначение Адаптера Данных списку
 //-- android.widget.ListView ---------------------
         this.lvActivity.setAdapter(adapterListLogActivity);
+        //this. adapterListLogActivity.
+        //this.lvActivity.
         Log.d(TAG," start setListHeigth");
        getListViewSize(lvActivity);
         //setListViewHeightBasedOnChildren(lvActivity);
        // this.lvActivity.
     }
 
+    //Метод для изменения Activity Log
+    private void createDialogForLogActivity(Button btnA)
+    {
 
+        Toast.makeText(MainActivity.this,"Click "+btnA.getText(),Toast.LENGTH_SHORT).show();
+     //  AlertDialog dialog=
+
+    }
     public static void getListViewSize(ListView myListView) {
         ListAdapter myListAdapter = myListView.getAdapter();
         if (myListAdapter == null) {
