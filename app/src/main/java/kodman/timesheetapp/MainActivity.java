@@ -34,6 +34,8 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 
+ import    android.os.Parcelable;
+
 public class MainActivity extends AppCompatActivity {
 
     ArrayList<ButtonActivity> listActivity= new ArrayList<>();//All buttons activity for current  time
@@ -129,14 +131,18 @@ public class MainActivity extends AppCompatActivity {
 private void addGoogleDiary(ButtonActivity ba)
 {
     Toast.makeText(MainActivity.this,
-            "Add To Google Diary "+ba.name+" "+ba.date+"/"+ba.time, Toast.LENGTH_SHORT).show();
- Log.d(TAG,"Add to Google Diary");
+        "Add To Google Diary "+ba.name+" "+ba.date+"/"+ba.time, Toast.LENGTH_SHORT).show();
+    Log.d(TAG,"Add to Google Diary");
+
+    Barcode.CalendarDateTime cdt=
 }
 private void removeGoogleDiary(ButtonActivity ba)
 {
     Log.d(TAG,"Remove from Google Diary");
 }
     //add  widgets To Layout for Current Activity
+
+
     private void addToGridViewButtonsActivity()
     {
         GridView gv=(GridView)this.findViewById(R.id.gridView);
@@ -162,12 +168,12 @@ private void removeGoogleDiary(ButtonActivity ba)
                     public void onClick(View v)
                     {
                         Date date= new Date();
-                        ba.date=new SimpleDateFormat("dd.MM.yyyy").format(date);
-                        ba.time=new SimpleDateFormat("HH:mm:ss").format(date);
-                        MainActivity.this.listLogActivity.add(0,ba);
+                        ButtonActivity BA= new ButtonActivity(ba.name);
+                        BA.date=new SimpleDateFormat("dd.MM.yyyy").format(date);
+                        BA.time=new SimpleDateFormat("HH:mm:ss").format(date);
 
+                        MainActivity.this.listLogActivity.add(0,BA);
                         createActivityLog();
-                       // MainActivity.this.adapterListLogActivity.notifyDataSetChanged();
                         getListViewSize(MainActivity.this.lvActivity);
                         MainActivity.this.addGoogleDiary(ba);
 
@@ -228,7 +234,7 @@ private void removeGoogleDiary(ButtonActivity ba)
     private void createActivityLog()
     {
         this.lvActivity=(ListView)this.findViewById(R.id.lvActivity);
-       adapterListLogActivity =new ArrayAdapter<ButtonActivity>(this,
+        adapterListLogActivity =new ArrayAdapter<ButtonActivity>(this,
                         R.layout.list_item, R.id.tvForDate, listLogActivity)
                 {
                     @Override
@@ -262,6 +268,7 @@ private void removeGoogleDiary(ButtonActivity ba)
                         tvStartTime.setText(ba.time);
                         final String name=ba.name;
                         final Button btnA=new Button(MainActivity.this);
+                        btnA.setWidth(120);
                         btnA.setText(ba.name);
                         btnA.setBackgroundColor(ba.getColor(ba.name));
                         btnA.setOnClickListener(new View.OnClickListener() {
@@ -280,15 +287,11 @@ private void removeGoogleDiary(ButtonActivity ba)
                         return view;
                     }
                 };
-        //-- Назначение Адаптера Данных списку
-//-- android.widget.ListView ---------------------
+        this.adapterListLogActivity.setNotifyOnChange(true);
         this.lvActivity.setAdapter(adapterListLogActivity);
-        //this. adapterListLogActivity.
-        //this.lvActivity.
         Log.d(TAG," start setListHeigth");
-       getListViewSize(lvActivity);
-        //setListViewHeightBasedOnChildren(lvActivity);
-       // this.lvActivity.
+        getListViewSize(lvActivity);
+
     }
 
     //Метод для изменения Activity Log
@@ -324,9 +327,41 @@ private void removeGoogleDiary(ButtonActivity ba)
                 })
                 .setNegativeButton("Delete", new DialogInterface.OnClickListener() {
                     public void onClick(DialogInterface dialog, int id) {
-                        MainActivity.this.listLogActivity.remove(ba);
-                        MainActivity.this.adapterListLogActivity.remove(ba);
-                        MainActivity.this.getListViewSize(MainActivity.this.lvActivity);
+
+                        AlertDialog.Builder bldr=new AlertDialog.Builder(MainActivity.this);
+                        bldr.setMessage(R.string.delete+"?")
+                                .setCancelable(false)
+                                .setPositiveButton(R.string.yes,
+                                        new DialogInterface.OnClickListener() {
+                                            public void onClick(DialogInterface dlg,
+                                                                int id)
+                                            {
+                                                MainActivity.this.listLogActivity.remove(ba);
+                                                MainActivity.this.createActivityLog();
+                                                //  MainActivity.this.adapterListLogActivity.remove(ba);
+                                              //  MainActivity.this.adapterListLogActivity.notifyDataSetChanged();
+                                              //  MainActivity.this.getListViewSize(MainActivity.this.lvActivity);
+
+                                                dlg.cancel();
+                                            }
+                                        })
+
+                                .setNegativeButton(R.string.no,
+                                        new DialogInterface.OnClickListener() {
+                                            public void onClick(DialogInterface dlg,
+                                                                int id) {
+                                                dlg.cancel();
+                                            }
+                                        });
+
+                         bldr.create().show();
+
+
+                       // MainActivity.this.listLogActivity.remove(ba);
+                      //  MainActivity.this.adapterListLogActivity.remove(ba);
+                      // MainActivity.this.createActivityLog();
+                       //  MainActivity.this.adapterListLogActivity.notifyDataSetChanged();
+                       // MainActivity.this.getListViewSize(MainActivity.this.lvActivity);
                         dialog.dismiss();
                     }
                 });;
@@ -397,7 +432,6 @@ private void removeGoogleDiary(ButtonActivity ba)
 
                 this.setSupportActionBar(toolbar);
                 this.addToGridViewButtonsActivity();
-
                 this.createActivityLog();
                 Toast.makeText(this, "Home", Toast.LENGTH_SHORT).show();
                 return true;
