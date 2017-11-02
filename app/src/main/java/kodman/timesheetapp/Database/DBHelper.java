@@ -8,7 +8,7 @@ import android.database.sqlite.SQLiteOpenHelper;
 class DBHelper extends SQLiteOpenHelper {
 
     DBHelper(Context context) {
-        super(context, "calendarDb", null, 1);
+        super(context, "calendar.db", null, 1);
     }
 
     @Override
@@ -19,8 +19,8 @@ class DBHelper extends SQLiteOpenHelper {
                 + "calendarId text,"
                 + "eventName text,"
                 + "eventId text,"
-                + "dateTimeStart real,"
-                + "dateTimeEnd real"
+                + "dateTimeStart text,"
+                + "dateTimeEnd text"
                 + ");");
         db.execSQL("create table activityTable ("
                 + "_id integer primary key autoincrement,"
