@@ -81,7 +81,7 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
         int color;
         String time = new SimpleDateFormat("HH:mm:ss").format(startDate);
         String date = new SimpleDateFormat("dd.MM.yyyy").format(startDate);
-
+        Long ms= startDate.getTime();
 
         public ButtonActivity() {
 
