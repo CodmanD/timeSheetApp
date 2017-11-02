@@ -7,7 +7,7 @@ import android.database.sqlite.SQLiteDatabase;
 
 public class DBHandler {
 
-    public void writeToDB(String eventName, String calendarId, String eventId, long startTime, long endTime, Context context) {
+    public void writeOneEventToDB(String eventName, String calendarId, String eventId, long startTime, long endTime, Context context) {
         DBHelper dbHelper = new DBHelper(context);
         SQLiteDatabase db = dbHelper.getWritableDatabase();
         ContentValues cv = new ContentValues();
@@ -20,20 +20,32 @@ public class DBHandler {
         dbHelper.close();
     }
 
-    public Cursor readFromDB(Context context) {
-        //read data from DB to fill fuel or service listviews
+    public Cursor readOneEventFromDB(Context context) {
+        DBHelper dbHelper = new DBHelper(context);
+        SQLiteDatabase db = dbHelper.getWritableDatabase();
+        return db.rawQuery("SELECT * FROM calendarTable WHERE eventId LIKE not_synced", null);
+    }
+
+    public Cursor readAllEventsFromDB(Context context) {
         DBHelper dbHelper = new DBHelper(context);
         SQLiteDatabase db = dbHelper.getWritableDatabase();
         return db.rawQuery("SELECT * FROM calendarTable", null);
     }
 
-    public void deleteFromDb(String eventId, Context context) {
+    public Cursor readActivitiesFromDB(Context context) {
+        DBHelper dbHelper = new DBHelper(context);
+        SQLiteDatabase db = dbHelper.getWritableDatabase();
+        return db.rawQuery("SELECT * FROM activityTable", null);
+    }
+
+    public void deleteEventFromDb(String eventId, Context context) {
         DBHelper dbHelper = new DBHelper(context);
         SQLiteDatabase db = dbHelper.getWritableDatabase();
         db.execSQL("DELETE FROM calendarTable WHERE startTime LIKE " + eventId);
         db.close();
         dbHelper.close();
     }
+
 
 }
 

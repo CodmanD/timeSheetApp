@@ -22,7 +22,14 @@ class DBHelper extends SQLiteOpenHelper {
                 + "dateTimeStart real,"
                 + "dateTimeEnd real"
                 + ");");
+        db.execSQL("create table activityTable ("
+                + "_id integer primary key autoincrement,"
+                + "buttonName text,"
+                + "eventName text"
+                + ");");
+
     }
+
 
     @Override
     public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {

@@ -416,9 +416,10 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
         }
 
         private void deleteEventFromCalendar() throws IOException {
+            //TODO: delete events from calendar
             DBHandler dbHandler = new DBHandler();
             mService.events().delete("primary", "eventId").execute();
-            dbHandler.deleteFromDb("eventId", getApplicationContext());
+            dbHandler.deleteEventFromDb("eventId", getApplicationContext());
         }
 
         private void addEventToCalendar() throws IOException {
@@ -440,9 +441,9 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
             String eventId = event.getId();
             System.out.printf("Event created: %s\n", event.getHtmlLink());
             if (!isDeviceOnline())
-                dbHandler.writeToDB(mCalendarData[0], "calendarId", eventId, mStartTime, mEndTime, getApplicationContext());
+                dbHandler.writeOneEventToDB(mCalendarData[0], "calendarId", eventId, mStartTime, mEndTime, getApplicationContext());
             else
-                dbHandler.writeToDB(mCalendarData[0], "calendarId", "not_synced", mStartTime, mEndTime, getApplicationContext());
+                dbHandler.writeOneEventToDB(mCalendarData[0], "calendarId", "not_synced", mStartTime, mEndTime, getApplicationContext());
         }
 
         @Override
