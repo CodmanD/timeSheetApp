@@ -50,7 +50,6 @@ import com.google.api.client.util.DateTime;
 import com.google.api.client.util.ExponentialBackOff;
 import com.google.api.services.calendar.CalendarScopes;
 import com.google.api.services.calendar.model.Event;
-import com.google.api.services.calendar.model.EventAttendee;
 import com.google.api.services.calendar.model.EventDateTime;
 
 import java.io.IOException;
@@ -59,7 +58,9 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
+import java.util.Locale;
 
+import kodman.timesheetapp.Database.DBHandler;
 import pub.devrel.easypermissions.AfterPermissionGranted;
 import pub.devrel.easypermissions.EasyPermissions;
 
@@ -171,7 +172,8 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
      * of the preconditions are not satisfied, the app will prompt the user as
      * appropriate.
      */
-    private void initCalendar(int action) {
+    //TODO: change input parameters
+    private void callCalendarApi(int action, String[] calendarData) {
         if (!isGooglePlayServicesAvailable()) {
             acquireGooglePlayServices();
         } else if (mCredential.getSelectedAccountName() == null) {
@@ -179,7 +181,7 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
         } else if (!isDeviceOnline()) {
             Toast.makeText(getApplicationContext(), "No network connection available.", Toast.LENGTH_SHORT).show();
         } else {
-            new MakeRequestTask(mCredential, action).execute();
+            new MakeRequestTask(mCredential, action, calendarData).execute();
         }
     }
 
@@ -201,7 +203,7 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
                     .getString(PREF_ACCOUNT_NAME, null);
             if (accountName != null) {
                 mCredential.setSelectedAccountName(accountName);
-                initCalendar(3);
+                callCalendarApi(3, null);
             } else {
                 // Start a dialog from which the user can choose an account
                 startActivityForResult(
@@ -237,9 +239,9 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
             case REQUEST_GOOGLE_PLAY_SERVICES:
                 if (resultCode != RESULT_OK) {
                     Toast.makeText(getApplicationContext(), "This app requires Google Play Services. Please install " +
-                            "Google Play Services on your device and relaunch this app.", Toast.LENGTH_SHORT);
+                            "Google Play Services on your device and relaunch this app.", Toast.LENGTH_SHORT).show();
                 } else {
-                    initCalendar(3);
+                    callCalendarApi(3, null);
                 }
                 break;
             case REQUEST_ACCOUNT_PICKER:
@@ -254,13 +256,13 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
                         editor.putString(PREF_ACCOUNT_NAME, accountName);
                         editor.apply();
                         mCredential.setSelectedAccountName(accountName);
-                        initCalendar(3);
+                        callCalendarApi(3, null);
                     }
                 }
                 break;
             case REQUEST_AUTHORIZATION:
                 if (resultCode == RESULT_OK) {
-                    initCalendar(3);
+                    callCalendarApi(3, null);
                 }
                 break;
         }
@@ -372,12 +374,14 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
      * An asynchronous task that handles the Google Calendar API call.
      * Placing the API calls in their own task ensures the UI stays responsive.
      */
-    private class MakeRequestTask extends AsyncTask<Void, Void, Void> {
+    private class MakeRequestTask extends AsyncTask<String[], Void, Void> {
         private com.google.api.services.calendar.Calendar mService = null;
-        private Exception mLastError = null;
         private int mAction;
+        private String[] mCalendarData;
+        long mStartTime;
+        long mEndTime = mStartTime;
 
-        MakeRequestTask(GoogleAccountCredential credential, int action) {
+        MakeRequestTask(GoogleAccountCredential credential, int action, String[] calendarData) {
             HttpTransport transport = AndroidHttp.newCompatibleTransport();
             JsonFactory jsonFactory = JacksonFactory.getDefaultInstance();
             mService = new com.google.api.services.calendar.Calendar.Builder(
@@ -385,6 +389,7 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
                     .setApplicationName("Google Calendar API Android Quickstart")
                     .build();
             mAction = action;
+            mCalendarData = calendarData;
         }
 
         /**
@@ -393,7 +398,7 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
          * @param params no parameters needed for this task.
          */
         @Override
-        protected Void doInBackground(Void... params) {
+        protected Void doInBackground(String[]... params) {
             try {
                 switch (mAction) {
                     case 1:
@@ -410,31 +415,42 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
         }
 
         private void deleteEventFromCalendar() throws IOException {
+            DBHandler dbHandler = new DBHandler();
             mService.events().delete("primary", "eventId").execute();
+            dbHandler.deleteFromDb("eventId", getApplicationContext());
         }
 
         private void addEventToCalendar() throws IOException {
-            Event event = new Event().setSummary("Google I/O 2015");
-            DateTime startDateTime = new DateTime("2017-10-28T09:00:00-07:00");
-            EventDateTime start = new EventDateTime()
-                    .setDateTime(startDateTime)
-                    .setTimeZone("America/Los_Angeles");
-            event.setStart(start);
-            event.setEnd(start);
+            DBHandler dbHandler = new DBHandler();
+            Event event = new Event().setSummary(mCalendarData[0]);
+            SimpleDateFormat dfStart = new SimpleDateFormat("yyyy-MM-dd'T'hh:mm:ss.SSS'Z'", Locale.ENGLISH);
+            String start = dfStart.format(mStartTime);
+            DateTime startDateTime = new DateTime(start);
+            //TODO: make end time
+            DateTime endDateTime = new DateTime(start);
+            // 2012-07-12T09:30:00.0z
+            EventDateTime startTime = new EventDateTime()
+                    .setDateTime(startDateTime);
+            EventDateTime endTime = new EventDateTime().setDateTime(endDateTime);
+            event.setStart(startTime);
+            event.setEnd(endTime);
             String calendarId = "primary";
             event = mService.events().insert(calendarId, event).execute();
+            String eventId = event.getId();
             System.out.printf("Event created: %s\n", event.getHtmlLink());
+            if (!isDeviceOnline())
+                dbHandler.writeToDB(mCalendarData[0], "calendarId", eventId, mStartTime, mEndTime, getApplicationContext());
+            else
+                dbHandler.writeToDB(mCalendarData[0], "calendarId", "not_synced", mStartTime, mEndTime, getApplicationContext());
         }
-
 
         @Override
         protected void onPreExecute() {
-
+            mStartTime = System.currentTimeMillis();
         }
 
         @Override
         protected void onCancelled() {
-
         }
     }
 
@@ -442,21 +458,21 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
         Toast.makeText(MainActivity.this,
                 "Add To Google Diary " + ba.name + " " + ba.date + "/" + ba.time, Toast.LENGTH_SHORT).show();
         Log.d(TAG, "Add to Google Diary");
-        initCalendar(1);
+        String calendarData[] = {ba.name, ba.time, ba.date};
+        callCalendarApi(1, calendarData);
     }
 
     private void removeGoogleDiary(ButtonActivity ba) {
         Log.d(TAG, "Remove from Google Diary");
-        initCalendar(2);
+        String calendarData[] = {ba.name, ba.time, ba.date};
+        callCalendarApi(2, calendarData);
     }
-
 
     //----------------End Block For Google Service------------------------------------------------------------
 
     //add  widgets To Layout for Current Activity
     private void addToGridViewButtonsActivity() {
         GridView gv = (GridView) this.findViewById(R.id.gridView);
-
         ArrayAdapter<ButtonActivity> adapter =
                 new ArrayAdapter<ButtonActivity>(this, R.layout.gridview_item,
                         R.id.btnItem, this.listActivity) {
@@ -465,9 +481,7 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
                                         View convertView, ViewGroup parent) {
                         View view = super.getView(
                                 position, convertView, parent);
-
                         final ButtonActivity ba = this.getItem(position);
-
                         Button btn = (Button) view.findViewById(R.id.btnItem);
                         btn.setBackgroundColor(ba.getColor(ba.name));
                         btn.setText(ba.name);
@@ -478,12 +492,10 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
                                 ButtonActivity BA = new ButtonActivity(ba.name);
                                 BA.date = new SimpleDateFormat("dd.MM.yyyy").format(date);
                                 BA.time = new SimpleDateFormat("HH:mm:ss").format(date);
-
                                 MainActivity.this.listLogActivity.add(0, BA);
                                 createActivityLog();
                                 getListViewSize(MainActivity.this.lvActivity);
                                 MainActivity.this.addGoogleDiary(ba);
-
                                 Toast.makeText(MainActivity.this,
                                         "Выбран : " +
                                                 ba.name + "lisLog Size=" + adapterListLogActivity.getCount(), Toast.LENGTH_SHORT).show();
@@ -539,7 +551,7 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
         mCredential = GoogleAccountCredential.usingOAuth2(
                 getApplicationContext(), Arrays.asList(SCOPES))
                 .setBackOff(new ExponentialBackOff());
-
+        callCalendarApi(3, null);
         //////-----------
         // this.lvActivity.
     }
