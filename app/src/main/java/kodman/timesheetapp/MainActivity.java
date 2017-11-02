@@ -108,7 +108,8 @@ public class MainActivity extends AppCompatActivity
        String name;
         int color;
         String time=new SimpleDateFormat("HH:mm:ss").format(startDate);
-        String date=new SimpleDateFormat("dd.MM.yyyy").format(startDate);;
+        String date=new SimpleDateFormat("dd.MM.yyyy").format(startDate);
+        Long ms= startDate.getTime();
 
         public ButtonActivity()
         {
@@ -700,7 +701,7 @@ private void removeGoogleDiary(ButtonActivity ba)
                     public void onClick(DialogInterface dialog, int id) {
 
                         AlertDialog.Builder bldr=new AlertDialog.Builder(MainActivity.this);
-                        bldr.setMessage(R.string.delete+"?")
+                        bldr.setMessage(res.getString(R.string.delete)+"?")
                                 .setCancelable(false)
                                 .setPositiveButton(R.string.yes,
                                         new DialogInterface.OnClickListener() {
