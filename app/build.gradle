@@ -39,6 +39,7 @@ dependencies {
     compile('com.google.api-client:google-api-client-android:1.23.0') {
         exclude group: 'org.apache.httpcomponents'
     }
+    compile 'com.google.http-client:google-http-client-gson:1.23.0' exclude module: 'httpclient'
     compile('com.google.apis:google-api-services-calendar:v3-rev263-1.23.0') {
         exclude group: 'org.apache.httpcomponents'
     }
