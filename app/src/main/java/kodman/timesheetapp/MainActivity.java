@@ -17,6 +17,7 @@ import android.net.NetworkInfo;
 import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
+import android.provider.ContactsContract;
 import android.support.annotation.NonNull;
 import android.support.annotation.RequiresApi;
 import android.support.v7.app.AlertDialog;
@@ -420,10 +421,6 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
                             addUnsyncedEventsToCalendar();
                         } else {
                             addEventToCalendar();
-                           /* if (mCalendarData != null) {
-                                mStartTime = mCalendarData[1];
-                                mDbHandler.writeOneEventToDB(mCalendarData[0], "mCalendarId", "not_synced", mStartTime, mEndTime);
-                            }*/
                         }
                         mTempData = false;
                         break;
@@ -446,36 +443,42 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
         String mCalendarId;
         String mSummary;
 
+        private void addEvent() throws IOException{
+            mCalendarId = "mCalendarId";
+            Event event = new Event().setSummary(mCalendarData[0]);
+            String start = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS", Locale.getDefault()).format(Long.parseLong(mStartTime));
+            String end = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS", Locale.getDefault()).format(Long.parseLong(mEndTime));
+            DateTime startDateTime = new DateTime(start);
+            //TODO: make end time
+            DateTime endDateTime = new DateTime(end);
+            EventDateTime startTime = new EventDateTime()
+                    .setDateTime(startDateTime);
+            EventDateTime endTime = new EventDateTime().setDateTime(endDateTime);
+            event.setStart(startTime);
+            event.setEnd(endTime);
+            String calendarId = "primary";
+            String eventId;
+            try {
+                event = mService.events().insert(calendarId, event).execute();
+                eventId = event.getId();
+            } catch (UnknownHostException e) {
+                eventId = "not_synced";
+            }
+            System.out.printf("Event created: %s\n", event.getHtmlLink());
+            mDbHandler.writeOneEventToDB(mCalendarData[0], mCalendarId, eventId, mStartTime, mEndTime);
+            mDbHandler.closeDB();
+        }
+
         private void addEventToCalendar() throws IOException {
             if (mTempData) {
                 //temp data
                 mSummary = mCalendarData[0];
                 mStartTime = mCalendarData[1];
-                mCalendarId = "mCalendarId";
+                mEndTime = mStartTime;
+                addEvent();
             } else {
                 mEndTime = mCalendarData[1];
-                Event event = new Event().setSummary(mCalendarData[0]);
-                String start = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'", Locale.getDefault()).format(Long.parseLong(mStartTime));
-                Log.e("starttime", start);
-                DateTime startDateTime = new DateTime(start);
-                //TODO: make end time
-                DateTime endDateTime = new DateTime(start);
-                EventDateTime startTime = new EventDateTime()
-                        .setDateTime(startDateTime);
-                EventDateTime endTime = new EventDateTime().setDateTime(endDateTime);
-                event.setStart(startTime);
-                event.setEnd(endTime);
-                String calendarId = "primary";
-                String eventId;
-                try {
-                    event = mService.events().insert(calendarId, event).execute();
-                    eventId = event.getId();
-                } catch (UnknownHostException e) {
-                    eventId = "not_synced";
-                }
-                System.out.printf("Event created: %s\n", event.getHtmlLink());
-                mDbHandler.writeOneEventToDB(mCalendarData[0], mCalendarId, eventId, mStartTime, mEndTime);
-                mDbHandler.closeDB();
+                addEvent();
             }
             mTempData = true;
         }
