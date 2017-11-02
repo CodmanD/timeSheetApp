@@ -114,17 +114,18 @@
         android:id="@+id/textView17"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:layout_marginStart="28dp"
         android:layout_marginTop="8dp"
         android:text="@string/reportEndDate"
         android:textColor="@color/colorText"
         android:textSize="18sp"
-        app:layout_constraintTop_toBottomOf="@+id/fe_message_et5"
-        tools:layout_editor_absoluteX="213dp" />
+        app:layout_constraintStart_toEndOf="@+id/fe_calendar_startd_ib"
+        app:layout_constraintTop_toBottomOf="@+id/fe_message_et5" />
 
     <ImageButton
         android:id="@+id/fe_calendar_startd_ib"
         android:layout_width="30dp"
-        android:layout_height="32dp"
+        android:layout_height="30dp"
         android:layout_marginTop="8dp"
         app:layout_constraintStart_toEndOf="@+id/textView16"
         app:layout_constraintTop_toBottomOf="@+id/fe_message_et5"
@@ -132,7 +133,7 @@
 
     <ImageButton
         android:id="@+id/fe_calendar_endd_ib"
-        android:layout_width="34dp"
+        android:layout_width="30dp"
         android:layout_height="30dp"
         android:layout_marginEnd="8dp"
         android:layout_marginStart="8dp"
@@ -142,36 +143,6 @@
         app:layout_constraintTop_toBottomOf="@+id/fe_message_et5"
         app:srcCompat="@android:drawable/ic_menu_my_calendar" />
 
-    <EditText
-        android:id="@+id/fe_calendar_startd_et"
-        android:layout_width="150dp"
-        android:layout_height="wrap_content"
-        android:layout_marginEnd="8dp"
-        android:layout_marginStart="8dp"
-        android:layout_marginTop="8dp"
-        android:background="@color/colorText"
-        android:ems="10"
-        android:enabled="false"
-        android:inputType="date"
-        app:layout_constraintEnd_toEndOf="@+id/fe_calendar_startd_ib"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/textView16" />
-
-    <EditText
-        android:id="@+id/fe_calendar_endd_et"
-        android:layout_width="150dp"
-        android:layout_height="wrap_content"
-        android:layout_marginEnd="8dp"
-        android:layout_marginStart="8dp"
-        android:layout_marginTop="8dp"
-        android:background="@color/colorText"
-        android:ems="10"
-        android:enabled="false"
-        android:inputType="date"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="@+id/textView17"
-        app:layout_constraintTop_toBottomOf="@+id/textView17" />
-
     <LinearLayout
         android:id="@+id/linearLayout"
         android:layout_width="0dp"
@@ -180,8 +151,7 @@
         android:orientation="vertical"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/fe_calendar_startd_et">
+        app:layout_constraintStart_toStartOf="parent">
 
 
         <Button
@@ -209,5 +179,34 @@
         </ScrollView>
 
     </LinearLayout>
+
+    <TextView
+        android:id="@+id/textView18"
+        android:layout_width="158dp"
+        android:layout_height="wrap_content"
+        android:layout_marginEnd="8dp"
+        android:layout_marginStart="8dp"
+        android:layout_marginTop="12dp"
+        android:background="@color/colorText"
+        app:layout_constraintEnd_toEndOf="@+id/fe_calendar_startd_ib"
+        app:layout_constraintHorizontal_bias="0.0"
+        app:layout_constraintStart_toStartOf="@+id/textView16"
+        app:layout_constraintTop_toBottomOf="@+id/textView16" />
+
+    <TextView
+        android:id="@+id/textView19"
+        android:layout_width="158dp"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="8dp"
+        android:layout_marginEnd="8dp"
+        android:layout_marginStart="8dp"
+        android:layout_marginTop="16dp"
+        android:background="@color/colorText"
+        app:layout_constraintBottom_toBottomOf="@+id/textView18"
+        app:layout_constraintEnd_toEndOf="@+id/fe_calendar_endd_ib"
+        app:layout_constraintHorizontal_bias="0.0"
+        app:layout_constraintStart_toStartOf="@+id/textView17"
+        app:layout_constraintTop_toBottomOf="@+id/textView17"
+        app:layout_constraintVertical_bias="0.384" />
 
 </android.support.constraint.ConstraintLayout>

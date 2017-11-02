@@ -111,7 +111,7 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
         }
 
         private int getColor(String name) {
-            // Resources res= MainActivity.this.getResources();
+
             if (name.equals(res.getString(R.string.nothing)))
                 return res.getColor(R.color.colorNothing);
             if (name.equals(res.getString(R.string.relaxing)))
@@ -139,6 +139,8 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
 
     }
 
+
+    // temporary method for List Activities
     private void createList() {
         this.listActivity.add(new ButtonActivity(res.getString(R.string.nothing)));
         this.listActivity.add(new ButtonActivity(res.getString(R.string.relaxing)));
@@ -149,17 +151,17 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
         this.listActivity.add(new ButtonActivity(res.getString(R.string.travelling)));
         this.listActivity.add(new ButtonActivity(res.getString(R.string.eating)));
         this.listActivity.add(new ButtonActivity(res.getString(R.string.washing)));
-        //this.listActivity.add(new ButtonActivity(res.getString(R.string.newButton)) );
+
     }
 
 
-    public void undoClick(View view) {
+    public void undoClick(View view)
+    {
         if (MainActivity.this.listLogActivity.size() == 0) return;
         ButtonActivity ba = MainActivity.this.listLogActivity.remove(0);
         MainActivity.this.adapterListLogActivity.remove(ba);
         createActivityLog();
         // MainActivity.this.adapterListLogActivity.notifyDataSetChanged();
-        getListViewSize(MainActivity.this.lvActivity);
         MainActivity.this.removeGoogleDiary(ba);
     }
 
@@ -523,15 +525,15 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
     }
 
     private void addGoogleDiary(ButtonActivity ba) {
-        Toast.makeText(MainActivity.this,
-                "Add To Google Diary " + ba.name + " " + ba.date + "/" + ba.time + "/" + ba.ms, Toast.LENGTH_SHORT).show();
-        Log.d(TAG, "Add to Google Diary");
+       //Toast.makeText(MainActivity.this,
+        //        "Add To Google Diary " + ba.name + " " + ba.date + "/" + ba.time + "/" + ba.ms, Toast.LENGTH_SHORT).show();
+        //Log.d(TAG, "Add to Google Diary");
         String calendarData[] = {ba.name, String.valueOf(ba.ms)};
         callCalendarApi(1, calendarData);
     }
 
     private void removeGoogleDiary(ButtonActivity ba) {
-        Log.d(TAG, "Remove from Google Diary");
+      //  Log.d(TAG, "Remove from Google Diary");
         String calendarData[] = {ba.name, ba.time, ba.date};
         callCalendarApi(2, calendarData);
     }
@@ -621,8 +623,7 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
                                 getListViewSize(MainActivity.this.lvActivity);
                                 MainActivity.this.addGoogleDiary(ba);
                                 Toast.makeText(MainActivity.this,
-                                        "Выбран : " +
-                                                ba.name + "lisLog Size=" + adapterListLogActivity.getCount(), Toast.LENGTH_SHORT).show();
+                                                ba.name , Toast.LENGTH_SHORT).show();
                             }
                         });
                         // Log.d(TAG,"getItem For GridView");
@@ -676,8 +677,7 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
                 getApplicationContext(), Arrays.asList(SCOPES))
                 .setBackOff(new ExponentialBackOff());
         callCalendarApi(3, null);
-        //////-----------
-        // this.lvActivity.
+        ///-------------
     }
 
     private void createActivityLog() {
@@ -707,8 +707,8 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
                         findViewById(R.id.llForBA);
 
 
-                String date = ba.date;
-                String time = ba.time;
+               // String date = ba.date;
+               // String time = ba.time;
                 tvDate.setText(ba.date);
                 tvStartTime.setText(ba.time);
                 final String name = ba.name;
@@ -718,17 +718,16 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
                 btnA.setBackgroundColor(ba.getColor(ba.name));
                 btnA.setOnClickListener(new View.OnClickListener() {
                     @Override
-                    public void onClick(View v) {
-
-
+                    public void onClick(View v)
+                    {
                         createDialogForLogActivity(ba, btnA);
                     }
                 });
                 if (llForBA.getChildCount() == 0)
                     llForBA.addView(btnA);
 
-                Log.d(TAG, "Layout size = " + llForBA.getChildCount() + "  " + view.toString());
-                //tvYear.setText(String.valueOf(F.year));
+                //Log.d(TAG, "Layout size = " + llForBA.getChildCount() + "  " + view.toString());
+
                 return view;
             }
         };
@@ -739,7 +738,7 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
 
     }
 
-    //Метод для изменения Activity Log
+    //initialize dialog for Buttons from Activity Log
     private void createDialogForLogActivity(final ButtonActivity ba, final Button btn) {
 
         // Toast.makeText(MainActivity.this,"Click "+btnA.getText(),Toast.LENGTH_SHORT).show();
@@ -772,7 +771,7 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
                 .setNegativeButton("Delete", new DialogInterface.OnClickListener() {
                     public void onClick(DialogInterface dialog, int id) {
                         AlertDialog.Builder bldr = new AlertDialog.Builder(MainActivity.this);
-                        bldr.setMessage(R.string.delete + "?")
+                        bldr.setMessage(res.getString(R.string.delete) + "?")
                                 .setCancelable(false)
                                 .setPositiveButton(R.string.yes,
                                         new DialogInterface.OnClickListener() {
@@ -780,10 +779,6 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
                                                                 int id) {
                                                 MainActivity.this.listLogActivity.remove(ba);
                                                 MainActivity.this.createActivityLog();
-                                                //  MainActivity.this.adapterListLogActivity.remove(ba);
-                                                //  MainActivity.this.adapterListLogActivity.notifyDataSetChanged();
-                                                //  MainActivity.this.getListViewSize(MainActivity.this.lvActivity);
-
                                                 dlg.cancel();
                                             }
                                         })
@@ -797,13 +792,6 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
                                         });
 
                         bldr.create().show();
-
-
-                        // MainActivity.this.listLogActivity.remove(ba);
-                        //  MainActivity.this.adapterListLogActivity.remove(ba);
-                        // MainActivity.this.createActivityLog();
-                        //  MainActivity.this.adapterListLogActivity.notifyDataSetChanged();
-                        // MainActivity.this.getListViewSize(MainActivity.this.lvActivity);
                         dialog.dismiss();
                     }
                 });
@@ -812,7 +800,7 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
         dialog.show();
     }
 
-    //МЕтод растягивает ListView
+    //change  heigth  ListView
     public static void getListViewSize(ListView myListView) {
         ListAdapter myListAdapter = myListView.getAdapter();
         if (myListAdapter == null) {
@@ -895,12 +883,12 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
                 this.setSupportActionBar(toolbar);
                 this.addToGridViewButtonsActivity();
                 this.createActivityLog();
-                Toast.makeText(this, "Home", Toast.LENGTH_SHORT).show();
+            //   Toast.makeText(this, "Home", Toast.LENGTH_SHORT).show();
                 return true;
             case R.id.action_settings:
                 this.status = 1;
                 createScreenSettings();
-                Toast.makeText(this, "Settings", Toast.LENGTH_SHORT).show();
+             //   Toast.makeText(this, "Settings", Toast.LENGTH_SHORT).show();
                 return true;
             case R.id.action_export:
                 this.status = 2;
@@ -912,7 +900,7 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
 
                 this.setSupportActionBar(toolbar);
 
-                Toast.makeText(this, "Export", Toast.LENGTH_SHORT).show();
+             //   Toast.makeText(this, "Export", Toast.LENGTH_SHORT).show();
                 return true;
             case R.id.action_share:
                 this.status = 3;
@@ -923,7 +911,7 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
                 toolbar.setSubtitleTextColor(Color.WHITE);
 
                 this.setSupportActionBar(toolbar);
-                Toast.makeText(this, "Share", Toast.LENGTH_SHORT).show();
+             //   Toast.makeText(this, "Share", Toast.LENGTH_SHORT).show();
                 return true;
         }
         return super.onOptionsItemSelected(item);
