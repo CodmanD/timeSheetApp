@@ -1,14 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
-<android.support.constraint.ConstraintLayout
-    xmlns:android="http://schemas.android.com/apk/res/android"
+<android.support.constraint.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context="kodman.timesheetapp.MainActivity"
-    android:orientation="vertical"
     android:background="@color/colorPrimaryDark"
-    >
+    android:orientation="vertical"
+    tools:context="kodman.timesheetapp.MainActivity">
 
     <!--include
         android:id="@+id/include2"
@@ -46,7 +44,7 @@
         android:layout_height="wrap_content"
         android:layout_marginStart="32dp"
         android:layout_marginTop="8dp"
-        android:text="TextView"
+        android:text="@string/myName"
         android:textColor="@color/colorText"
         android:textSize="18sp"
         app:layout_constraintStart_toStartOf="parent"
@@ -54,7 +52,7 @@
         tools:text="@string/myName" />
 
     <EditText
-        android:id="@+id/editText"
+        android:id="@+id/editTextName"
         android:layout_width="152dp"
         android:layout_height="24dp"
         android:layout_marginStart="16dp"
@@ -77,7 +75,7 @@
         app:layout_constraintTop_toBottomOf="@+id/textView" />
 
     <EditText
-        android:id="@+id/editText2"
+        android:id="@+id/editTextCalendar"
         android:layout_width="241dp"
         android:layout_height="23dp"
         android:layout_marginEnd="8dp"
@@ -85,7 +83,7 @@
         android:background="@color/colorText"
         android:ems="10"
         android:inputType="textPersonName"
-        app:layout_constraintEnd_toEndOf="@+id/editText"
+        app:layout_constraintEnd_toEndOf="@+id/editTextName"
         app:layout_constraintHorizontal_bias="0.533"
         app:layout_constraintStart_toStartOf="@+id/textView2"
         app:layout_constraintTop_toBottomOf="@+id/textView2" />
@@ -99,154 +97,34 @@
         android:layout_marginStart="12dp"
         android:layout_marginTop="8dp"
         android:background="@color/colorButton"
+        android:onClick="clickSaveSettings"
         android:text="Save"
         android:textColor="@color/colorText"
-        app:layout_constraintBottom_toBottomOf="@+id/editText2"
+        app:layout_constraintBottom_toBottomOf="@+id/editTextCalendar"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toEndOf="@+id/editText"
-        app:layout_constraintTop_toTopOf="@+id/editText"
+        app:layout_constraintStart_toEndOf="@+id/editTextName"
+        app:layout_constraintTop_toTopOf="@+id/editTextName"
         app:layout_constraintVertical_bias="0.466" />
 
     <TextView
         android:id="@+id/textView4"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:layout_marginEnd="8dp"
+        android:layout_marginStart="8dp"
         android:text="Tap activity button to edit name or colour"
         android:textColor="@color/colorText"
         android:textSize="16sp"
-        app:layout_constraintStart_toStartOf="@+id/editText2"
-        app:layout_constraintTop_toBottomOf="@+id/editText2" />
-
-    <TableLayout
-        android:id="@+id/tableLayout"
-        android:layout_width="325dp"
-        android:layout_height="291dp"
-        android:layout_marginBottom="8dp"
-        android:layout_marginEnd="8dp"
-        android:layout_marginTop="8dp"
-        app:layout_constraintBottom_toTopOf="@+id/button10"
-        app:layout_constraintEnd_toEndOf="@+id/button"
-        app:layout_constraintHorizontal_bias="0.625"
-        app:layout_constraintStart_toStartOf="@+id/textView4"
-        app:layout_constraintTop_toBottomOf="@+id/textView4">
-
-        <TableRow
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content">
-
-            <Button
-                android:id="@+id/button2"
-                style="@style/styleForButton"
-                android:layout_width="100dp"
-                android:layout_height="40dp"
-                android:layout_column="0"
-                android:text="@string/nothing"
-                android:textAllCaps="false"
-                tools:layout_editor_absoluteX="55dp"
-                tools:layout_editor_absoluteY="288dp" />
-
-            <Button
-                android:id="@+id/button9"
-                android:layout_width="100dp"
-                android:layout_height="40dp"
-                android:layout_column="1"
-                android:background="@color/colorEating"
-                android:text="@string/eating"
-                android:textAllCaps="false" />
-        </TableRow>
-
-        <TableRow
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content">
-
-            <Button
-                android:id="@+id/button3"
-                android:layout_width="match_parent"
-                android:layout_height="40dp"
-                android:text="@string/relaxing"
-                android:textAllCaps="false" />
-
-            <Button
-                android:layout_width="match_parent"
-                android:layout_height="40dp"
-                android:text="@string/washing"
-                android:textAllCaps="false" />
-        </TableRow>
-
-        <TableRow
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content">
-
-            <Button
-                android:id="@+id/button4"
-                android:layout_width="wrap_content"
-                android:layout_height="40dp"
-                android:text="@string/sleeping"
-                android:textAllCaps="false" />
-
-            <Button
-                android:layout_width="match_parent"
-                android:layout_height="40dp"
-                android:text="@string/newButton"
-                android:textAllCaps="false"
-                android:textSize="14sp" />
-        </TableRow>
-
-        <TableRow
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content">
-
-            <Button
-                android:id="@+id/button5"
-                android:layout_width="wrap_content"
-                android:layout_height="40dp"
-                android:text="@string/working"
-                android:textAllCaps="false" />
-        </TableRow>
-
-        <TableRow
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content">
-
-            <Button
-                android:id="@+id/button6"
-                android:layout_width="match_parent"
-                android:layout_height="40dp"
-                android:text="@string/exercising"
-                android:textAllCaps="false" />
-        </TableRow>
-
-        <TableRow
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content">
-
-            <Button
-                android:id="@+id/button7"
-                android:layout_width="match_parent"
-                android:layout_height="40dp"
-                android:text="@string/reading"
-                android:textAllCaps="false" />
-        </TableRow>
-
-        <TableRow
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content">
-
-            <Button
-                android:id="@+id/button8"
-                android:layout_width="match_parent"
-                android:layout_height="40dp"
-                android:text="@string/travelling"
-                android:textAllCaps="false" />
-        </TableRow>
-    </TableLayout>
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/editTextCalendar" />
 
     <TextView
         android:id="@+id/textView5"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginBottom="8dp"
-        android:layout_marginStart="32dp"
+        android:layout_marginStart="68dp"
         android:text="Clean Whole log?"
         android:textColor="@color/colorText"
         android:textSize="18sp"
@@ -257,14 +135,28 @@
         android:id="@+id/button10"
         android:layout_width="97dp"
         android:layout_height="37dp"
-        android:layout_marginBottom="4dp"
+        android:layout_marginBottom="8dp"
         android:layout_marginEnd="8dp"
         android:layout_marginStart="16dp"
         android:background="@color/colorButton"
         android:text="@string/cleanLog"
-        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintBottom_toBottomOf="@+id/textView5"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.032"
+        app:layout_constraintHorizontal_bias="0.857"
         app:layout_constraintStart_toEndOf="@+id/textView5" />
+
+    <GridLayout
+        android:id="@+id/gridLayoutSettings"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginEnd="8dp"
+        android:layout_marginStart="8dp"
+        android:layout_marginTop="8dp"
+        android:paddingLeft="10dp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/textView4">
+
+    </GridLayout>
 
 </android.support.constraint.ConstraintLayout>

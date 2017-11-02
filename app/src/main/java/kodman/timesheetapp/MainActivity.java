@@ -33,10 +33,12 @@ import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.GridLayout;
 import android.widget.GridView;
 import android.widget.LinearLayout;
 import android.widget.ListAdapter;
 import android.widget.ListView;
+import android.widget.RadioButton;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -78,6 +80,8 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
     Time startTime = new Time();
     Date startDate = new Date();
     DateFormat df = new DateFormat();
+    static String nameCalendar="";
+    static String myName="";
 
     class ButtonActivity {
         String name;
@@ -524,6 +528,66 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
 
     //----------------End Block For Google Service------------------------------------------------------------
 
+
+
+    //add widgets to GridLayoutSetting
+    private void addToGridLayoutSettings()
+    {
+        GridLayout GL= (GridLayout)this.findViewById(R.id.gridLayoutSettings);
+        GL.setColumnCount(3);
+        GL.setRowCount(7);
+        int rowIndex=0,columnIndex=0;
+        for(int i=0;i<this.listActivity.size();i++,rowIndex++)
+        {
+            if(rowIndex>=7)
+            {
+                columnIndex++;
+                rowIndex=0;
+            }
+            ButtonActivity ba= this.listActivity.get(i);
+            Button btn=new Button(this);
+
+            btn.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    Toast.makeText(MainActivity.this,"Click",Toast.LENGTH_SHORT).show();
+                }
+            });
+            btn.setText(ba.name);
+            btn.setBackgroundColor(ba.getColor(ba.name));
+
+
+            GridLayout.Spec row = GridLayout.spec(rowIndex, 1);
+
+            GridLayout.Spec column = GridLayout.spec(columnIndex, 1);
+
+            GridLayout.LayoutParams gridLayoutParam = new GridLayout.LayoutParams(row, column);
+            GL.addView(btn,gridLayoutParam);
+            GridLayout.LayoutParams lParams = (GridLayout.LayoutParams) btn.getLayoutParams();
+            lParams.setMargins(3,0,3,10);
+        }
+        Button btn = new Button(this);
+        btn.setOnClickListener(new View.OnClickListener() {
+                                   @Override
+                                   public void onClick(View v) {
+                                       Toast.makeText(MainActivity.this,"Click New Button",
+                                               Toast.LENGTH_SHORT).show();
+                                   }
+        });
+
+        btn.setText(R.string.newButton);
+
+
+        GridLayout.Spec row = GridLayout.spec(rowIndex, 1);
+
+        GridLayout.Spec column = GridLayout.spec(columnIndex, 1);
+
+        GridLayout.LayoutParams gridLayoutParam = new GridLayout.LayoutParams(row, column);
+        GL.addView(btn,gridLayoutParam);
+
+    }
+
+
     //add  widgets To Layout for Current Activity
     private void addToGridViewButtonsActivity() {
         GridView gv = (GridView) this.findViewById(R.id.gridView);
@@ -785,6 +849,35 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
         return true;
     }
 
+        private void createScreenSettings()
+        {
+            this.setContentView(R.layout.screen_settings);
+            toolbar = (Toolbar) this.findViewById(R.id.toolBar_Setting);
+            toolbar.setTitleTextColor(Color.WHITE);
+            toolbar.setSubtitleTextColor(Color.WHITE);
+            this.setSupportActionBar(toolbar);
+            this.addToGridLayoutSettings();
+            if(!nameCalendar.equals(""))
+            {
+                EditText editTextCalendar=(EditText)this.findViewById(R.id.editTextCalendar);
+                editTextCalendar.setText(this.nameCalendar);
+            }
+            if(!myName.equals(""))
+            {
+                EditText editTextCalendar=(EditText)this.findViewById(R.id.editTextName);
+                editTextCalendar.setText(this.myName);
+            }
+        }
+
+    public void clickSaveSettings(View view)
+    {
+        EditText editTextName=(EditText)this.findViewById(R.id.editTextName);
+        EditText editTextCalendar=(EditText)this.findViewById(R.id.editTextCalendar);
+        this.nameCalendar=editTextCalendar.getText().toString();
+        this.myName=editTextName.getText().toString();
+        Toast.makeText(this,"Click Save:"+nameCalendar+" MYName"+myName,Toast.LENGTH_SHORT).show();
+    }
+
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         int id = item.getItemId();
@@ -804,12 +897,7 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
                 return true;
             case R.id.action_settings:
                 this.status = 1;
-                this.setContentView(R.layout.screen_settings);
-                toolbar = (Toolbar) this.findViewById(R.id.toolBar_Setting);
-                toolbar.setTitleTextColor(Color.WHITE);
-                toolbar.setSubtitleTextColor(Color.WHITE);
-                this.setSupportActionBar(toolbar);
-
+                createScreenSettings();
                 Toast.makeText(this, "Settings", Toast.LENGTH_SHORT).show();
                 return true;
             case R.id.action_export:
@@ -826,6 +914,13 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
                 return true;
             case R.id.action_share:
                 this.status = 3;
+                 this.setContentView(R.layout.screen_share);
+                toolbar = (Toolbar) this.findViewById(R.id.toolBar_MainActivity);
+
+                toolbar.setTitleTextColor(Color.WHITE);
+                toolbar.setSubtitleTextColor(Color.WHITE);
+
+                this.setSupportActionBar(toolbar);
                 Toast.makeText(this, "Share", Toast.LENGTH_SHORT).show();
                 return true;
         }
