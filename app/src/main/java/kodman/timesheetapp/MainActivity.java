@@ -82,7 +82,7 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
         int color;
         String time = new SimpleDateFormat("HH:mm:ss").format(startDate);
         String date = new SimpleDateFormat("dd.MM.yyyy").format(startDate);
-
+        Long ms = startDate.getTime();
 
         public ButtonActivity() {
 
@@ -146,7 +146,7 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
 
 
     public void undoClick(View view) {
-        if(MainActivity.this.listLogActivity.size()==0)return;
+        if (MainActivity.this.listLogActivity.size() == 0) return;
         ButtonActivity ba = MainActivity.this.listLogActivity.remove(0);
         MainActivity.this.adapterListLogActivity.remove(ba);
         createActivityLog();
@@ -447,7 +447,8 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
 
         @Override
         protected void onPreExecute() {
-            mStartTime = System.currentTimeMillis();
+            if (mCalendarData != null)
+                mStartTime = Long.parseLong(mCalendarData[1]);
         }
 
         @Override
@@ -459,7 +460,7 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
         Toast.makeText(MainActivity.this,
                 "Add To Google Diary " + ba.name + " " + ba.date + "/" + ba.time, Toast.LENGTH_SHORT).show();
         Log.d(TAG, "Add to Google Diary");
-        String calendarData[] = {ba.name, ba.time, ba.date};
+        String calendarData[] = {ba.name, String.valueOf(ba.ms)};
         callCalendarApi(1, calendarData);
     }
 
