@@ -7,14 +7,16 @@ import android.database.sqlite.SQLiteDatabase;
 
 public class DBHandler {
     private Context mContext;
+    private DBHelper dbHelper;
+    private SQLiteDatabase db;
 
     public DBHandler(Context context) {
         mContext = context;
     }
 
     public void writeOneEventToDB(String eventName, String calendarId, String eventId, String startTime, String endTime) {
-        DBHelper dbHelper = new DBHelper(mContext);
-        SQLiteDatabase db = dbHelper.getWritableDatabase();
+        dbHelper = new DBHelper(mContext);
+        db = dbHelper.getWritableDatabase();
         ContentValues cv = new ContentValues();
         cv.put("eventId", eventId);
         cv.put("calendarId", calendarId);
@@ -26,44 +28,49 @@ public class DBHandler {
     }
 
     public Cursor readUnsyncedEventFromDB() {
-        DBHelper dbHelper = new DBHelper(mContext);
-        SQLiteDatabase db = dbHelper.getWritableDatabase();
+        dbHelper = new DBHelper(mContext);
+        db = dbHelper.getWritableDatabase();
         return db.rawQuery("SELECT * FROM calendarTable WHERE eventId LIKE 'not_synced'", null);
     }
 
     public Cursor readAllEventsFromDB() {
-        DBHelper dbHelper = new DBHelper(mContext);
-        SQLiteDatabase db = dbHelper.getWritableDatabase();
+        dbHelper = new DBHelper(mContext);
+        db = dbHelper.getWritableDatabase();
 
         return db.rawQuery("SELECT * FROM calendarTable", null);
     }
 
     public Cursor readActivitiesFromDB() {
-        DBHelper dbHelper = new DBHelper(mContext);
-        SQLiteDatabase db = dbHelper.getWritableDatabase();
+        dbHelper = new DBHelper(mContext);
+        db = dbHelper.getWritableDatabase();
         return db.rawQuery("SELECT * FROM activityTable", null);
     }
 
     public void clearEventsTable() {
-        DBHelper dbHelper = new DBHelper(mContext);
-        SQLiteDatabase db = dbHelper.getWritableDatabase();
+        dbHelper = new DBHelper(mContext);
+        db = dbHelper.getWritableDatabase();
         db.execSQL("DELETE FROM calendarTable");
         db.close();
         dbHelper.close();
     }
 
     public void deleteUnsyncedEventFromDb(String startTime) {
-        DBHelper dbHelper = new DBHelper(mContext);
-        SQLiteDatabase db = dbHelper.getWritableDatabase();
+        dbHelper = new DBHelper(mContext);
+        db = dbHelper.getWritableDatabase();
         db.execSQL("DELETE FROM calendarTable WHERE dateTimeStart LIKE '" + startTime + "' AND eventId LIKE 'not_synced'");
         db.close();
         dbHelper.close();
     }
 
     public void deleteEventFromDb(String startTime) {
-        DBHelper dbHelper = new DBHelper(mContext);
-        SQLiteDatabase db = dbHelper.getWritableDatabase();
+        dbHelper = new DBHelper(mContext);
+        db = dbHelper.getWritableDatabase();
         db.execSQL("DELETE FROM calendarTable WHERE dateTimeStart LIKE '" + startTime + "'");
+        db.close();
+        dbHelper.close();
+    }
+
+    public void closeDB() {
         db.close();
         dbHelper.close();
     }

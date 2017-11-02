@@ -57,7 +57,7 @@ import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Currency;
+import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
 import java.util.Locale;
@@ -84,7 +84,7 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
         int color;
         String time = new SimpleDateFormat("HH:mm:ss").format(startDate);
         String date = new SimpleDateFormat("dd.MM.yyyy").format(startDate);
-        Long ms = System.currentTimeMillis();
+        Long ms = Calendar.getInstance().getTimeInMillis();
 
         public ButtonActivity() {
 
@@ -167,6 +167,7 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
 
     private static final String PREF_ACCOUNT_NAME = "korovin.dmitry.1977@gmail.com";
     private static final String[] SCOPES = {CalendarScopes.CALENDAR};
+    private static boolean mTempData = true;
 
     /**
      * Attempt to call the API, after verifying that all the preconditions are
@@ -177,12 +178,14 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
      */
     //TODO: change input parameters
     private void callCalendarApi(int action, String[] calendarData) {
+
         if (!isGooglePlayServicesAvailable()) {
             acquireGooglePlayServices();
         } else if (mCredential.getSelectedAccountName() == null) {
             chooseAccount();
-        } else
+        } else {
             new MakeRequestTask(mCredential, action, calendarData).execute();
+        }
 
     }
 
@@ -371,6 +374,10 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
         dialog.show();
     }
 
+    String mStartTime;
+    String mEndTime;
+    String[] mCalendarData;
+
     /**
      * An asynchronous task that handles the Google Calendar API call.
      * Placing the API calls in their own task ensures the UI stays responsive.
@@ -378,9 +385,7 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
     private class MakeRequestTask extends AsyncTask<String[], Void, Void> {
         private com.google.api.services.calendar.Calendar mService = null;
         private int mAction;
-        private String[] mCalendarData;
-        String mStartTime;
-        String mEndTime = mStartTime;
+
         DBHandler mDbHandler = new DBHandler(getApplicationContext());
 
         MakeRequestTask(GoogleAccountCredential credential, int action, String[] calendarData) {
@@ -404,14 +409,17 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
             try {
                 switch (mAction) {
                     case 1:
+
                         if (isDeviceOnline()) {
                             addEventToCalendar();
                             addUnsyncedEventsToCalendar();
                         } else {
-                            if (mCalendarData != null)
+                            if (mCalendarData != null) {
                                 mStartTime = mCalendarData[1];
-                            mDbHandler.writeOneEventToDB(mCalendarData[0], "calendarId", "not_synced", mStartTime, mEndTime);
+                                mDbHandler.writeOneEventToDB(mCalendarData[0], "mCalendarId", "not_synced", mStartTime, mEndTime);
+                            }
                         }
+                        mTempData = false;
                         break;
                     case 0:
                         deleteEventFromCalendar();
@@ -429,26 +437,36 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
             mDbHandler.deleteEventFromDb("startTime");
         }
 
+        String mCalendarId;
+        String mSummary;
+
         private void addEventToCalendar() throws IOException {
-            if (mCalendarData != null)
+            if (mTempData) {
+                //temp data
+                mSummary = mCalendarData[0];
                 mStartTime = mCalendarData[1];
-            Event event = new Event().setSummary(mCalendarData[0]);
-            SimpleDateFormat dfStart = new SimpleDateFormat("yyyy-MM-dd'T'hh:mm:ss.SSS'Z'", Locale.ENGLISH);
-            String start = dfStart.format(Long.parseLong(mStartTime));
-            DateTime startDateTime = new DateTime(start);
-            //TODO: make end time
-            DateTime endDateTime = new DateTime(start);
-            // 2012-07-12T09:30:00.0z
-            EventDateTime startTime = new EventDateTime()
-                    .setDateTime(startDateTime);
-            EventDateTime endTime = new EventDateTime().setDateTime(endDateTime);
-            event.setStart(startTime);
-            event.setEnd(endTime);
-            String calendarId = "primary";
-            event = mService.events().insert(calendarId, event).execute();
-            String eventId = event.getId();
-            System.out.printf("Event created: %s\n", event.getHtmlLink());
-            mDbHandler.writeOneEventToDB(mCalendarData[0], "calendarId", eventId, mStartTime, mEndTime);
+                mCalendarId = "mCalendarId";
+            } else {
+                mEndTime = mCalendarData[1];
+                Event event = new Event().setSummary(mCalendarData[0]);
+                String start = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'", Locale.getDefault()).format(Long.parseLong(mStartTime));
+                Log.e("starttime", start);
+                DateTime startDateTime = new DateTime(start);
+                //TODO: make end time
+                DateTime endDateTime = new DateTime(start);
+                EventDateTime startTime = new EventDateTime()
+                        .setDateTime(startDateTime);
+                EventDateTime endTime = new EventDateTime().setDateTime(endDateTime);
+                event.setStart(startTime);
+                event.setEnd(endTime);
+                String calendarId = "primary";
+                event = mService.events().insert(calendarId, event).execute();
+                String eventId = event.getId();
+                System.out.printf("Event created: %s\n", event.getHtmlLink());
+                mDbHandler.writeOneEventToDB(mCalendarData[0], mCalendarId, eventId, mStartTime, mEndTime);
+                mDbHandler.closeDB();
+            }
+            mTempData = true;
         }
 
         private void addUnsyncedEventsToCalendar() throws IOException {
@@ -461,12 +479,10 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
                 startTimeDb = unsyncedEvents.getString(unsyncedEvents.getColumnIndexOrThrow("dateTimeStart"));
                 endTimeDb = unsyncedEvents.getString(unsyncedEvents.getColumnIndexOrThrow("dateTimeEnd"));
                 Event event = new Event().setSummary(eventNameDb);
-                SimpleDateFormat dfStart = new SimpleDateFormat("yyyy-MM-dd'T'hh:mm:ss.SSS'Z'", Locale.ENGLISH);
-                String start = dfStart.format(Long.parseLong(startTimeDb));
+                String start = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'", Locale.getDefault()).format(Long.parseLong(startTimeDb));
                 DateTime startDateTime = new DateTime(start);
                 //TODO: make end time
                 DateTime endDateTime = new DateTime(start);
-                // 2012-07-12T09:30:00.0z
                 EventDateTime startTime = new EventDateTime()
                         .setDateTime(startDateTime);
                 EventDateTime endTime = new EventDateTime().setDateTime(endDateTime);
@@ -477,8 +493,9 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
                 String eventId = event.getId();
                 mDbHandler.deleteUnsyncedEventFromDb(startTimeDb);
                 System.out.printf("Event created: %s\n", event.getHtmlLink());
-                mDbHandler.writeOneEventToDB(eventNameDb, "calendarId", eventId, startTimeDb, endTimeDb);
+                mDbHandler.writeOneEventToDB(eventNameDb, "mCalendarId", eventId, startTimeDb, endTimeDb);
             }
+            mDbHandler.closeDB();
         }
 
         @Override
@@ -684,7 +701,6 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
                 })
                 .setNegativeButton("Delete", new DialogInterface.OnClickListener() {
                     public void onClick(DialogInterface dialog, int id) {
-
                         AlertDialog.Builder bldr = new AlertDialog.Builder(MainActivity.this);
                         bldr.setMessage(R.string.delete + "?")
                                 .setCancelable(false)
@@ -721,7 +737,6 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
                         dialog.dismiss();
                     }
                 });
-        ;
         AlertDialog dialog = builder.create();
         dialog.setCancelable(true);
         dialog.show();
