@@ -56,6 +56,7 @@ import com.google.api.services.calendar.model.Event;
 import com.google.api.services.calendar.model.EventDateTime;
 
 import java.io.IOException;
+import java.net.UnknownHostException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -80,8 +81,8 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
     Time startTime = new Time();
     Date startDate = new Date();
     DateFormat df = new DateFormat();
-    static String nameCalendar="";
-    static String myName="";
+    static String nameCalendar = "";
+    static String myName = "";
 
     class ButtonActivity {
         String name;
@@ -418,10 +419,11 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
                             addEventToCalendar();
                             addUnsyncedEventsToCalendar();
                         } else {
-                            if (mCalendarData != null) {
+                            addEventToCalendar();
+                           /* if (mCalendarData != null) {
                                 mStartTime = mCalendarData[1];
                                 mDbHandler.writeOneEventToDB(mCalendarData[0], "mCalendarId", "not_synced", mStartTime, mEndTime);
-                            }
+                            }*/
                         }
                         mTempData = false;
                         break;
@@ -464,8 +466,13 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
                 event.setStart(startTime);
                 event.setEnd(endTime);
                 String calendarId = "primary";
-                event = mService.events().insert(calendarId, event).execute();
-                String eventId = event.getId();
+                String eventId;
+                try {
+                    event = mService.events().insert(calendarId, event).execute();
+                    eventId = event.getId();
+                } catch (UnknownHostException e) {
+                    eventId = "not_synced";
+                }
                 System.out.printf("Event created: %s\n", event.getHtmlLink());
                 mDbHandler.writeOneEventToDB(mCalendarData[0], mCalendarId, eventId, mStartTime, mEndTime);
                 mDbHandler.closeDB();
@@ -529,28 +536,24 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
     //----------------End Block For Google Service------------------------------------------------------------
 
 
-
     //add widgets to GridLayoutSetting
-    private void addToGridLayoutSettings()
-    {
-        GridLayout GL= (GridLayout)this.findViewById(R.id.gridLayoutSettings);
+    private void addToGridLayoutSettings() {
+        GridLayout GL = (GridLayout) this.findViewById(R.id.gridLayoutSettings);
         GL.setColumnCount(3);
         GL.setRowCount(7);
-        int rowIndex=0,columnIndex=0;
-        for(int i=0;i<this.listActivity.size();i++,rowIndex++)
-        {
-            if(rowIndex>=7)
-            {
+        int rowIndex = 0, columnIndex = 0;
+        for (int i = 0; i < this.listActivity.size(); i++, rowIndex++) {
+            if (rowIndex >= 7) {
                 columnIndex++;
-                rowIndex=0;
+                rowIndex = 0;
             }
-            ButtonActivity ba= this.listActivity.get(i);
-            Button btn=new Button(this);
+            ButtonActivity ba = this.listActivity.get(i);
+            Button btn = new Button(this);
 
             btn.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
-                    Toast.makeText(MainActivity.this,"Click",Toast.LENGTH_SHORT).show();
+                    Toast.makeText(MainActivity.this, "Click", Toast.LENGTH_SHORT).show();
                 }
             });
             btn.setText(ba.name);
@@ -562,17 +565,17 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
             GridLayout.Spec column = GridLayout.spec(columnIndex, 1);
 
             GridLayout.LayoutParams gridLayoutParam = new GridLayout.LayoutParams(row, column);
-            GL.addView(btn,gridLayoutParam);
+            GL.addView(btn, gridLayoutParam);
             GridLayout.LayoutParams lParams = (GridLayout.LayoutParams) btn.getLayoutParams();
-            lParams.setMargins(3,0,3,10);
+            lParams.setMargins(3, 0, 3, 10);
         }
         Button btn = new Button(this);
         btn.setOnClickListener(new View.OnClickListener() {
-                                   @Override
-                                   public void onClick(View v) {
-                                       Toast.makeText(MainActivity.this,"Click New Button",
-                                               Toast.LENGTH_SHORT).show();
-                                   }
+            @Override
+            public void onClick(View v) {
+                Toast.makeText(MainActivity.this, "Click New Button",
+                        Toast.LENGTH_SHORT).show();
+            }
         });
 
         btn.setText(R.string.newButton);
@@ -583,7 +586,7 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
         GridLayout.Spec column = GridLayout.spec(columnIndex, 1);
 
         GridLayout.LayoutParams gridLayoutParam = new GridLayout.LayoutParams(row, column);
-        GL.addView(btn,gridLayoutParam);
+        GL.addView(btn, gridLayoutParam);
 
     }
 
@@ -849,33 +852,29 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
         return true;
     }
 
-        private void createScreenSettings()
-        {
-            this.setContentView(R.layout.screen_settings);
-            toolbar = (Toolbar) this.findViewById(R.id.toolBar_Setting);
-            toolbar.setTitleTextColor(Color.WHITE);
-            toolbar.setSubtitleTextColor(Color.WHITE);
-            this.setSupportActionBar(toolbar);
-            this.addToGridLayoutSettings();
-            if(!nameCalendar.equals(""))
-            {
-                EditText editTextCalendar=(EditText)this.findViewById(R.id.editTextCalendar);
-                editTextCalendar.setText(this.nameCalendar);
-            }
-            if(!myName.equals(""))
-            {
-                EditText editTextCalendar=(EditText)this.findViewById(R.id.editTextName);
-                editTextCalendar.setText(this.myName);
-            }
+    private void createScreenSettings() {
+        this.setContentView(R.layout.screen_settings);
+        toolbar = (Toolbar) this.findViewById(R.id.toolBar_Setting);
+        toolbar.setTitleTextColor(Color.WHITE);
+        toolbar.setSubtitleTextColor(Color.WHITE);
+        this.setSupportActionBar(toolbar);
+        this.addToGridLayoutSettings();
+        if (!nameCalendar.equals("")) {
+            EditText editTextCalendar = (EditText) this.findViewById(R.id.editTextCalendar);
+            editTextCalendar.setText(this.nameCalendar);
         }
+        if (!myName.equals("")) {
+            EditText editTextCalendar = (EditText) this.findViewById(R.id.editTextName);
+            editTextCalendar.setText(this.myName);
+        }
+    }
 
-    public void clickSaveSettings(View view)
-    {
-        EditText editTextName=(EditText)this.findViewById(R.id.editTextName);
-        EditText editTextCalendar=(EditText)this.findViewById(R.id.editTextCalendar);
-        this.nameCalendar=editTextCalendar.getText().toString();
-        this.myName=editTextName.getText().toString();
-        Toast.makeText(this,"Click Save:"+nameCalendar+" MYName"+myName,Toast.LENGTH_SHORT).show();
+    public void clickSaveSettings(View view) {
+        EditText editTextName = (EditText) this.findViewById(R.id.editTextName);
+        EditText editTextCalendar = (EditText) this.findViewById(R.id.editTextCalendar);
+        this.nameCalendar = editTextCalendar.getText().toString();
+        this.myName = editTextName.getText().toString();
+        Toast.makeText(this, "Click Save:" + nameCalendar + " MYName" + myName, Toast.LENGTH_SHORT).show();
     }
 
     @Override
@@ -914,7 +913,7 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
                 return true;
             case R.id.action_share:
                 this.status = 3;
-                 this.setContentView(R.layout.screen_share);
+                this.setContentView(R.layout.screen_share);
                 toolbar = (Toolbar) this.findViewById(R.id.toolBar_MainActivity);
 
                 toolbar.setTitleTextColor(Color.WHITE);
