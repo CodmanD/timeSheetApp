@@ -145,6 +145,7 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
 
 
     public void undoClick(View view) {
+        if(MainActivity.this.listLogActivity.size()==0)return;
         ButtonActivity ba = MainActivity.this.listLogActivity.remove(0);
         MainActivity.this.adapterListLogActivity.remove(ba);
         createActivityLog();
@@ -161,7 +162,7 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
     static final int REQUEST_GOOGLE_PLAY_SERVICES = 1002;
     static final int REQUEST_PERMISSION_GET_ACCOUNTS = 1003;
 
-    private static final String PREF_ACCOUNT_NAME = "accountName";
+    private static final String PREF_ACCOUNT_NAME = "korovin.dmitry.1977@gmail.com";
     private static final String[] SCOPES = {CalendarScopes.CALENDAR};
 
     /**
