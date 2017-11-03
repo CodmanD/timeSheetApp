@@ -17,7 +17,6 @@ import android.net.NetworkInfo;
 import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
-import android.provider.ContactsContract;
 import android.support.annotation.NonNull;
 import android.support.annotation.RequiresApi;
 import android.support.v7.app.AlertDialog;
@@ -39,7 +38,6 @@ import android.widget.GridView;
 import android.widget.LinearLayout;
 import android.widget.ListAdapter;
 import android.widget.ListView;
-import android.widget.RadioButton;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -53,6 +51,8 @@ import com.google.api.client.json.jackson2.JacksonFactory;
 import com.google.api.client.util.DateTime;
 import com.google.api.client.util.ExponentialBackOff;
 import com.google.api.services.calendar.CalendarScopes;
+import com.google.api.services.calendar.model.CalendarList;
+import com.google.api.services.calendar.model.CalendarListEntry;
 import com.google.api.services.calendar.model.Event;
 import com.google.api.services.calendar.model.EventDateTime;
 
@@ -82,8 +82,8 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
     Time startTime = new Time();
     Date startDate = new Date();
     DateFormat df = new DateFormat();
-    static String nameCalendar = "";
-    static String myName = "";
+    String nameCalendar = "";
+    String myName = "";
 
     class ButtonActivity {
         String name;
@@ -155,8 +155,7 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
     }
 
 
-    public void undoClick(View view)
-    {
+    public void undoClick(View view) {
         if (MainActivity.this.listLogActivity.size() == 0) return;
         ButtonActivity ba = MainActivity.this.listLogActivity.remove(0);
         MainActivity.this.adapterListLogActivity.remove(ba);
@@ -186,7 +185,7 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
      */
     //TODO: change input parameters
     private void callCalendarApi(int action, String[] calendarData) {
-
+        mCalendarId = mShared.getString("calendarName", "primary");
         if (!isGooglePlayServicesAvailable()) {
             acquireGooglePlayServices();
         } else if (mCredential.getSelectedAccountName() == null) {
@@ -194,7 +193,6 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
         } else {
             new MakeRequestTask(mCredential, action, calendarData).execute();
         }
-
     }
 
     /**
@@ -382,6 +380,7 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
         dialog.show();
     }
 
+    String mCalendarId;
     String mStartTime;
     String mEndTime;
     String[] mCalendarData;
@@ -393,8 +392,8 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
     private class MakeRequestTask extends AsyncTask<String[], Void, Void> {
         private com.google.api.services.calendar.Calendar mService = null;
         private int mAction;
-
-        DBHandler mDbHandler = new DBHandler(getApplicationContext());
+        private String mSummary;
+        private DBHandler mDbHandler = new DBHandler(getApplicationContext());
 
         MakeRequestTask(GoogleAccountCredential credential, int action, String[] calendarData) {
             HttpTransport transport = AndroidHttp.newCompatibleTransport();
@@ -417,7 +416,6 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
             try {
                 switch (mAction) {
                     case 1:
-
                         if (isDeviceOnline()) {
                             addEventToCalendar();
                             addUnsyncedEventsToCalendar();
@@ -442,26 +440,41 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
             mDbHandler.deleteEventFromDb("startTime");
         }
 
-        String mCalendarId;
-        String mSummary;
 
-        private void addEvent() throws IOException{
-            mCalendarId = "mCalendarId";
+        boolean mIdFlag = false;
+
+        private void addEvent() throws IOException {
+
             Event event = new Event().setSummary(mCalendarData[0]);
             String start = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS", Locale.getDefault()).format(Long.parseLong(mStartTime));
             String end = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS", Locale.getDefault()).format(Long.parseLong(mEndTime));
             DateTime startDateTime = new DateTime(start);
-            //TODO: make end time
             DateTime endDateTime = new DateTime(end);
+            //DateTime startDateTime = new DateTime(startDate, TimeZone.getTimeZone("UTC"));
             EventDateTime startTime = new EventDateTime()
                     .setDateTime(startDateTime);
             EventDateTime endTime = new EventDateTime().setDateTime(endDateTime);
             event.setStart(startTime);
             event.setEnd(endTime);
-            String calendarId = "primary";
             String eventId;
             try {
-                event = mService.events().insert(calendarId, event).execute();
+                String pageToken = null;
+                do {
+                    CalendarList calendarList = mService.calendarList().list().setPageToken(pageToken).execute();
+                    List<CalendarListEntry> items = calendarList.getItems();
+                    for (CalendarListEntry calendarListEntry : items) {
+                        if (mCalendarId.equals(calendarListEntry.getSummary())) {
+                            mCalendarId = calendarListEntry.getId();
+                            mIdFlag = true;
+                            break;
+                        }
+                    }
+                    pageToken = calendarList.getNextPageToken();
+                } while (pageToken != null);
+                if (!mIdFlag) {
+                    mCalendarId = "primary";
+                }
+                event = mService.events().insert(mCalendarId, event).execute();
                 eventId = event.getId();
             } catch (UnknownHostException e) {
                 eventId = "not_synced";
@@ -494,18 +507,32 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
                 eventNameDb = unsyncedEvents.getString(unsyncedEvents.getColumnIndexOrThrow("eventName"));
                 startTimeDb = unsyncedEvents.getString(unsyncedEvents.getColumnIndexOrThrow("dateTimeStart"));
                 endTimeDb = unsyncedEvents.getString(unsyncedEvents.getColumnIndexOrThrow("dateTimeEnd"));
+                String pageToken = null;
+                do {
+                    CalendarList calendarList = mService.calendarList().list().setPageToken(pageToken).execute();
+                    List<CalendarListEntry> items = calendarList.getItems();
+                    for (CalendarListEntry calendarListEntry : items) {
+                        if (mCalendarId.equals(calendarListEntry.getSummary())) {
+                            mCalendarId = calendarListEntry.getId();
+                            mIdFlag = true;
+                            break;
+                        }
+                    }
+                    pageToken = calendarList.getNextPageToken();
+                } while (pageToken != null);
+                if (!mIdFlag) {
+                    mCalendarId = "primary";
+                }
                 Event event = new Event().setSummary(eventNameDb);
                 String start = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'", Locale.getDefault()).format(Long.parseLong(startTimeDb));
                 DateTime startDateTime = new DateTime(start);
-                //TODO: make end time
                 DateTime endDateTime = new DateTime(start);
                 EventDateTime startTime = new EventDateTime()
                         .setDateTime(startDateTime);
                 EventDateTime endTime = new EventDateTime().setDateTime(endDateTime);
                 event.setStart(startTime);
                 event.setEnd(endTime);
-                String calendarId = "primary";
-                event = mService.events().insert(calendarId, event).execute();
+                event = mService.events().insert(mCalendarId, event).execute();
                 String eventId = event.getId();
                 mDbHandler.deleteUnsyncedEventFromDb(startTimeDb);
                 System.out.printf("Event created: %s\n", event.getHtmlLink());
@@ -525,7 +552,7 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
     }
 
     private void addGoogleDiary(ButtonActivity ba) {
-       //Toast.makeText(MainActivity.this,
+        //Toast.makeText(MainActivity.this,
         //        "Add To Google Diary " + ba.name + " " + ba.date + "/" + ba.time + "/" + ba.ms, Toast.LENGTH_SHORT).show();
         //Log.d(TAG, "Add to Google Diary");
         String calendarData[] = {ba.name, String.valueOf(ba.ms)};
@@ -533,7 +560,7 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
     }
 
     private void removeGoogleDiary(ButtonActivity ba) {
-      //  Log.d(TAG, "Remove from Google Diary");
+        //  Log.d(TAG, "Remove from Google Diary");
         String calendarData[] = {ba.name, ba.time, ba.date};
         callCalendarApi(2, calendarData);
     }
@@ -623,7 +650,7 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
                                 getListViewSize(MainActivity.this.lvActivity);
                                 MainActivity.this.addGoogleDiary(ba);
                                 Toast.makeText(MainActivity.this,
-                                                ba.name , Toast.LENGTH_SHORT).show();
+                                        ba.name, Toast.LENGTH_SHORT).show();
                             }
                         });
                         // Log.d(TAG,"getItem For GridView");
@@ -638,12 +665,16 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
     private Toolbar toolbar;
     private Menu menu;
     private int status = 0;
+    SharedPreferences mShared;
+    SharedPreferences.Editor mSharedEditor;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         Log.d(TAG, "onCreate");
         System.out.println(TAG + "onCreate");
         super.onCreate(savedInstanceState);
+        mShared = getApplicationContext().getSharedPreferences("prefs", MODE_PRIVATE);
+        mSharedEditor = mShared.edit();
         setContentView(R.layout.activity_main);
         setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
         this.res = this.getResources();
@@ -707,8 +738,8 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
                         findViewById(R.id.llForBA);
 
 
-               // String date = ba.date;
-               // String time = ba.time;
+                // String date = ba.date;
+                // String time = ba.time;
                 tvDate.setText(ba.date);
                 tvStartTime.setText(ba.time);
                 final String name = ba.name;
@@ -718,8 +749,7 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
                 btnA.setBackgroundColor(ba.getColor(ba.name));
                 btnA.setOnClickListener(new View.OnClickListener() {
                     @Override
-                    public void onClick(View v)
-                    {
+                    public void onClick(View v) {
                         createDialogForLogActivity(ba, btnA);
                     }
                 });
@@ -850,21 +880,25 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
         toolbar.setSubtitleTextColor(Color.WHITE);
         this.setSupportActionBar(toolbar);
         this.addToGridLayoutSettings();
-        if (!nameCalendar.equals("")) {
-            EditText editTextCalendar = (EditText) this.findViewById(R.id.editTextCalendar);
-            editTextCalendar.setText(this.nameCalendar);
-        }
-        if (!myName.equals("")) {
-            EditText editTextCalendar = (EditText) this.findViewById(R.id.editTextName);
-            editTextCalendar.setText(this.myName);
-        }
+        // if (!nameCalendar.equals("")) {
+        EditText editTextCalendar = (EditText) this.findViewById(R.id.editTextCalendar);
+        editTextCalendar.setText(mShared.getString("calendarName", "primary"));
+        // }
+        // if (!myName.equals("")) {
+        EditText editTextName = (EditText) this.findViewById(R.id.editTextName);
+        editTextName.setText(mShared.getString("myName", ""));
+        // }
     }
+
 
     public void clickSaveSettings(View view) {
         EditText editTextName = (EditText) this.findViewById(R.id.editTextName);
         EditText editTextCalendar = (EditText) this.findViewById(R.id.editTextCalendar);
-        this.nameCalendar = editTextCalendar.getText().toString();
-        this.myName = editTextName.getText().toString();
+        nameCalendar = editTextCalendar.getText().toString();
+        mSharedEditor.putString("calendarName", nameCalendar);
+        myName = editTextName.getText().toString();
+        mSharedEditor.putString("myName", myName);
+        mSharedEditor.commit();
         Toast.makeText(this, "Click Save:" + nameCalendar + " MYName" + myName, Toast.LENGTH_SHORT).show();
     }
 
@@ -883,12 +917,12 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
                 this.setSupportActionBar(toolbar);
                 this.addToGridViewButtonsActivity();
                 this.createActivityLog();
-            //   Toast.makeText(this, "Home", Toast.LENGTH_SHORT).show();
+                //   Toast.makeText(this, "Home", Toast.LENGTH_SHORT).show();
                 return true;
             case R.id.action_settings:
                 this.status = 1;
                 createScreenSettings();
-             //   Toast.makeText(this, "Settings", Toast.LENGTH_SHORT).show();
+                //   Toast.makeText(this, "Settings", Toast.LENGTH_SHORT).show();
                 return true;
             case R.id.action_export:
                 this.status = 2;
@@ -900,7 +934,7 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
 
                 this.setSupportActionBar(toolbar);
 
-             //   Toast.makeText(this, "Export", Toast.LENGTH_SHORT).show();
+                //   Toast.makeText(this, "Export", Toast.LENGTH_SHORT).show();
                 return true;
             case R.id.action_share:
                 this.status = 3;
@@ -911,7 +945,7 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
                 toolbar.setSubtitleTextColor(Color.WHITE);
 
                 this.setSupportActionBar(toolbar);
-             //   Toast.makeText(this, "Share", Toast.LENGTH_SHORT).show();
+                //   Toast.makeText(this, "Share", Toast.LENGTH_SHORT).show();
                 return true;
         }
         return super.onOptionsItemSelected(item);
