@@ -5,6 +5,8 @@ import android.content.Context;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 
+import java.util.ArrayList;
+
 public class DBHandler {
     private Context mContext;
     private DBHelper dbHelper;
@@ -14,7 +16,7 @@ public class DBHandler {
         mContext = context;
     }
 
-    public void writeOneEventToDB(String eventName, String calendarId, String eventId, String startTime, String endTime) {
+    public void writeOneEventToDB(String eventName, String calendarId, String eventId, String endTime, String startTime) {
         dbHelper = new DBHelper(mContext);
         db = dbHelper.getWritableDatabase();
         ContentValues cv = new ContentValues();
@@ -31,6 +33,24 @@ public class DBHandler {
         dbHelper = new DBHelper(mContext);
         db = dbHelper.getWritableDatabase();
         return db.rawQuery("SELECT * FROM calendarTable WHERE eventId LIKE 'not_synced'", null);
+    }
+
+    public ArrayList<String> readOneEventFromDB(String dateTimeStart) {
+        dbHelper = new DBHelper(mContext);
+        db = dbHelper.getWritableDatabase();
+        Cursor cursor = db.rawQuery("SELECT * FROM calendarTable WHERE dateTimeStart LIKE '" + dateTimeStart + "'", null);
+        cursor.moveToFirst();
+        ArrayList<String> arrayList = new ArrayList<>();
+        try {
+            arrayList.add(cursor.getString(cursor.getColumnIndexOrThrow("calendarId")));
+            arrayList.add(cursor.getString(cursor.getColumnIndexOrThrow("eventId")));
+            arrayList.add(cursor.getString(cursor.getColumnIndexOrThrow("eventName")));
+        } catch (IndexOutOfBoundsException e) {
+            e.printStackTrace();
+        }
+        db.close();
+        dbHelper.close();
+        return arrayList;
     }
 
     public Cursor readAllEventsFromDB() {

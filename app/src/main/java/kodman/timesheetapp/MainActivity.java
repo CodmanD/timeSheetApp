@@ -83,7 +83,7 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
                 while (true) {
                     Thread.sleep(1000);
                     synchronized (MainActivity.this.toolbar) {
-                        Log.d(TAG, "Thread=================TICK");
+                        // Log.d(TAG, "Thread=================TICK");
                         toolbar.post(new Runnable() {
                             @Override
                             public void run() {
@@ -459,7 +459,8 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
                         mTempData = false;
                         break;
                     case 0:
-                        deleteEventFromCalendar();
+                        //TODO: time for deleting from listview
+                        deleteEventFromCalendar(mStartTime);
                         break;
                 }
             } catch (IOException e) {
@@ -468,25 +469,18 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
             return null;
         }
 
-        private void deleteEventFromCalendar() throws IOException {
-            //TODO: delete events from calendar
-            mService.events().delete("primary", "eventId").execute();
-            mDbHandler.deleteEventFromDb("startTime");
+        private void deleteEventFromCalendar(String startTime) throws IOException {
+            mDbHandler.deleteEventFromDb(startTime);
         }
-
 
         boolean mIdFlag = false;
 
         private void addEvent() throws IOException {
-
-            Event event = new Event().setSummary(mCalendarData[0]);
-           // String start = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS", Locale.getDefault()).format(Long.parseLong(mStartTime));
-           // String end = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS", Locale.getDefault()).format(Long.parseLong(mEndTime));
+            Event event = new Event().setSummary(mSummary);
             Date start = new Date(Long.parseLong(mStartTime));
             Date end = new Date(Long.parseLong(mEndTime));
-            DateTime startDateTime = new DateTime(start,TimeZone.getTimeZone("UTC"));
-            DateTime endDateTime = new DateTime(end,TimeZone.getTimeZone("UTC"));
-          //  DateTime startDateTime = new DateTime(startDate, TimeZone.getTimeZone("UTC"));
+            DateTime startDateTime = new DateTime(start, TimeZone.getTimeZone("UTC"));
+            DateTime endDateTime = new DateTime(end, TimeZone.getTimeZone("UTC"));
             EventDateTime startTime = new EventDateTime()
                     .setDateTime(startDateTime);
             EventDateTime endTime = new EventDateTime().setDateTime(endDateTime);
@@ -516,22 +510,52 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
                 eventId = "not_synced";
             }
             System.out.printf("Event created: %s\n", event.getHtmlLink());
-            mDbHandler.writeOneEventToDB(mCalendarData[0], mCalendarId, eventId, mStartTime, mEndTime);
+            mDbHandler.writeOneEventToDB(mSummary, mCalendarId, eventId, mStartTime, mEndTime);
             mDbHandler.closeDB();
         }
 
         private void addEventToCalendar() throws IOException {
             if (mTempData) {
-                //temp data
                 mSummary = mCalendarData[0];
                 mStartTime = mCalendarData[1];
                 mEndTime = mStartTime;
                 addEvent();
             } else {
+                mSummary = mCalendarData[0];
                 mEndTime = mCalendarData[1];
                 addEvent();
+                updateEvent();
             }
             mTempData = true;
+        }
+
+        private void updateEvent() throws IOException {
+            ArrayList<String> arrayList = mDbHandler.readOneEventFromDB(mStartTime);
+            if (arrayList.size() == 0) {
+                mTempData=true;
+                return;
+            }
+            String eventSummary = arrayList.get(2);
+            String eventId = arrayList.get(1);
+            String calendarId = arrayList.get(0);
+            // Retrieve the event from the API
+            Event event = mService.events().get(calendarId, eventId).execute();
+            // Make a change
+            Date end = new Date(Long.parseLong(mEndTime));
+            DateTime endDateTime = new DateTime(end, TimeZone.getTimeZone("UTC"));
+            EventDateTime endTime = new EventDateTime().setDateTime(endDateTime);
+            event.setSummary(eventSummary);
+            event.setEnd(endTime);
+            // Update the event
+            try {
+                event = mService.events().update(calendarId, event.getId(), event).execute();
+                System.out.printf("Event created: %s\n", event.getHtmlLink());
+            } catch (UnknownHostException e) {
+                eventId = "not_synced";
+            }
+            mDbHandler.deleteEventFromDb(mStartTime);
+            mDbHandler.writeOneEventToDB(eventSummary, calendarId, eventId, mStartTime, mEndTime);
+            mDbHandler.closeDB();
         }
 
         private void addUnsyncedEventsToCalendar() throws IOException {
@@ -572,7 +596,7 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
                 String eventId = event.getId();
                 mDbHandler.deleteUnsyncedEventFromDb(startTimeDb);
                 System.out.printf("Event created: %s\n", event.getHtmlLink());
-                mDbHandler.writeOneEventToDB(eventNameDb, "mCalendarId", eventId, startTimeDb, endTimeDb);
+                mDbHandler.writeOneEventToDB(eventNameDb, mCalendarId, eventId, startTimeDb, endTimeDb);
             }
             mDbHandler.closeDB();
         }
