@@ -68,6 +68,7 @@ import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
 import java.util.Locale;
+import java.util.TimeZone;
 
 import kodman.timesheetapp.Database.DBHandler;
 import pub.devrel.easypermissions.AfterPermissionGranted;
@@ -75,33 +76,28 @@ import pub.devrel.easypermissions.EasyPermissions;
 
 public class MainActivity extends AppCompatActivity implements EasyPermissions.PermissionCallbacks {
 
-    class ThreadForActualTime extends Thread
-    {
+    class ThreadForActualTime extends Thread {
         @Override
-        public void run()
-        {
-            try{
-            while(true)
-            {
-               Thread.sleep(1000);
-               synchronized (MainActivity.this.toolbar)
-               {
-                   Log.d(TAG,"Thread=================TICK");
-                   toolbar.post(new Runnable() {
-                       @Override
-                       public void run() {
+        public void run() {
+            try {
+                while (true) {
+                    Thread.sleep(1000);
+                    synchronized (MainActivity.this.toolbar) {
+                        Log.d(TAG, "Thread=================TICK");
+                        toolbar.post(new Runnable() {
+                            @Override
+                            public void run() {
 
-                           Date curDate= new Date();
-                           String time=new SimpleDateFormat("HH:mm:ss").format(curDate);
-                           toolbar.setTitle(time);
-                       }
-                   });
+                                Date curDate = new Date();
+                                String time = new SimpleDateFormat("HH:mm:ss").format(curDate);
+                                toolbar.setTitle(time);
+                            }
+                        });
 //                   toolbar.setTitle("" + System.currentTimeMillis());
-               }
+                    }
+                }
+            } catch (InterruptedException ex) {
             }
-            }
-            catch(InterruptedException ex)
-            {}
         }
     }
 
@@ -484,11 +480,13 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
         private void addEvent() throws IOException {
 
             Event event = new Event().setSummary(mCalendarData[0]);
-            String start = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS", Locale.getDefault()).format(Long.parseLong(mStartTime));
-            String end = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS", Locale.getDefault()).format(Long.parseLong(mEndTime));
-            DateTime startDateTime = new DateTime(start);
-            DateTime endDateTime = new DateTime(end);
-            //DateTime startDateTime = new DateTime(startDate, TimeZone.getTimeZone("UTC"));
+           // String start = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS", Locale.getDefault()).format(Long.parseLong(mStartTime));
+           // String end = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS", Locale.getDefault()).format(Long.parseLong(mEndTime));
+            Date start = new Date(Long.parseLong(mStartTime));
+            Date end = new Date(Long.parseLong(mEndTime));
+            DateTime startDateTime = new DateTime(start,TimeZone.getTimeZone("UTC"));
+            DateTime endDateTime = new DateTime(end,TimeZone.getTimeZone("UTC"));
+          //  DateTime startDateTime = new DateTime(startDate, TimeZone.getTimeZone("UTC"));
             EventDateTime startTime = new EventDateTime()
                     .setDateTime(startDateTime);
             EventDateTime endTime = new EventDateTime().setDateTime(endDateTime);
@@ -501,7 +499,7 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
                     CalendarList calendarList = mService.calendarList().list().setPageToken(pageToken).execute();
                     List<CalendarListEntry> items = calendarList.getItems();
                     for (CalendarListEntry calendarListEntry : items) {
-                        if (mCalendarId.equals(calendarListEntry.getSummary())) {
+                        if (mCalendarId.equals(calendarListEntry.getSummary()) || mCalendarId.equals(calendarListEntry.getId())) {
                             mCalendarId = calendarListEntry.getId();
                             mIdFlag = true;
                             break;
@@ -550,7 +548,7 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
                     CalendarList calendarList = mService.calendarList().list().setPageToken(pageToken).execute();
                     List<CalendarListEntry> items = calendarList.getItems();
                     for (CalendarListEntry calendarListEntry : items) {
-                        if (mCalendarId.equals(calendarListEntry.getSummary())) {
+                        if (mCalendarId.equals(calendarListEntry.getSummary()) || mCalendarId.equals(calendarListEntry.getId())) {
                             mCalendarId = calendarListEntry.getId();
                             mIdFlag = true;
                             break;
@@ -610,15 +608,11 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
     //----------------End Block For Google Service------------------------------------------------------------
 
 
+    private void changeTime() {
+        // Toast.makeText(MainActivity.this," tick",Toast.LENGTH_SHORT).show();
 
 
-
-private void changeTime()
-{
-   // Toast.makeText(MainActivity.this," tick",Toast.LENGTH_SHORT).show();
-
-
-}
+    }
 
     //add widgets to GridLayoutSetting
     private void addToGridLayoutSettings() {
@@ -1026,7 +1020,7 @@ private void changeTime()
         this.nameCalendar = sPref.getString("myCalendar", "");
         //------------------------------------------------------------------
 
-        ThreadForActualTime actualTime= new ThreadForActualTime();
+        ThreadForActualTime actualTime = new ThreadForActualTime();
 
         actualTime.start();
     }
