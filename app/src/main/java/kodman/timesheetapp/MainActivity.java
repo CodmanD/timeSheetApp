@@ -512,6 +512,7 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
             System.out.printf("Event created: %s\n", event.getHtmlLink());
             mDbHandler.writeOneEventToDB(mSummary, mCalendarId, eventId, mStartTime, mEndTime);
             mDbHandler.closeDB();
+            mTempData = false;
         }
 
         private void addEventToCalendar() throws IOException {
@@ -523,16 +524,19 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
             } else {
                 mSummary = mCalendarData[0];
                 mEndTime = mCalendarData[1];
-                addEvent();
                 updateEvent();
+                mSummary = mCalendarData[0];
+                mStartTime = mCalendarData[1];
+                mEndTime = mStartTime;
+                addEvent();
+                mTempData = true;
             }
-            mTempData = true;
         }
 
         private void updateEvent() throws IOException {
             ArrayList<String> arrayList = mDbHandler.readOneEventFromDB(mStartTime);
             if (arrayList.size() == 0) {
-                mTempData=true;
+                mTempData = true;
                 return;
             }
             String eventSummary = arrayList.get(2);
