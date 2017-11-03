@@ -75,6 +75,36 @@ import pub.devrel.easypermissions.EasyPermissions;
 
 public class MainActivity extends AppCompatActivity implements EasyPermissions.PermissionCallbacks {
 
+    class ThreadForActualTime extends Thread
+    {
+        @Override
+        public void run()
+        {
+            try{
+            while(true)
+            {
+               Thread.sleep(1000);
+               synchronized (MainActivity.this.toolbar)
+               {
+                   Log.d(TAG,"Thread=================TICK");
+                   toolbar.post(new Runnable() {
+                       @Override
+                       public void run() {
+
+                           Date curDate= new Date();
+                           String time=new SimpleDateFormat("HH:mm:ss").format(curDate);
+                           toolbar.setTitle(time);
+                       }
+                   });
+//                   toolbar.setTitle("" + System.currentTimeMillis());
+               }
+            }
+            }
+            catch(InterruptedException ex)
+            {}
+        }
+    }
+
     ArrayList<ButtonActivity> listActivity = new ArrayList<>();//All buttons activity for current  time
     ArrayList<ButtonActivity> listLogActivity = new ArrayList<>();
     ArrayAdapter<ButtonActivity> adapterListLogActivity;
@@ -84,6 +114,7 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
     ListView lvActivity;
     Time startTime = new Time();
     Date startDate = new Date();
+    Date currentDate = new Date();
     DateFormat df = new DateFormat();
 
     static String nameCalendar = "";
@@ -420,6 +451,7 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
         @Override
         protected Void doInBackground(String[]... params) {
             try {
+
                 switch (mAction) {
                     case 1:
                         if (isDeviceOnline()) {
@@ -550,6 +582,7 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
         @Override
         protected void onPreExecute() {
 
+
         }
 
         @Override
@@ -576,6 +609,16 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
 
     //----------------End Block For Google Service------------------------------------------------------------
 
+
+
+
+
+private void changeTime()
+{
+   // Toast.makeText(MainActivity.this," tick",Toast.LENGTH_SHORT).show();
+
+
+}
 
     //add widgets to GridLayoutSetting
     private void addToGridLayoutSettings() {
@@ -953,7 +996,7 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
         this.setSupportActionBar(toolbar);
         toolbar.setTitleTextColor(Color.WHITE);
         toolbar.setSubtitleTextColor(Color.WHITE);
-        toolbar.setSubtitle("Time");
+
 
         //toolbar.setNavigationIcon(R.mipmap.ic_add_circle_white_36dp);
 
@@ -982,6 +1025,10 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
         this.myName = sPref.getString("myName", "");
         this.nameCalendar = sPref.getString("myCalendar", "");
         //------------------------------------------------------------------
+
+        ThreadForActualTime actualTime= new ThreadForActualTime();
+
+        actualTime.start();
     }
 
     private void createActivityLog() {
