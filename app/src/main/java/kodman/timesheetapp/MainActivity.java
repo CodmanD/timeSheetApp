@@ -11,6 +11,7 @@ import android.content.pm.ActivityInfo;
 import android.content.res.Resources;
 import android.database.Cursor;
 import android.graphics.Color;
+import android.graphics.drawable.ColorDrawable;
 import android.graphics.drawable.Drawable;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
@@ -35,11 +36,13 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.GridLayout;
 import android.widget.GridView;
+import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.ListAdapter;
 import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
+import android.widget.SeekBar;
 
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.GoogleApiAvailability;
@@ -82,8 +85,10 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
     Time startTime = new Time();
     Date startDate = new Date();
     DateFormat df = new DateFormat();
-    String nameCalendar = "";
-    String myName = "";
+
+    static String nameCalendar = "";
+    static String myName = "";
+    SharedPreferences sPref;
 
     class ButtonActivity {
         String name;
@@ -133,8 +138,8 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
             if (name.equals(res.getString(R.string.newButton)))
                 return res.getColor(R.color.colorText);
 
-
-            return res.getColor(R.color.colorButton);
+            return this.color;
+            // return res.getColor(R.color.colorButton);
         }
 
     }
@@ -185,7 +190,8 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
      */
     //TODO: change input parameters
     private void callCalendarApi(int action, String[] calendarData) {
-        mCalendarId = mShared.getString("calendarName", "primary");
+        sPref = this.getPreferences(MODE_PRIVATE);
+        mCalendarId = sPref.getString("myCalendar", "primary");
         if (!isGooglePlayServicesAvailable()) {
             acquireGooglePlayServices();
         } else if (mCredential.getSelectedAccountName() == null) {
@@ -551,6 +557,7 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
         }
     }
 
+    //Add to Google diary
     private void addGoogleDiary(ButtonActivity ba) {
         //Toast.makeText(MainActivity.this,
         //        "Add To Google Diary " + ba.name + " " + ba.date + "/" + ba.time + "/" + ba.ms, Toast.LENGTH_SHORT).show();
@@ -559,6 +566,8 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
         callCalendarApi(1, calendarData);
     }
 
+
+    //Delete From Google Diary
     private void removeGoogleDiary(ButtonActivity ba) {
         //  Log.d(TAG, "Remove from Google Diary");
         String calendarData[] = {ba.name, ba.time, ba.date};
@@ -571,10 +580,20 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
     //add widgets to GridLayoutSetting
     private void addToGridLayoutSettings() {
         GridLayout GL = (GridLayout) this.findViewById(R.id.gridLayoutSettings);
-        GL.setColumnCount(3);
-        GL.setRowCount(7);
+        if (GL.getChildCount() > 0) {
+            Toast.makeText(MainActivity.this, "Count listActivity=" + this.listActivity.size(),
+                    Toast.LENGTH_SHORT).show();
+            GL.removeViews(0, GL.getChildCount());
+            Toast.makeText(MainActivity.this, "Count after remove =" + GL.getChildCount(),
+                    Toast.LENGTH_SHORT).show();
+        }
+        Toast.makeText(MainActivity.this, "Count =" + GL.getChildCount(),
+                Toast.LENGTH_SHORT).show();
+        //GL.setColumnCount(3);
+        //GL.setRowCount(7);
         int rowIndex = 0, columnIndex = 0;
         for (int i = 0; i < this.listActivity.size(); i++, rowIndex++) {
+
             if (rowIndex >= 7) {
                 columnIndex++;
                 rowIndex = 0;
@@ -585,6 +604,7 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
             btn.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
+
                     Toast.makeText(MainActivity.this, "Click", Toast.LENGTH_SHORT).show();
                 }
             });
@@ -592,36 +612,283 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
             btn.setBackgroundColor(ba.getColor(ba.name));
 
 
+            //Insert the Button in defined position
             GridLayout.Spec row = GridLayout.spec(rowIndex, 1);
-
             GridLayout.Spec column = GridLayout.spec(columnIndex, 1);
-
             GridLayout.LayoutParams gridLayoutParam = new GridLayout.LayoutParams(row, column);
             GL.addView(btn, gridLayoutParam);
+
             GridLayout.LayoutParams lParams = (GridLayout.LayoutParams) btn.getLayoutParams();
             lParams.setMargins(3, 0, 3, 10);
         }
+
+
+        if (GL.getChildCount() >= 21) return;
+
         Button btn = new Button(this);
         btn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                Toast.makeText(MainActivity.this, "Click New Button",
-                        Toast.LENGTH_SHORT).show();
+
+                MainActivity.this.clickNewButton(v);
+
             }
         });
 
+        if (rowIndex >= 7) {
+            columnIndex++;
+            rowIndex = 0;
+        }
         btn.setText(R.string.newButton);
 
 
         GridLayout.Spec row = GridLayout.spec(rowIndex, 1);
-
         GridLayout.Spec column = GridLayout.spec(columnIndex, 1);
-
         GridLayout.LayoutParams gridLayoutParam = new GridLayout.LayoutParams(row, column);
         GL.addView(btn, gridLayoutParam);
 
     }
 
+
+    //------For click on button +New
+    private void clickNewButton(final View v) {
+
+        Toast.makeText(MainActivity.this, "Click New Button",
+                Toast.LENGTH_SHORT).show();
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        builder.setMessage(R.string.dialogNewButton);
+        LayoutInflater inflater = MainActivity.this.getLayoutInflater();
+        final View view = inflater.inflate(R.layout.dialog, null);
+        builder.setView(view)
+                .setPositiveButton("Create new button", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int id) {
+
+                        EditText editText = (EditText) view.findViewById(R.id.editTextDialog);
+                        String nameButton = editText.getText().toString();
+                        if (nameButton.length() > 20) {
+                            Toast.makeText(MainActivity.this, "Maximum  characters in name is 20",
+                                    Toast.LENGTH_SHORT).show();
+                            dialog.dismiss();
+                            clickNewButton(v);
+                        }
+                        if (!MainActivity.this.uniqueButtonActivity(nameButton)) {
+                            Toast.makeText(MainActivity.this, "Maximum  characters in name is 20",
+                                    Toast.LENGTH_SHORT).show();
+                            dialog.dismiss();
+                            clickNewButton(v);
+                        } else {
+                            final ButtonActivity ba = new ButtonActivity(nameButton);
+                            ba.name = nameButton;
+                            setColorFromDialog(ba);
+                            dialog.dismiss();
+                            Toast.makeText(MainActivity.this, "create",
+                                    Toast.LENGTH_SHORT).show();
+                        }
+                    }
+                })
+                .setNeutralButton("Cancel", new DialogInterface.OnClickListener() {
+                    public void onClick(DialogInterface dialog, int id) {
+                        dialog.dismiss();
+                    }
+                })
+                .setNegativeButton("Delete", new DialogInterface.OnClickListener() {
+                    public void onClick(DialogInterface dialog, int id) {
+                        AlertDialog.Builder bldr = new AlertDialog.Builder(MainActivity.this);
+                        bldr.setMessage(res.getString(R.string.delete) + "?")
+                                .setCancelable(false)
+                                .setPositiveButton(R.string.yes,
+                                        new DialogInterface.OnClickListener() {
+                                            public void onClick(DialogInterface dlg,
+                                                                int id) {
+                                                //  MainActivity.this.listLogActivity.remove(ba);
+                                                MainActivity.this.createActivityLog();
+                                                dlg.cancel();
+                                            }
+                                        })
+
+                                .setNegativeButton(R.string.no,
+                                        new DialogInterface.OnClickListener() {
+                                            public void onClick(DialogInterface dlg,
+                                                                int id) {
+                                                dlg.cancel();
+                                            }
+                                        });
+
+                        bldr.create().show();
+                        dialog.dismiss();
+                    }
+                });
+        AlertDialog dialog = builder.create();
+        dialog.setCancelable(true);
+        dialog.show();
+    }
+
+
+    //--------------------for color---------
+    private void setColorFromDialog(final ButtonActivity ba) {
+        ba.color = Color.RED;
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        builder.setMessage("Choise the color");
+        LayoutInflater inflater = MainActivity.this.getLayoutInflater();
+        final View view = inflater.inflate(R.layout.color_blender, null);
+        builder.setView(view);
+
+        final SeekBar fSeekBar = (SeekBar) view.findViewById(R.id.fSeekBar);
+        final SeekBar sSeekBar = (SeekBar) view.findViewById(R.id.sSeekBar);
+        final SeekBar faSeekBar = (SeekBar) view.findViewById(R.id.faSeekBar);
+        final SeekBar saSeekBar = (SeekBar) view.findViewById(R.id.saSeekBar);
+        final ImageView sColor = (ImageView) view.findViewById(R.id.imageView4);
+        final ImageView fColor = (ImageView) view.findViewById(R.id.imageView3);
+        final ImageView rColor = (ImageView) view.findViewById(R.id.imageView5);
+
+
+        SeekBar.OnSeekBarChangeListener listener = new SeekBar.OnSeekBarChangeListener() {
+
+            @Override
+            public void onProgressChanged(@NonNull SeekBar seekBar, int progress, boolean fromUser) {
+
+                int color1[] = calcColor(fSeekBar.getProgress());
+                int color2[] = calcColor(sSeekBar.getProgress());
+                int colorR[] = calcColor(color1, color2, faSeekBar.getProgress(), saSeekBar.getProgress());
+
+                switch (seekBar.getId()) {
+                    case R.id.fSeekBar: {
+                        fColor.setBackgroundColor(Color.argb(faSeekBar.getProgress(), color1[0], color1[1], color1[2]));
+                        break;
+                    }
+                    case R.id.sSeekBar: {
+                        sColor.setBackgroundColor(Color.argb(saSeekBar.getProgress(), color2[0], color2[1], color2[2]));
+                        break;
+                    }
+                    case R.id.faSeekBar: {
+                        fColor.setBackgroundColor(Color.argb(faSeekBar.getProgress(), color1[0], color1[1], color1[2]));
+                        break;
+                    }
+                    case R.id.saSeekBar: {
+                        sColor.setBackgroundColor(Color.argb(saSeekBar.getProgress(), color2[0], color2[1], color2[2]));
+                        break;
+                    }
+
+                }
+                fColor.invalidate();
+                rColor.setBackgroundColor(Color.argb(colorR[3], colorR[0], colorR[1], colorR[2]));
+                rColor.invalidate();
+                //  rColor.getDrawable().
+
+                ba.color = Color.argb(colorR[3], colorR[0], colorR[1], colorR[2]);
+                Toast.makeText(MainActivity.this, "returnColor =", Toast.LENGTH_SHORT).show();
+
+            }
+
+            @Override
+            public void onStartTrackingTouch(SeekBar seekBar) {
+
+            }
+
+            @Override
+            public void onStopTrackingTouch(SeekBar seekBar) {
+
+            }
+
+        };
+
+
+        faSeekBar.setOnSeekBarChangeListener(listener);
+        fSeekBar.setOnSeekBarChangeListener(listener);
+        sSeekBar.setOnSeekBarChangeListener(listener);
+        saSeekBar.setOnSeekBarChangeListener(listener);
+
+        builder.setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                ba.color = Color.WHITE;
+                dialog.dismiss();
+            }
+        });
+
+        builder.setPositiveButton("Save", new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                // returnColor=rColor.getSolidColor();
+                MainActivity.this.listActivity.add(ba);
+
+                Toast.makeText(MainActivity.this, "Color NEw Button =" + ba.color,
+                        Toast.LENGTH_SHORT).show();
+
+                MainActivity.this.addToGridLayoutSettings();
+                Toast.makeText(MainActivity.this, "Click Save", Toast.LENGTH_SHORT).show();
+                dialog.dismiss();
+            }
+        });
+
+        Dialog dialog = builder.create();
+        dialog.setCancelable(true);
+        dialog.show();
+
+//        Drawable background = rColor.getBackground();
+//        if (background instanceof ColorDrawable) {
+//            returnColor = ((ColorDrawable) background).getColor();
+//            // Use color here
+//        }
+        // returnColor=rColor.getSolidColor();
+        // Toast.makeText(MainActivity.this,"returnColor ="+returnColor,Toast.LENGTH_SHORT).show();
+
+    }
+
+
+    int Red, Green, Blue;
+
+    public int[] calcColor(int progress) {
+        if (progress == 0) {
+            Red = 255;
+            Green = 0;
+            Blue = 0;
+        }
+        if (progress > 0 & progress <= 42) {
+            Red = 255;
+            Green = progress * 6 - 1;
+            Blue = 0;
+        } else if (progress > 42 & progress <= 84) {
+            Red = 256 - (progress - 42) * 6 - 1;
+            Green = 255;
+            Blue = 0;
+        } else if (progress > 84 & progress <= 126) {
+            Red = 0;
+            Green = 255;
+            Blue = (progress - 84) * 6 - 1;
+        } else if (progress > 126 & progress <= 168) {
+            Red = 0;
+            Green = 256 - (progress - 126) * 6 - 1;
+            Blue = 255;
+        } else if (progress > 168 & progress <= 210) {
+            Red = (progress - 168) * 6 - 1;
+            Green = 0;
+            Blue = 255;
+        } else if (progress > 210 & progress <= 252) {
+            Red = 255;
+            Green = 0;
+            Blue = 256 - (progress - 210) * 6 - 1;
+        }
+        int[] color = {Red, Green, Blue};
+        return color;
+    }
+
+    public int[] calcColor(int[] color1, int[] color2, int ALPHA1, int ALPHA2) {
+        int[] color = {(color1[0] + color2[0]) / 2, (color1[1] + color2[1]) / 2, (color1[2] + color2[2]) / 2, (ALPHA1 + ALPHA2) / 2};
+        return color;
+    }
+    /////------End color----------
+
+
+    // learn the uniqueness of the name
+    private boolean uniqueButtonActivity(String name) {
+        for (ButtonActivity ba : MainActivity.this.listActivity) {
+            if (ba.name.toUpperCase().equals(name.toUpperCase()))
+                return false;
+        }
+        return true;
+    }
 
     //add  widgets To Layout for Current Activity
     private void addToGridViewButtonsActivity() {
@@ -709,10 +976,18 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
                 .setBackOff(new ExponentialBackOff());
         callCalendarApi(3, null);
         ///-------------
+
+        //---Read from SharedPreferences Name & Calendar User
+        sPref = this.getPreferences(MODE_PRIVATE);
+        this.myName = sPref.getString("myName", "");
+        this.nameCalendar = sPref.getString("myCalendar", "");
+        //------------------------------------------------------------------
     }
 
     private void createActivityLog() {
+        if (listActivity.size() == 0) return;
         this.lvActivity = (ListView) this.findViewById(R.id.lvActivity);
+
         adapterListLogActivity = new ArrayAdapter<ButtonActivity>(this,
                 R.layout.list_item, R.id.tvForDate, listLogActivity) {
             @Override
@@ -772,7 +1047,7 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
     private void createDialogForLogActivity(final ButtonActivity ba, final Button btn) {
 
         // Toast.makeText(MainActivity.this,"Click "+btnA.getText(),Toast.LENGTH_SHORT).show();
-        Toast.makeText(MainActivity.this, "Click " + ba.name, Toast.LENGTH_SHORT).show();
+        //Toast.makeText(MainActivity.this, "Click " + ba.name, Toast.LENGTH_SHORT).show();
 
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
         builder.setMessage(R.string.dialogLogActivityTitle);
@@ -882,24 +1157,44 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
         this.addToGridLayoutSettings();
         // if (!nameCalendar.equals("")) {
         EditText editTextCalendar = (EditText) this.findViewById(R.id.editTextCalendar);
-        editTextCalendar.setText(mShared.getString("calendarName", "primary"));
+        editTextCalendar.setText(sPref.getString("calendarName", "primary"));
         // }
         // if (!myName.equals("")) {
         EditText editTextName = (EditText) this.findViewById(R.id.editTextName);
-        editTextName.setText(mShared.getString("myName", ""));
+        editTextName.setText(sPref.getString("myName", ""));
         // }
     }
 
 
     public void clickSaveSettings(View view) {
+        sPref = this.getPreferences(MODE_PRIVATE);
+
         EditText editTextName = (EditText) this.findViewById(R.id.editTextName);
         EditText editTextCalendar = (EditText) this.findViewById(R.id.editTextCalendar);
-        nameCalendar = editTextCalendar.getText().toString();
-        mSharedEditor.putString("calendarName", nameCalendar);
-        myName = editTextName.getText().toString();
-        mSharedEditor.putString("myName", myName);
-        mSharedEditor.commit();
         Toast.makeText(this, "Click Save:" + nameCalendar + " MYName" + myName, Toast.LENGTH_SHORT).show();
+        this.nameCalendar = editTextCalendar.getText().toString();
+        this.myName = editTextName.getText().toString();
+        if (nameCalendar.equals("") || myName.equals("")) {
+            Toast.makeText(this, "Fill in all the fields ", Toast.LENGTH_SHORT).show();
+            return;
+        }
+        if (nameCalendar.length() > 40) {
+            this.nameCalendar = "";
+            Toast.makeText(this, "Maximum 40 characters", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        if (myName.length() > 20) {
+            this.myName = "";
+            Toast.makeText(this, "Maximum 20 characters", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        SharedPreferences.Editor ed = sPref.edit();
+        ed.putString("myName", this.myName);
+        ed.putString("myCalendar", this.nameCalendar);
+        ed.commit();
+        Toast.makeText(this, "Click Save:" + nameCalendar + " Name :" + myName, Toast.LENGTH_SHORT).show();
     }
 
     @Override
@@ -949,5 +1244,36 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
                 return true;
         }
         return super.onOptionsItemSelected(item);
+    }
+
+
+    //------For event onClick button Clean Log --
+    public void clickCleanLog(View v) {
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        builder.setMessage(R.string.dialogCleanLog)
+                .setCancelable(false)
+                .setNegativeButton(R.string.no,
+                        new DialogInterface.OnClickListener() {
+                            public void onClick(DialogInterface dialog, int id) {
+                                dialog.cancel();
+                            }
+                        })
+                .setPositiveButton(R.string.yes, new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+
+                        MainActivity.this.listLogActivity.clear();
+                        //   MainActivity.this.createActivityLog();
+                        clearLogActivityFromDB();
+                        dialog.cancel();
+                    }
+                });
+        AlertDialog dialog = builder.create();
+
+        dialog.show();
+    }
+
+    public void clearLogActivityFromDB() {
+        Toast.makeText(this, "Clean Log From DB", Toast.LENGTH_SHORT).show();
     }
 }

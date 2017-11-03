@@ -139,6 +139,7 @@
         android:layout_marginEnd="8dp"
         android:layout_marginStart="16dp"
         android:background="@color/colorButton"
+        android:onClick="clickCleanLog"
         android:text="@string/cleanLog"
         app:layout_constraintBottom_toBottomOf="@+id/textView5"
         app:layout_constraintEnd_toEndOf="parent"
@@ -152,7 +153,9 @@
         android:layout_marginEnd="8dp"
         android:layout_marginStart="8dp"
         android:layout_marginTop="8dp"
+        android:columnCount="3"
         android:paddingLeft="10dp"
+        android:rowCount="7"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/textView4">
