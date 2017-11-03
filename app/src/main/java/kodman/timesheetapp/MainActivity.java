@@ -1204,7 +1204,7 @@ private void changeTime()
         this.addToGridLayoutSettings();
         // if (!nameCalendar.equals("")) {
         EditText editTextCalendar = (EditText) this.findViewById(R.id.editTextCalendar);
-        editTextCalendar.setText(sPref.getString("calendarName", "primary"));
+        editTextCalendar.setText(sPref.getString("myCalendar", ""));
         // }
         // if (!myName.equals("")) {
         EditText editTextName = (EditText) this.findViewById(R.id.editTextName);
