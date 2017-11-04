@@ -23,7 +23,7 @@ public class DBHandler {
         cv.put("eventId", eventId);
         cv.put("calendarId", calendarId);
         cv.put("eventName", eventName);
-        cv.put("dateTimeStart ", startTime);
+        cv.put("dateTimeStart", startTime);
         cv.put("dateTimeEnd", endTime);
         db.insert("calendarTable", null, cv);
         dbHelper.close();
@@ -48,9 +48,26 @@ public class DBHandler {
         } catch (IndexOutOfBoundsException e) {
             e.printStackTrace();
         }
+        cursor.close();
         db.close();
         dbHelper.close();
         return arrayList;
+    }
+
+    public void updateEvent(String dateTimeStart, String dateTimeEnd) {
+        dbHelper = new DBHelper(mContext);
+        db = dbHelper.getWritableDatabase();
+        db.execSQL("UPDATE calendarTable SET dateTimeEnd = '" + dateTimeEnd + "' WHERE dateTimeStart = '" + dateTimeStart + "'");
+        db.close();
+        dbHelper.close();
+    }
+
+    public void updateEventStartTime(String dateTimeStart, String newStartTime) {
+        dbHelper = new DBHelper(mContext);
+        db = dbHelper.getWritableDatabase();
+        db.execSQL("UPDATE calendarTable SET dateTimeStart = '" + newStartTime + "' WHERE dateTimeStart = '" + dateTimeStart + "'");
+        db.close();
+        dbHelper.close();
     }
 
     public Cursor readAllEventsFromDB() {

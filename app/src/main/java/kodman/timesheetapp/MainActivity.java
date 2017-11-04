@@ -439,6 +439,8 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
             mCalendarData = calendarData;
         }
 
+
+
         /**
          * Background task to call Google Calendar API.
          *
@@ -522,7 +524,6 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
                 mEndTime = mStartTime;
                 addEvent();
             } else {
-                mSummary = mCalendarData[0];
                 mEndTime = mCalendarData[1];
                 updateEvent();
                 mSummary = mCalendarData[0];
@@ -557,8 +558,7 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
             } catch (UnknownHostException e) {
                 eventId = "not_synced";
             }
-            mDbHandler.deleteEventFromDb(mStartTime);
-            mDbHandler.writeOneEventToDB(eventSummary, calendarId, eventId, mStartTime, mEndTime);
+            mDbHandler.updateEvent(mStartTime, mEndTime);
             mDbHandler.closeDB();
         }
 
