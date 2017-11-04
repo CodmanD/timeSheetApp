@@ -55,18 +55,20 @@ public class DBHandler {
         return arrayList;
     }
 
-    public void updateEvent(String dateTimeStart, String dateTimeEnd) {
+    public void updateEvent(String dateTimeStart, String dateTimeEnd, String eventId) {
         dbHelper = new DBHelper(mContext);
         db = dbHelper.getWritableDatabase();
         db.execSQL("UPDATE calendarTable SET dateTimeEnd = '" + dateTimeEnd + "' WHERE dateTimeStart = '" + dateTimeStart + "'");
+        db.execSQL("UPDATE calendarTable SET eventId = '" + eventId + "' WHERE dateTimeStart = '" + dateTimeStart + "'");
         db.close();
         dbHelper.close();
     }
 
-    public void updateEventStartTime(String dateTimeStart, String newStartTime) {
+    public void updateEventStartTime(String dateTimeStart, String newStartTime, String eventId) {
         dbHelper = new DBHelper(mContext);
         db = dbHelper.getWritableDatabase();
         db.execSQL("UPDATE calendarTable SET dateTimeStart = '" + newStartTime + "' WHERE dateTimeStart = '" + dateTimeStart + "'");
+        db.execSQL("UPDATE calendarTable SET eventId = '" + eventId + "' WHERE dateTimeStart = '" + dateTimeStart + "'");
         db.close();
         dbHelper.close();
     }

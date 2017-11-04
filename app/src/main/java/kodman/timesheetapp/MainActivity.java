@@ -112,11 +112,12 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
     Date startDate = new Date();
     Date currentDate = new Date();
     DateFormat df = new DateFormat();
-
+    String mColor = "#aaaaaa";
     static String nameCalendar = "";
     static String myName = "";
     SharedPreferences sPref;
     Long ms;
+
     class ButtonActivity {
         String name;
         int color;
@@ -513,10 +514,11 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
                 eventId = "not_synced";
             }
             System.out.printf("Event created: %s\n", event.getHtmlLink());
-            mDbHandler.writeOneEventToDB(mSummary, mCalendarId, eventId, mStartTime, mEndTime);
+            mDbHandler.writeOneEventToDB(mSummary, mCalendarId, eventId, mStartTime, mEndTime, mColor);
             mDbHandler.closeDB();
             mTempData = false;
         }
+
         private void addEventToCalendar() throws IOException {
             if (mTempData) {
                 mSummary = mCalendarData[0];
@@ -558,7 +560,29 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
             } catch (UnknownHostException e) {
                 eventId = "not_synced";
             }
-            mDbHandler.updateEvent(mStartTime, mEndTime);
+            mDbHandler.updateEvent(mStartTime, mEndTime, eventId);
+            mDbHandler.closeDB();
+        }
+
+        private void updateEventStartTime(String startTime, String newStartTime) throws IOException {
+            ArrayList<String> arrayList = mDbHandler.readOneEventFromDB(startTime);
+            String eventId = arrayList.get(1);
+            String calendarId = arrayList.get(0);
+            // Retrieve the event from the API
+            Event event = mService.events().get(calendarId, eventId).execute();
+            // Make a change
+            Date start = new Date(Long.parseLong(newStartTime));
+            DateTime startDateTime = new DateTime(start, TimeZone.getTimeZone("UTC"));
+            EventDateTime endTime = new EventDateTime().setDateTime(startDateTime);
+            event.setEnd(endTime);
+            // Update the event
+            try {
+                event = mService.events().update(calendarId, event.getId(), event).execute();
+                System.out.printf("Event created: %s\n", event.getHtmlLink());
+            } catch (UnknownHostException e) {
+                eventId = "not_synced";
+            }
+            mDbHandler.updateEvent(mStartTime, mEndTime, eventId);
             mDbHandler.closeDB();
         }
 
@@ -600,7 +624,7 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
                 String eventId = event.getId();
                 mDbHandler.deleteUnsyncedEventFromDb(startTimeDb);
                 System.out.printf("Event created: %s\n", event.getHtmlLink());
-                mDbHandler.writeOneEventToDB(eventNameDb, mCalendarId, eventId, startTimeDb, endTimeDb);
+                mDbHandler.writeOneEventToDB(eventNameDb, mCalendarId, eventId, startTimeDb, endTimeDb, mColor);
             }
             mDbHandler.closeDB();
         }
