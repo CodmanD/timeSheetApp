@@ -16,7 +16,7 @@ public class DBHandler {
         mContext = context;
     }
 
-    public void writeOneEventToDB(String eventName, String calendarId, String eventId, String endTime, String startTime) {
+    public void writeOneEventToDB(String eventName, String calendarId, String eventId, String endTime, String startTime, String color) {
         dbHelper = new DBHelper(mContext);
         db = dbHelper.getWritableDatabase();
         ContentValues cv = new ContentValues();
@@ -25,6 +25,7 @@ public class DBHandler {
         cv.put("eventName", eventName);
         cv.put("dateTimeStart", startTime);
         cv.put("dateTimeEnd", endTime);
+        cv.put("color", color);
         db.insert("calendarTable", null, cv);
         dbHelper.close();
     }
@@ -73,7 +74,6 @@ public class DBHandler {
     public Cursor readAllEventsFromDB() {
         dbHelper = new DBHelper(mContext);
         db = dbHelper.getWritableDatabase();
-
         return db.rawQuery("SELECT * FROM calendarTable", null);
     }
 

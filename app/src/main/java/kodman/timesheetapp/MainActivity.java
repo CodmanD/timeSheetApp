@@ -460,7 +460,7 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
                         mTempData = false;
                         break;
                     case 0:
-                        //TODO: time for deleting from listview
+                        //TODO:put time for deleting from db and calendar
                         deleteEventFromCalendar(mStartTime);
                         break;
                 }
@@ -471,6 +471,8 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
         }
 
         private void deleteEventFromCalendar(String startTime) throws IOException {
+            ArrayList<String> arrayList = mDbHandler.readOneEventFromDB(startTime);
+            mService.events().delete(mCalendarId, arrayList.get(1)).execute();
             mDbHandler.deleteEventFromDb(startTime);
         }
 

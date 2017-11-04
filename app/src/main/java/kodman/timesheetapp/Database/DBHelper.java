@@ -20,7 +20,8 @@ class DBHelper extends SQLiteOpenHelper {
                 + "eventName text,"
                 + "eventId text,"
                 + "dateTimeStart text,"
-                + "dateTimeEnd text"
+                + "dateTimeEnd text,"
+                + "color text"
                 + ");");
         db.execSQL("create table activityTable ("
                 + "_id integer primary key autoincrement,"
