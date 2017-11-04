@@ -6,6 +6,7 @@
     android:layout_height="match_parent"
     android:background="@color/colorPrimaryDark"
     >
+
     <android.support.v7.widget.Toolbar
         android:id="@+id/toolBar_MainActivity"
         android:layout_width="0dp"
@@ -15,7 +16,9 @@
         android:theme="?attr/actionBarTheme"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
+        app:layout_constraintTop_toTopOf="parent"
+        app:subtitleTextColor="@color/colorText"
+        app:titleTextColor="@color/colorText" />
 
 
 </android.support.constraint.ConstraintLayout>

@@ -22,7 +22,9 @@
         android:theme="?attr/actionBarTheme"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
+        app:layout_constraintTop_toTopOf="parent"
+        app:subtitleTextColor="@color/colorText"
+        app:titleTextColor="@color/colorText" />
 
     <TextView
         android:id="@+id/textView3"
