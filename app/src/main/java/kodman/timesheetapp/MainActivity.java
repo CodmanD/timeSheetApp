@@ -116,13 +116,13 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
     static String nameCalendar = "";
     static String myName = "";
     SharedPreferences sPref;
-
+    Long ms;
     class ButtonActivity {
         String name;
         int color;
         String time = new SimpleDateFormat("HH:mm:ss").format(startDate);
         String date = new SimpleDateFormat("dd.MM.yyyy").format(startDate);
-        Long ms = Calendar.getInstance().getTimeInMillis();
+
 
         public ButtonActivity() {
 
@@ -216,7 +216,7 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
      * appropriate.
      */
     //TODO: change input parameters
-    private void callCalendarApi(int action, String[] calendarData) {
+    private void callCalendarApi(int action) {
         sPref = this.getPreferences(MODE_PRIVATE);
         mCalendarId = sPref.getString("myCalendar", "primary");
         if (!isGooglePlayServicesAvailable()) {
@@ -224,7 +224,7 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
         } else if (mCredential.getSelectedAccountName() == null) {
             chooseAccount();
         } else {
-            new MakeRequestTask(mCredential, action, calendarData).execute();
+            new MakeRequestTask(mCredential, action).execute();
         }
     }
 
@@ -246,7 +246,7 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
                     .getString(PREF_ACCOUNT_NAME, null);
             if (accountName != null) {
                 mCredential.setSelectedAccountName(accountName);
-                callCalendarApi(3, null);
+                callCalendarApi(3);
             } else {
                 // Start a dialog from which the user can choose an account
                 startActivityForResult(
@@ -284,7 +284,7 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
                     Toast.makeText(getApplicationContext(), "This app requires Google Play Services. Please install " +
                             "Google Play Services on your device and relaunch this app.", Toast.LENGTH_SHORT).show();
                 } else {
-                    callCalendarApi(3, null);
+                    callCalendarApi(3);
                 }
                 break;
             case REQUEST_ACCOUNT_PICKER:
@@ -299,13 +299,13 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
                         editor.putString(PREF_ACCOUNT_NAME, accountName);
                         editor.apply();
                         mCredential.setSelectedAccountName(accountName);
-                        callCalendarApi(3, null);
+                        callCalendarApi(3);
                     }
                 }
                 break;
             case REQUEST_AUTHORIZATION:
                 if (resultCode == RESULT_OK) {
-                    callCalendarApi(3, null);
+                    callCalendarApi(3);
                 }
                 break;
         }
@@ -414,9 +414,9 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
     }
 
     String mCalendarId;
+    String mCalendarData[] = {null, null};
     String mStartTime;
     String mEndTime;
-    String[] mCalendarData;
 
     /**
      * An asynchronous task that handles the Google Calendar API call.
@@ -428,7 +428,8 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
         private String mSummary;
         private DBHandler mDbHandler = new DBHandler(getApplicationContext());
 
-        MakeRequestTask(GoogleAccountCredential credential, int action, String[] calendarData) {
+
+        MakeRequestTask(GoogleAccountCredential credential, int action) {
             HttpTransport transport = AndroidHttp.newCompatibleTransport();
             JsonFactory jsonFactory = JacksonFactory.getDefaultInstance();
             mService = new com.google.api.services.calendar.Calendar.Builder(
@@ -436,9 +437,7 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
                     .setApplicationName("Google Calendar API Android Quickstart")
                     .build();
             mAction = action;
-            mCalendarData = calendarData;
         }
-
 
 
         /**
@@ -516,13 +515,13 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
             mDbHandler.closeDB();
             mTempData = false;
         }
-
         private void addEventToCalendar() throws IOException {
             if (mTempData) {
                 mSummary = mCalendarData[0];
                 mStartTime = mCalendarData[1];
                 mEndTime = mStartTime;
                 addEvent();
+                mTempData = false;
             } else {
                 mEndTime = mCalendarData[1];
                 updateEvent();
@@ -549,7 +548,6 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
             Date end = new Date(Long.parseLong(mEndTime));
             DateTime endDateTime = new DateTime(end, TimeZone.getTimeZone("UTC"));
             EventDateTime endTime = new EventDateTime().setDateTime(endDateTime);
-            event.setSummary(eventSummary);
             event.setEnd(endTime);
             // Update the event
             try {
@@ -621,16 +619,18 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
         //Toast.makeText(MainActivity.this,
         //        "Add To Google Diary " + ba.name + " " + ba.date + "/" + ba.time + "/" + ba.ms, Toast.LENGTH_SHORT).show();
         //Log.d(TAG, "Add to Google Diary");
-        String calendarData[] = {ba.name, String.valueOf(ba.ms)};
-        callCalendarApi(1, calendarData);
+        mCalendarData[0] = ba.name;
+        mCalendarData[1] = String.valueOf(ms);
+        callCalendarApi(1);
     }
 
 
     //Delete From Google Diary
     private void removeGoogleDiary(ButtonActivity ba) {
         //  Log.d(TAG, "Remove from Google Diary");
-        String calendarData[] = {ba.name, ba.time, ba.date};
-        callCalendarApi(2, calendarData);
+        mCalendarData[0] = ba.name;
+        mCalendarData[1] = String.valueOf(ms);
+        callCalendarApi(2);
     }
 
     //----------------End Block For Google Service------------------------------------------------------------
@@ -977,6 +977,7 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
                                 ButtonActivity BA = new ButtonActivity(ba.name);
                                 BA.date = new SimpleDateFormat("dd.MM.yyyy").format(date);
                                 BA.time = new SimpleDateFormat("HH:mm:ss").format(date);
+                                ms = System.currentTimeMillis();
                                 MainActivity.this.listLogActivity.add(0, BA);
                                 createActivityLog();
                                 getListViewSize(MainActivity.this.lvActivity);
@@ -1039,7 +1040,7 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
         mCredential = GoogleAccountCredential.usingOAuth2(
                 getApplicationContext(), Arrays.asList(SCOPES))
                 .setBackOff(new ExponentialBackOff());
-        callCalendarApi(3, null);
+        callCalendarApi(3);
         ///-------------
 
         //---Read from SharedPreferences Name & Calendar User
@@ -1330,7 +1331,6 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
                 .setPositiveButton(R.string.yes, new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(DialogInterface dialog, int which) {
-
                         MainActivity.this.listLogActivity.clear();
                         //   MainActivity.this.createActivityLog();
                         clearLogActivityFromDB();
