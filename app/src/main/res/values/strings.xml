@@ -41,4 +41,5 @@
     <string name="saved_myName">myName</string>
     <string name="saved_Calendar_use">myCalendar</string>
     <string name="dialogCleanLog">ARE YOU SURE YOU WANT TO CLEAR THE LOG?</string>
+    <string name="deleteActivity">Confirm Delete button ?</string>
 </resources>

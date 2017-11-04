@@ -40,13 +40,13 @@
         android:layout_margin="3dp"
         android:text="Прозрачность" /-->
 
-    <SeekBar
+    <!--SeekBar
         android:id="@+id/faSeekBar"
         style="@style/Widget.AppCompat.SeekBar.Discrete"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:max="255"
-        android:progress="255" />
+        android:progress="255" /-->
 
     <ImageView
         android:id="@+id/imageView3"
@@ -91,13 +91,13 @@
         android:layout_margin="3dp"
         android:text="Прозрачность" /-->
 
-    <SeekBar
+    <!--SeekBar
         android:id="@+id/saSeekBar"
         style="@style/Widget.AppCompat.SeekBar.Discrete"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:max="255"
-        android:progress="255" />
+        android:progress="255" /-->
 
     <ImageView
         android:id="@+id/imageView4"

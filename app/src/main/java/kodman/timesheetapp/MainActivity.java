@@ -3,6 +3,7 @@ package kodman.timesheetapp;
 import android.Manifest;
 import android.accounts.AccountManager;
 import android.app.Dialog;
+import android.app.TimePickerDialog;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
@@ -31,6 +32,7 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.EditText;
@@ -40,7 +42,9 @@ import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.ListAdapter;
 import android.widget.ListView;
+import android.widget.Spinner;
 import android.widget.TextView;
+import android.widget.TimePicker;
 import android.widget.Toast;
 import android.widget.SeekBar;
 
@@ -59,9 +63,12 @@ import com.google.api.services.calendar.model.CalendarListEntry;
 import com.google.api.services.calendar.model.Event;
 import com.google.api.services.calendar.model.EventDateTime;
 
+import org.w3c.dom.Text;
+
 import java.io.IOException;
 import java.net.UnknownHostException;
 import java.text.SimpleDateFormat;
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Calendar;
@@ -77,13 +84,24 @@ import pub.devrel.easypermissions.EasyPermissions;
 public class MainActivity extends AppCompatActivity implements EasyPermissions.PermissionCallbacks {
 
     class ThreadForActualTime extends Thread {
+        boolean isPause=false;
+
         @Override
         public void run() {
             try {
                 while (true) {
+                    synchronized (this)
+                    {
+                        while(this.isPause)
+                        {
+                            this.wait();
+                        }
+                    }
+
                     Thread.sleep(1000);
-                    synchronized (MainActivity.this.toolbar) {
-                        // Log.d(TAG, "Thread=================TICK");
+                    synchronized (MainActivity.this)
+                    {
+                        //Log.d(TAG, "Thread=================TICK");
                         toolbar.post(new Runnable() {
                             @Override
                             public void run() {
@@ -91,13 +109,31 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
                                 Date curDate = new Date();
                                 String time = new SimpleDateFormat("HH:mm:ss").format(curDate);
                                 toolbar.setTitle(time);
+                                if(MainActivity.this.listLogActivity.size()>0&&MainActivity.this.status==0)
+                                {
+                                    long timeDiff=System.currentTimeMillis()-MainActivity.this.listLogActivity.get(0).ms;
+                                    Date moment = new Date(timeDiff);
+                                    time=new SimpleDateFormat("mm:ss").format(moment)+" min:sec";
+                                     ((TextView)MainActivity.this.findViewById(R.id.tvLastLap)).setText(time);
+                                }
+
                             }
                         });
-//                   toolbar.setTitle("" + System.currentTimeMillis());
                     }
                 }
-            } catch (InterruptedException ex) {
             }
+            catch (InterruptedException ex) {
+                Log.d(TAG,"--Daemon Thread :"+ex.getMessage());
+            }
+        }
+        public synchronized void pauseOn()//включаем паузу
+        {
+            this.isPause=true;
+        }
+        public synchronized void pauseOff()//выключаем паузу
+        {
+            this.isPause=false;
+            this.notify();
         }
     }
 
@@ -123,7 +159,7 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
         int color;
         String time = new SimpleDateFormat("HH:mm:ss").format(startDate);
         String date = new SimpleDateFormat("dd.MM.yyyy").format(startDate);
-
+        long ms=System.currentTimeMillis();;
 
         public ButtonActivity() {
 
@@ -662,11 +698,6 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
     //----------------End Block For Google Service------------------------------------------------------------
 
 
-    private void changeTime() {
-        // Toast.makeText(MainActivity.this," tick",Toast.LENGTH_SHORT).show();
-
-
-    }
 
     //add widgets to GridLayoutSetting
     private void addToGridLayoutSettings() {
@@ -680,8 +711,6 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
         }
         Toast.makeText(MainActivity.this, "Count =" + GL.getChildCount(),
                 Toast.LENGTH_SHORT).show();
-        //GL.setColumnCount(3);
-        //GL.setRowCount(7);
         int rowIndex = 0, columnIndex = 0;
         for (int i = 0; i < this.listActivity.size(); i++, rowIndex++) {
 
@@ -689,14 +718,32 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
                 columnIndex++;
                 rowIndex = 0;
             }
-            ButtonActivity ba = this.listActivity.get(i);
-            Button btn = new Button(this);
+            final ButtonActivity ba = this.listActivity.get(i);
+            final Button btn = new Button(this);
 
             btn.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
 
-                    Toast.makeText(MainActivity.this, "Click", Toast.LENGTH_SHORT).show();
+                    AlertDialog.Builder builder=new AlertDialog.Builder(MainActivity.this);
+                    builder.setTitle(res.getString(R.string.deleteActivity))
+                            .setPositiveButton(R.string.yes, new DialogInterface.OnClickListener() {
+                                @Override
+                                public void onClick(DialogInterface dialog, int which) {
+                                    MainActivity.this.listActivity.remove(ba);
+                                    addToGridLayoutSettings();
+                                    dialog.cancel();
+                                }
+                            })
+                            .setNegativeButton(R.string.no, new DialogInterface.OnClickListener() {
+                                @Override
+                                public void onClick(DialogInterface dialog, int which) {
+                                    dialog.cancel();
+                                }
+                            }).setCancelable(true);
+
+                        builder.create().show();
+                   // Toast.makeText(MainActivity.this, "Click", Toast.LENGTH_SHORT).show();
                 }
             });
             btn.setText(ba.name);
@@ -713,16 +760,13 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
             lParams.setMargins(3, 0, 3, 10);
         }
 
-
         if (GL.getChildCount() >= 21) return;
 
         Button btn = new Button(this);
         btn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-
-                MainActivity.this.clickNewButton(v);
-
+                    MainActivity.this.clickNewButton(v);
             }
         });
 
@@ -827,8 +871,7 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
 
         final SeekBar fSeekBar = (SeekBar) view.findViewById(R.id.fSeekBar);
         final SeekBar sSeekBar = (SeekBar) view.findViewById(R.id.sSeekBar);
-        final SeekBar faSeekBar = (SeekBar) view.findViewById(R.id.faSeekBar);
-        final SeekBar saSeekBar = (SeekBar) view.findViewById(R.id.saSeekBar);
+
         final ImageView sColor = (ImageView) view.findViewById(R.id.imageView4);
         final ImageView fColor = (ImageView) view.findViewById(R.id.imageView3);
         final ImageView rColor = (ImageView) view.findViewById(R.id.imageView5);
@@ -841,33 +884,21 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
 
                 int color1[] = calcColor(fSeekBar.getProgress());
                 int color2[] = calcColor(sSeekBar.getProgress());
-                int colorR[] = calcColor(color1, color2, faSeekBar.getProgress(), saSeekBar.getProgress());
-
+                int colorR[] = calcColor(color1, color2);
                 switch (seekBar.getId()) {
                     case R.id.fSeekBar: {
-                        fColor.setBackgroundColor(Color.argb(faSeekBar.getProgress(), color1[0], color1[1], color1[2]));
+                        fColor.setBackgroundColor(Color.rgb(color1[0], color1[1], color1[2]));
                         break;
                     }
                     case R.id.sSeekBar: {
-                        sColor.setBackgroundColor(Color.argb(saSeekBar.getProgress(), color2[0], color2[1], color2[2]));
+                        sColor.setBackgroundColor(Color.rgb(color2[0], color2[1], color2[2]));
                         break;
                     }
-                    case R.id.faSeekBar: {
-                        fColor.setBackgroundColor(Color.argb(faSeekBar.getProgress(), color1[0], color1[1], color1[2]));
-                        break;
-                    }
-                    case R.id.saSeekBar: {
-                        sColor.setBackgroundColor(Color.argb(saSeekBar.getProgress(), color2[0], color2[1], color2[2]));
-                        break;
-                    }
-
                 }
                 fColor.invalidate();
-                rColor.setBackgroundColor(Color.argb(colorR[3], colorR[0], colorR[1], colorR[2]));
+                rColor.setBackgroundColor(Color.rgb( colorR[0], colorR[1], colorR[2]));
                 rColor.invalidate();
-                //  rColor.getDrawable().
-
-                ba.color = Color.argb(colorR[3], colorR[0], colorR[1], colorR[2]);
+                ba.color = Color.rgb( colorR[0], colorR[1], colorR[2]);
                 Toast.makeText(MainActivity.this, "returnColor =", Toast.LENGTH_SHORT).show();
 
             }
@@ -884,11 +915,8 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
 
         };
 
-
-        faSeekBar.setOnSeekBarChangeListener(listener);
         fSeekBar.setOnSeekBarChangeListener(listener);
         sSeekBar.setOnSeekBarChangeListener(listener);
-        saSeekBar.setOnSeekBarChangeListener(listener);
 
         builder.setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
             @Override
@@ -901,14 +929,10 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
         builder.setPositiveButton("Save", new DialogInterface.OnClickListener() {
             @Override
             public void onClick(DialogInterface dialog, int which) {
-                // returnColor=rColor.getSolidColor();
+
                 MainActivity.this.listActivity.add(ba);
-
-                Toast.makeText(MainActivity.this, "Color NEw Button =" + ba.color,
-                        Toast.LENGTH_SHORT).show();
-
                 MainActivity.this.addToGridLayoutSettings();
-                Toast.makeText(MainActivity.this, "Click Save", Toast.LENGTH_SHORT).show();
+                //Toast.makeText(MainActivity.this, "Click Save", Toast.LENGTH_SHORT).show();
                 dialog.dismiss();
             }
         });
@@ -916,15 +940,6 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
         Dialog dialog = builder.create();
         dialog.setCancelable(true);
         dialog.show();
-
-//        Drawable background = rColor.getBackground();
-//        if (background instanceof ColorDrawable) {
-//            returnColor = ((ColorDrawable) background).getColor();
-//            // Use color here
-//        }
-        // returnColor=rColor.getSolidColor();
-        // Toast.makeText(MainActivity.this,"returnColor ="+returnColor,Toast.LENGTH_SHORT).show();
-
     }
 
 
@@ -964,9 +979,9 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
         int[] color = {Red, Green, Blue};
         return color;
     }
-
-    public int[] calcColor(int[] color1, int[] color2, int ALPHA1, int ALPHA2) {
-        int[] color = {(color1[0] + color2[0]) / 2, (color1[1] + color2[1]) / 2, (color1[2] + color2[2]) / 2, (ALPHA1 + ALPHA2) / 2};
+    public int[] calcColor(int[] color1, int[] color2)
+    {
+        int[] color = {(color1[0] + color2[0]) / 2, (color1[1] + color2[1]) / 2, (color1[2] + color2[2]) / 2};
         return color;
     }
     /////------End color----------
@@ -1024,9 +1039,9 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
     private Toolbar toolbar;
     private Menu menu;
     private int status = 0;
-    SharedPreferences mShared;
-    SharedPreferences.Editor mSharedEditor;
-
+    private SharedPreferences mShared;
+    private SharedPreferences.Editor mSharedEditor;
+    private static ThreadForActualTime actualTime;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         Log.d(TAG, "onCreate");
@@ -1075,9 +1090,11 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
         this.nameCalendar = sPref.getString("myCalendar", "");
         //------------------------------------------------------------------
 
-        ThreadForActualTime actualTime = new ThreadForActualTime();
-
-        actualTime.start();
+        if(actualTime==null)
+        {
+            actualTime = new ThreadForActualTime();
+            actualTime.start();
+        }
     }
 
     private void createActivityLog() {
@@ -1105,12 +1122,18 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
                 TextView tvStartTime = (TextView) view.
                         findViewById(R.id.tvForStartTime);
 
+                        tvStartTime.setOnClickListener(new View.OnClickListener() {
+                            @Override
+                            public void onClick(View v) {
+
+                               Toast.makeText(MainActivity.this, ba.name+"ms = "+ba.ms,Toast.LENGTH_SHORT).show();
+                               changeTimeActivity(ba);
+                            }
+                        });
+
                 LinearLayout llForBA = (LinearLayout) view.
                         findViewById(R.id.llForBA);
 
-
-                // String date = ba.date;
-                // String time = ba.time;
                 tvDate.setText(ba.date);
                 tvStartTime.setText(ba.time);
                 final String name = ba.name;
@@ -1121,13 +1144,12 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
                 btnA.setOnClickListener(new View.OnClickListener() {
                     @Override
                     public void onClick(View v) {
+                        Toast.makeText(MainActivity.this,"Click name= "+ba.name,Toast.LENGTH_SHORT).show();
                         createDialogForLogActivity(ba, btnA);
                     }
                 });
                 if (llForBA.getChildCount() == 0)
                     llForBA.addView(btnA);
-
-                //Log.d(TAG, "Layout size = " + llForBA.getChildCount() + "  " + view.toString());
 
                 return view;
             }
@@ -1139,33 +1161,179 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
 
     }
 
+    // changing the time for activity
+    private void changeTimeActivity(final ButtonActivity ba)
+    {
+        //final Date date= new Date(ba.ms);
+        final Date date= new Date();
+
+       final TimePickerDialog TPD = new TimePickerDialog(this,
+                null, date.getHours(), date.getMinutes(), true)
+        {
+            @Override
+            public void onTimeChanged(TimePicker view,
+                                      int hour, int minute)
+            {
+                long currentTime =System.currentTimeMillis();
+
+                Date curDate=new Date(currentTime);
+                int curHour=curDate.getHours();
+                int curMinutes=curDate.getMinutes();
+
+                Date lastDate=new Date(ba.ms);
+                int lastHour=lastDate.getHours();
+                int lastMinutes=lastDate.getMinutes();
+
+                Log.d(TAG,"al="+hour+":"+minute+"  last="+lastHour+":"+lastMinutes+"  cur="+curHour+":"+curMinutes);
+
+                //Toast.makeText(MainActivity.this,"curTime="+new Date(currentTime)+"  |selectedTime="+new Date(selectedTime),Toast.LENGTH_SHORT).show();
+                //Toast.makeText(MainActivity.this,"curTime="+currentTime+"  |selectedTime="+selectedTime,Toast.LENGTH_SHORT).show();
+                if(hour>curHour||(hour==curHour&&minute>curMinutes)||hour<lastHour||(hour==lastHour&&minute<lastMinutes))
+                {
+                    Toast.makeText(MainActivity.this,"The selected time is not valid for selection",Toast.LENGTH_SHORT).show();
+
+                    cancel();
+                    changeTimeActivity(ba);
+                }
+                else
+                {
+                    date.setHours(hour);
+                    date.setMinutes(minute);
+                    Toast.makeText(MainActivity.this,"Ok Change time "+date.toString(),Toast.LENGTH_SHORT).show();
+                }
+            }
+        };
+
+        TPD.setButton(DialogInterface.BUTTON_POSITIVE,
+                "Save", new DialogInterface.
+                        OnClickListener()
+                {
+                    @Override
+                    public void onClick(DialogInterface
+                                                dialog, int which)
+                    {
+
+
+                        ba.time= new SimpleDateFormat("HH:mm:ss").format(date);
+                        ba.date = new SimpleDateFormat("dd.MM.yyyy").format(date);
+                         ba.ms=date.getTime();
+                         createActivityLog();
+                        Toast.makeText(MainActivity.this,
+                                "Выбранное время чч:мм : " + date.toString(),
+                                Toast.LENGTH_LONG).show();
+                    }
+                });
+
+        TPD.setButton(DialogInterface.BUTTON_NEGATIVE,
+                "Cancel", new DialogInterface.
+                        OnClickListener()
+                {
+                    @Override
+                    public void onClick(DialogInterface
+                                                dialog, int which)
+                    {
+
+                    }
+                });
+        TPD.show();
+
+    }
+
     //initialize dialog for Buttons from Activity Log
     private void createDialogForLogActivity(final ButtonActivity ba, final Button btn) {
 
-        // Toast.makeText(MainActivity.this,"Click "+btnA.getText(),Toast.LENGTH_SHORT).show();
-        //Toast.makeText(MainActivity.this, "Click " + ba.name, Toast.LENGTH_SHORT).show();
 
-        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+
+        int size=MainActivity.this.listActivity.size();
+        final String[] itemsAcivities=new String[size];
+        for(int i=0;i<size;i++)
+        {
+            itemsAcivities[i]=MainActivity.this.listActivity.get(i).name;
+        }
+
+        AlertDialog.Builder   builder = new AlertDialog.Builder(this);
         builder.setMessage(R.string.dialogLogActivityTitle);
         LayoutInflater inflater = MainActivity.this.getLayoutInflater();
-        View view = inflater.inflate(R.layout.dialog, null);
-        final EditText editText = (EditText) view.findViewById(R.id.editTextDialog);
-        editText.setText(ba.name);
+
+
+        View view = inflater.inflate(R.layout.dialog_with_list, null);
+      //  final TextView tvButtonAcivity=(TextView)view.findViewById(R.id.tvNameButtonAcivity);
+       // tvButtonAcivity.setText(ba.name);
+        final Spinner spinner= (Spinner)view.findViewById(R.id.spinnerAcivityLog);
+        ArrayAdapter<String> adapter =
+                new ArrayAdapter<String>(this,android.R.layout.
+                        simple_spinner_item, itemsAcivities);
+        spinner.setAdapter(adapter);
+
+
+        //helper class for data transfer
+        class  Swap{
+            int flag=0;
+            int color;
+        };
+        final Swap  s=new Swap();
+
+        adapter.setDropDownViewResource(android.R.layout.
+                simple_spinner_dropdown_item);
+
+
+
+        spinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener()
+                                                  {
+
+                                                      @Override
+                                                      public void onItemSelected(AdapterView<?> parent,
+                                                                                 View view, int position, long id)
+                                                      {
+
+                                                          if(s.flag==0)
+                                                          {
+                                                            for(int i=0;i<parent.getCount();i++)
+                                                            {
+                                                                if(itemsAcivities[i].toUpperCase().equals(ba.name.toUpperCase()))
+                                                                {
+                                                                    parent.setSelection(i);
+                                                                    break;
+                                                                }
+
+                                                            }
+                                                            s.flag=1;
+                                                          }
+                                                          else
+                                                          {
+                                                              ba.name=itemsAcivities[position];
+                                                              s.color=listActivity.get(position).color;
+                                                          }
+
+                                                      }
+                                                      @Override
+                                                      public void onNothingSelected(AdapterView<?>
+                                                                                            parent)
+                                                      {
+
+                                                      }
+                                                  });
+
+
+
+
         builder.setView(view)
                 .setPositiveButton("Change", new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(DialogInterface dialog, int id) {
-                        ba.name = editText.getText().toString();
+                       // ba.name=tvButtonAcivity.getText().toString();
                         btn.setText(ba.name);
-                        btn.setBackgroundColor(ba.getColor(ba.name));
-                        MainActivity.this.adapterListLogActivity.notifyDataSetChanged();
-                        MainActivity.this.getListViewSize(MainActivity.this.lvActivity);
-                        dialog.dismiss();
-                        Toast.makeText(MainActivity.this, ba.name, Toast.LENGTH_SHORT).show();
+
+                        ba.color=s.color;
+                        btn.setBackgroundColor(ba.color);
+                        createActivityLog();
+                        Toast.makeText(MainActivity.this,"Change"+spinner.getItemAtPosition(0).toString()+"now Name="+ ba.name, Toast.LENGTH_SHORT).show();
+
                     }
                 })
                 .setNeutralButton("Cancel", new DialogInterface.OnClickListener() {
                     public void onClick(DialogInterface dialog, int id) {
+                        ba.name=btn.getText().toString();
                         dialog.dismiss();
                     }
                 })
@@ -1247,8 +1415,7 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
     private void createScreenSettings() {
         this.setContentView(R.layout.screen_settings);
         toolbar = (Toolbar) this.findViewById(R.id.toolBar_Setting);
-        toolbar.setTitleTextColor(Color.WHITE);
-        toolbar.setSubtitleTextColor(Color.WHITE);
+        toolbar.setTitle("00:00:00");
         this.setSupportActionBar(toolbar);
         this.addToGridLayoutSettings();
         // if (!nameCalendar.equals("")) {
@@ -1302,9 +1469,7 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
                 this.setContentView(R.layout.activity_main);
                 toolbar = (Toolbar) this.findViewById(R.id.toolBar_MainActivity);
 
-                toolbar.setTitleTextColor(Color.WHITE);
-                toolbar.setSubtitleTextColor(Color.WHITE);
-
+                toolbar.setTitle("00:00:00");
                 this.setSupportActionBar(toolbar);
                 this.addToGridViewButtonsActivity();
                 this.createActivityLog();
@@ -1320,9 +1485,7 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
                 this.setContentView(R.layout.screen_email);
                 toolbar = (Toolbar) this.findViewById(R.id.toolBar_MainActivity);
 
-                toolbar.setTitleTextColor(Color.WHITE);
-                toolbar.setSubtitleTextColor(Color.WHITE);
-
+                toolbar.setTitle("00:00:00");
                 this.setSupportActionBar(toolbar);
 
                 //   Toast.makeText(this, "Export", Toast.LENGTH_SHORT).show();
@@ -1332,9 +1495,7 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
                 this.setContentView(R.layout.screen_share);
                 toolbar = (Toolbar) this.findViewById(R.id.toolBar_MainActivity);
 
-                toolbar.setTitleTextColor(Color.WHITE);
-                toolbar.setSubtitleTextColor(Color.WHITE);
-
+                toolbar.setTitle("00:00:00");
                 this.setSupportActionBar(toolbar);
                 //   Toast.makeText(this, "Share", Toast.LENGTH_SHORT).show();
                 return true;
@@ -1357,6 +1518,7 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
                 .setPositiveButton(R.string.yes, new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(DialogInterface dialog, int which) {
+
                         MainActivity.this.listLogActivity.clear();
                         //   MainActivity.this.createActivityLog();
                         clearLogActivityFromDB();
@@ -1370,5 +1532,29 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
 
     public void clearLogActivityFromDB() {
         Toast.makeText(this, "Clean Log From DB", Toast.LENGTH_SHORT).show();
+    }
+
+
+
+    @Override
+    public void onResume()
+    {
+        super.onResume();
+        if(MainActivity.actualTime!=null)
+        {
+            MainActivity.actualTime.pauseOff();//Возобновляем работу потока
+        }
+       // Log.d("======OnResume=====","Thread if != null begin");
+    }
+
+    @Override
+    public void onPause()
+    {
+        super.onPause();
+        if(MainActivity.actualTime!=null)
+        {
+            MainActivity.actualTime.pauseOn();//Приостанавливаем работу потока
+        }
+       // Log.d("======OnPause=====","Thread if != null stop");
     }
 }
