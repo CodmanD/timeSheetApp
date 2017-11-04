@@ -10,19 +10,12 @@ import android.content.Intent;
 import android.content.res.Resources;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
-import android.graphics.drawable.Drawable;
 import android.net.Uri;
-import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
-import android.support.annotation.RequiresApi;
-import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
 import android.view.LayoutInflater;
-import android.view.Menu;
-import android.view.MenuInflater;
-import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
@@ -81,14 +74,6 @@ public class FragmentExport extends Fragment implements View.OnClickListener {
     private Button sendEmail;
     private ListView includeLv;
     private Toolbar toolbar;
-    private View thisView;
-
-    public Toolbar getToolbar() {
-        if (toolbar == null) {
-            toolbar = (Toolbar) thisView.findViewById(R.id.toolBar_export);
-        }
-        return toolbar;
-    }
 
     Resources res;
     ArrayList<ButtonActivity> listActivity;
@@ -96,22 +81,17 @@ public class FragmentExport extends Fragment implements View.OnClickListener {
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
-        // Создем наш фрагмент и инициализируем его
+        // Создем наш фрашмент и инициализируем его
         View view = inflater.inflate(R.layout.screen_email, container, false);
         fContext = view.getContext();
-        toolbar = (Toolbar) view.findViewById(R.id.toolBar_export);
-        AppCompatActivity activity = (AppCompatActivity) getActivity();
-        activity.setSupportActionBar(toolbar);
-        activity.getSupportActionBar().setDisplayHomeAsUpEnabled(true);
         res = view.getResources();
-        thisView = view;
-
         setupUI(view);
         return view;
     }
 
     // Настраимваем и инициализируем все view элементы
     private void setupUI(View container) {
+        toolbar = (Toolbar) container.findViewById(R.id.toolBar_MainActivity);
         emailEt = (EditText) container.findViewById(R.id.fe_email_et);
         subjectEt = (EditText) container.findViewById(R.id.fe_subject_et);
         messageEt = (EditText) container.findViewById(R.id.fe_message_et5);
@@ -162,24 +142,6 @@ public class FragmentExport extends Fragment implements View.OnClickListener {
         endData.setText(sdf.format(lastDayOfMonth));
 
         showIncludeItems();
-    }
-
-    @Override
-    public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
-        inflater.inflate(R.menu.menu_toolbar, menu);
-        super.onCreateOptionsMenu(menu, inflater);
-        //Change colour for selected icon
-        if (Build.VERSION.SDK_INT >= 21) {
-            for (int i = 0; i < menu.size(); i++) {
-                MenuItem mItem = menu.getItem(i);
-                Drawable icon = mItem.getIcon();
-                if (i == 2)
-                    icon.setTint(getResources().getColor(R.color.colorActiveIcon));
-                else
-                    icon.setTint(getResources().getColor(R.color.colorNoActiveIcon));
-            }
-        }
-
     }
 
     @Override
