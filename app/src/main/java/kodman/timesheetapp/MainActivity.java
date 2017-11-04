@@ -204,8 +204,7 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
     static final int REQUEST_AUTHORIZATION = 1001;
     static final int REQUEST_GOOGLE_PLAY_SERVICES = 1002;
     static final int REQUEST_PERMISSION_GET_ACCOUNTS = 1003;
-
-    private static final String PREF_ACCOUNT_NAME = "korovin.dmitry.1977@gmail.com";
+    private static final String PREF_ACCOUNT_NAME = "is.karpus@gmail.com";
     private static final String[] SCOPES = {CalendarScopes.CALENDAR};
     private static boolean mTempData = true;
 
@@ -491,7 +490,7 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
             event.setStart(startTime);
             event.setEnd(endTime);
             String eventId;
-            try {
+            if (isDeviceOnline()) {
                 String pageToken = null;
                 do {
                     CalendarList calendarList = mService.calendarList().list().setPageToken(pageToken).execute();
@@ -508,11 +507,11 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
                 if (!mIdFlag) {
                     mCalendarId = "primary";
                 }
-                event = mService.events().insert(mCalendarId, event).execute();
+                event = mService.events().update(mCalendarId, event.getId(), event).execute();
+                System.out.printf("Event created: %s\n", event.getHtmlLink());
                 eventId = event.getId();
-            } catch (UnknownHostException e) {
+            } else
                 eventId = "not_synced";
-            }
             System.out.printf("Event created: %s\n", event.getHtmlLink());
             mDbHandler.writeOneEventToDB(mSummary, mCalendarId, eventId, mStartTime, mEndTime, mColor);
             mDbHandler.closeDB();
@@ -543,23 +542,25 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
                 mTempData = true;
                 return;
             }
-            String eventSummary = arrayList.get(2);
+
             String eventId = arrayList.get(1);
             String calendarId = arrayList.get(0);
             // Retrieve the event from the API
-            Event event = mService.events().get(calendarId, eventId).execute();
-            // Make a change
-            Date end = new Date(Long.parseLong(mEndTime));
-            DateTime endDateTime = new DateTime(end, TimeZone.getTimeZone("UTC"));
-            EventDateTime endTime = new EventDateTime().setDateTime(endDateTime);
-            event.setEnd(endTime);
-            // Update the event
-            try {
+            if (isDeviceOnline()) {
+                Event event = mService.events().get(calendarId, eventId).execute();
+                // Make a change
+                Date end = new Date(Long.parseLong(mEndTime));
+                DateTime endDateTime = new DateTime(end, TimeZone.getTimeZone("UTC"));
+                EventDateTime endTime = new EventDateTime().setDateTime(endDateTime);
+                event.setEnd(endTime);
+                // Update the event
+
+
                 event = mService.events().update(calendarId, event.getId(), event).execute();
                 System.out.printf("Event created: %s\n", event.getHtmlLink());
-            } catch (UnknownHostException e) {
+            } else
                 eventId = "not_synced";
-            }
+
             mDbHandler.updateEvent(mStartTime, mEndTime, eventId);
             mDbHandler.closeDB();
         }
@@ -576,12 +577,11 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
             EventDateTime endTime = new EventDateTime().setDateTime(startDateTime);
             event.setEnd(endTime);
             // Update the event
-            try {
+            if (isDeviceOnline()) {
                 event = mService.events().update(calendarId, event.getId(), event).execute();
                 System.out.printf("Event created: %s\n", event.getHtmlLink());
-            } catch (UnknownHostException e) {
+            } else
                 eventId = "not_synced";
-            }
             mDbHandler.updateEvent(mStartTime, mEndTime, eventId);
             mDbHandler.closeDB();
         }
