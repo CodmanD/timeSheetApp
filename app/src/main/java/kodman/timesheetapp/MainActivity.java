@@ -1118,7 +1118,7 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
 
 
         this.addToGridViewButtonsActivity();
-        this.createActivityLog();
+
         ///------------
 
         // Initialize credentials and service object.
@@ -1128,6 +1128,9 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
         callCalendarApi(3);
         ///-------------
 
+//Read From DataBase
+        addFromAcivitiesFromDB();
+        this.createActivityLog();
 /*
 For actual time, update every 1000 ms
  */
@@ -1596,14 +1599,43 @@ For actual time, update every 1000 ms
     }
 
     //Add from DB Activities in AcivityLog
-    private void addFromDB() {
+    private void addFromAcivitiesFromDB()
+    {
+       // String query = "SELECT * FROM calendarTable";
+        DBHandler mDbHandler = new DBHandler(getApplicationContext());
+
+        Cursor cursor =mDbHandler.readAllEventsFromDB();
+        int count =cursor.getColumnCount();
+        String msg="CalendarTable= ";
+        for(int i=0;i<count;i++)
+        {
+            msg+=" | "+cursor.getColumnName(i);
+        }
+        Log.d(TAG,"Count = "+count+"   : "+msg);
+
+        while(cursor.moveToNext())
+        {
+            String id=cursor.getString(0);
+           String name=cursor.getString(2);
+            long startTime=Long.parseLong(cursor.getString(4));
+         //   String color=cursor.getString(6);
+            int  color=Integer.parseInt(cursor.getString(6));
+            Log.d(TAG,"Id:"+id+"Name = "+name+"Color = "+color+"time = "+startTime );
+
+            ButtonActivity ba=new ButtonActivity(name,color);
+            ba.ms=startTime;
+            this.listLogActivity.add(0,ba);
+        }
 
     }
 
     //Clear all from  DataBase
     private void clearLogActivityFromDB() {
 
-        Toast.makeText(this, "Clean Log From DB", Toast.LENGTH_SHORT).show();
+        DBHandler mDbHandler = new DBHandler(getApplicationContext());
+        mDbHandler.clearEventsTable();
+       Log.d(TAG,"Clean DB");
+        // Toast.makeText(this, "Clean Log From DB", Toast.LENGTH_SHORT).show();
     }
 
 
