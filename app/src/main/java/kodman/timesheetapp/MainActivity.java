@@ -16,6 +16,7 @@ import android.graphics.drawable.ColorDrawable;
 import android.graphics.drawable.Drawable;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
+import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
@@ -1497,6 +1498,14 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
 
                 toolbar.setTitle("00:00:00");
                 this.setSupportActionBar(toolbar);
+                
+                //Open Google play app link
+                String appPackageName = "kodman.timesheetapp";
+                try {
+                    startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse("market://details?id=" + appPackageName)));
+                } catch (android.content.ActivityNotFoundException anfe) {
+                    startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse("https://play.google.com/store/apps/details?id=" + appPackageName)));
+                }
                 //   Toast.makeText(this, "Share", Toast.LENGTH_SHORT).show();
                 return true;
         }
