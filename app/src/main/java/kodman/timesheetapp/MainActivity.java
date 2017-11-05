@@ -525,7 +525,6 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
 
         private void updateEventTime() throws IOException {
             updateEventStartTime(mUpdateTime);
-            mDbHandler.deleteEventFromDb(mUpdateTime);
         }
 
         boolean mIdFlag = false;
@@ -566,7 +565,6 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
                 mDbHandler.closeDB();
             } else {
                 eventId = "not_synced";
-                System.out.printf("Event created: %s\n", event.getHtmlLink());
                 mDbHandler.writeOneEventToDB(mSummary, mCalendarId, eventId, mStartTime, mEndTime, mColor);
                 mDbHandler.closeDB();
             }
@@ -612,7 +610,7 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
 
 
                 event = mService.events().update(calendarId, event.getId(), event).execute();
-                System.out.printf("Event created: %s\n", event.getHtmlLink());
+                System.out.printf("Event end time updated: %s\n", event.getHtmlLink());
                 mDbHandler.updateEvent(mStartTime, mEndTime, eventId);
                 mDbHandler.closeDB();
             } else {
@@ -624,6 +622,8 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
 
         private void updateEventStartTime(String startTime) throws IOException {
             String newStartTime = mNewStartTime;
+            Log.e("startTime", startTime);
+            Log.e("newstartTime", mNewStartTime);
             ArrayList<String> arrayList = mDbHandler.readOneEventFromDB(startTime);
             String eventId = arrayList.get(1);
             String calendarId = arrayList.get(0);
@@ -637,12 +637,12 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
             // Update the event
             if (isDeviceOnline()) {
                 event = mService.events().update(calendarId, event.getId(), event).execute();
-                System.out.printf("Event created: %s\n", event.getHtmlLink());
-                mDbHandler.updateEvent(mStartTime, mEndTime, eventId);
+                System.out.printf("Event time update: %s\n", event.getHtmlLink());
+                mDbHandler.updateEventStartTime(startTime, mNewStartTime, eventId);
                 mDbHandler.closeDB();
             } else {
                 eventId = "not_synced";
-                mDbHandler.updateEvent(mStartTime, mEndTime, eventId);
+                mDbHandler.updateEventStartTime(startTime, mNewStartTime, eventId);
                 mDbHandler.closeDB();
             }
         }
@@ -684,7 +684,7 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
                 event = mService.events().insert(mCalendarId, event).execute();
                 String eventId = event.getId();
                 mDbHandler.deleteUnsyncedEventFromDb(startTimeDb);
-                System.out.printf("Event created: %s\n", event.getHtmlLink());
+                System.out.printf("Event synced: %s\n", event.getHtmlLink());
                 mDbHandler.writeOneEventToDB(eventNameDb, mCalendarId, eventId, startTimeDb, endTimeDb, mColor);
             }
             mDbHandler.closeDB();
@@ -1298,18 +1298,18 @@ For actual time, update every 1000 ms
                     @Override
                     public void onClick(DialogInterface
                                                 dialog, int which) {
+                        Log.e("UPDATE!!", "sf");
                         ba.time = new SimpleDateFormat("HH:mm:ss").format(date);
                         ba.date = new SimpleDateFormat("dd.MM.yyyy").format(date);
-                        mUpdateTime = String.valueOf(ba.ms);
-                        ba.ms = date.getTime();
-                        mNewStartTime = String.valueOf(ba.ms);
-                        updateGoogleDiary();
-
-                        createActivityLog();
                         Toast.makeText(MainActivity.this,
                                 "Выбранное время чч:мм : " + date.toString(),
                                 Toast.LENGTH_LONG).show();
 
+                        mUpdateTime = String.valueOf(ba.ms);
+                        ba.ms = date.getTime();
+                        mNewStartTime = String.valueOf(ba.ms);
+                        updateGoogleDiary();
+                        createActivityLog();
                     }
                 });
 
@@ -1402,6 +1402,8 @@ For actual time, update every 1000 ms
 
                         ba.color = s.color;
                         btn.setBackgroundColor(ba.color);
+
+
                         createActivityLog();
                         Toast.makeText(MainActivity.this, "Change" + spinner.getItemAtPosition(0).toString() + "now Name=" + ba.name, Toast.LENGTH_SHORT).show();
 
