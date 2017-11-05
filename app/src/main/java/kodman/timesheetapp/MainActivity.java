@@ -83,35 +83,76 @@ import pub.devrel.easypermissions.AfterPermissionGranted;
 import pub.devrel.easypermissions.EasyPermissions;
 
 public class MainActivity extends AppCompatActivity implements EasyPermissions.PermissionCallbacks {
-    private static final String TAG = "------Activity Say";
 
+    class ThreadForActualTime extends Thread {
+        boolean isPause = false;
 
-    private ArrayList<ButtonActivity> listActivity = new ArrayList<>();//All buttons activity for current  time
-    private ArrayList<ButtonActivity> listLogActivity = new ArrayList<>();
-    private ArrayAdapter<ButtonActivity> adapterListLogActivity;
-    private ArrayList<ButtonActivity> listSetActivity = new ArrayList<>();
-    private String mDeleteTime;
-    private String mUpdateTime;
-    private String mNewStartTime;
-    private Resources res;
-    private ListView lvActivity;
-    private Time startTime = new Time();
-    private Date startDate = new Date();
-    private Date currentDate = new Date();
-    private DateFormat df = new DateFormat();
-    private String mColor = "#aaaaaa";
+        @Override
+        public void run() {
+            try {
+                while (true) {
+                    synchronized (this) {
+                        while (this.isPause) {
+                            this.wait();
+                        }
+                    }
+
+                    Thread.sleep(1000);
+                    synchronized (MainActivity.this) {
+                        //Log.d(TAG, "Thread=================TICK");
+                        toolbar.post(new Runnable() {
+                            @Override
+                            public void run() {
+
+                                Date curDate = new Date();
+                                String time = new SimpleDateFormat("HH:mm:ss").format(curDate);
+                                toolbar.setTitle(time);
+                                if (MainActivity.this.listLogActivity.size() > 0 && MainActivity.this.status == 0) {
+                                    long timeDiff = System.currentTimeMillis() - MainActivity.this.listLogActivity.get(0).ms;
+                                    Date moment = new Date(timeDiff);
+                                    time = new SimpleDateFormat("mm:ss").format(moment) + " min:sec";
+                                    ((TextView) MainActivity.this.findViewById(R.id.tvLastLap)).setText(time);
+                                }
+
+                            }
+                        });
+                    }
+                }
+            } catch (InterruptedException ex) {
+                Log.d(TAG, "--Daemon Thread :" + ex.getMessage());
+            }
+        }
+
+        public synchronized void pauseOn()//включаем паузу
+        {
+            this.isPause = true;
+        }
+
+        public synchronized void pauseOff()//выключаем паузу
+        {
+            this.isPause = false;
+            this.notify();
+        }
+    }
+
+    ArrayList<ButtonActivity> listActivity = new ArrayList<>();//All buttons activity for current  time
+    ArrayList<ButtonActivity> listLogActivity = new ArrayList<>();
+    ArrayAdapter<ButtonActivity> adapterListLogActivity;
+    ArrayList<ButtonActivity> listSetActivity = new ArrayList<>();
+    String mDeleteTime;
+    String mUpdateTime;
+    String mNewStartTime;
+    Resources res;
+    ListView lvActivity;
+    Time startTime = new Time();
+    Date startDate = new Date();
+    Date currentDate = new Date();
+    DateFormat df = new DateFormat();
+    String mColor;
     static String nameCalendar = "";
     static String myName = "";
-    private SharedPreferences sPref;
-    private long ms;
-
-
-    private Toolbar toolbar;
-    private Menu menu;
-    private int status = 0;
-    private SharedPreferences mShared;
-    private SharedPreferences.Editor mSharedEditor;
-
+    SharedPreferences sPref;
+    Long ms;
 
     class ButtonActivity {
         String name;
@@ -120,51 +161,56 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
         String date = new SimpleDateFormat("dd.MM.yyyy").format(startDate);
         long ms = System.currentTimeMillis();
         ;
-         public ButtonActivity() {
+
+        public ButtonActivity() {
 
         }
 
         public ButtonActivity(String name) {
+
             this.name = name;
             this.color = getColor(this.name);
+
         }
 
         public ButtonActivity(String name, int color) {
+
             this.name = name;
             this.color = color;
-         }
+
+        }
 
         private int getColor(String name) {
 
             if (name.equals(res.getString(R.string.nothing)))
-                this.color=res.getColor(R.color.colorNothing);
-
+                return res.getColor(R.color.colorNothing);
             if (name.equals(res.getString(R.string.relaxing)))
-                this.color=res.getColor(R.color.colorRelaxing);
+                return res.getColor(R.color.colorRelaxing);
             if (name.equals(res.getString(R.string.sleeping)))
-                this.color=res.getColor(R.color.colorSleeping);
+                return res.getColor(R.color.colorSleeping);
             if (name.equals(res.getString(R.string.working)))
-                this.color=res.getColor(R.color.colorWorking);
+                return res.getColor(R.color.colorWorking);
             if (name.equals(res.getString(R.string.exercising)))
-                this.color=res.getColor(R.color.colorExercising);
+                return res.getColor(R.color.colorExercising);
             if (name.equals(res.getString(R.string.reading)))
-                this.color=res.getColor(R.color.colorReading);
+                return res.getColor(R.color.colorReading);
             if (name.equals(res.getString(R.string.travelling)))
-                this.color=res.getColor(R.color.colorTravelling);
+                return res.getColor(R.color.colorTravelling);
             if (name.equals(res.getString(R.string.eating)))
-                this.color=res.getColor(R.color.colorEating);
+                return res.getColor(R.color.colorEating);
             if (name.equals(res.getString(R.string.washing)))
-                this.color=res.getColor(R.color.colorWashing);
+                return res.getColor(R.color.colorWashing);
             if (name.equals(res.getString(R.string.newButton)))
-                this.color=res.getColor(R.color.colorText);
+                return res.getColor(R.color.colorText);
 
             return this.color;
-         }
+            // return res.getColor(R.color.colorButton);
+        }
 
     }
 
 
-    //  for create default List Activities
+    // temporary method for List Activities
     private void createList() {
         this.listActivity.add(new ButtonActivity(res.getString(R.string.nothing)));
         this.listActivity.add(new ButtonActivity(res.getString(R.string.relaxing)));
@@ -175,20 +221,11 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
         this.listActivity.add(new ButtonActivity(res.getString(R.string.travelling)));
         this.listActivity.add(new ButtonActivity(res.getString(R.string.eating)));
         this.listActivity.add(new ButtonActivity(res.getString(R.string.washing)));
+
     }
 
 
-    //
-    public static int getContrastColor( int color)
-    {
-    // Counting the perceptive luminance - human eye favors green color...
-        double a = 1 - (0.299 * Color.red(color) + 0.587 * Color.green(color) + 0.114 * Color.blue(color)) / 255;
-        return a < 0.5 ?  Color.BLACK : Color.WHITE;
-    }
-
-
-    public void undoClick(View view)
-    {
+    public void undoClick(View view) {
         if (MainActivity.this.listLogActivity.size() == 0) return;
         ButtonActivity ba = MainActivity.this.listLogActivity.get(0);
         try {
@@ -199,7 +236,10 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
         }
         MainActivity.this.adapterListLogActivity.remove(ba);
         createActivityLog();
-      }
+        // MainActivity.this.adapterListLogActivity.notifyDataSetChanged();
+
+
+    }
 
     //------for work with Google Diary---------------------------------------------------------------
     GoogleAccountCredential mCredential;
@@ -211,6 +251,8 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
     private static final String PREF_ACCOUNT_NAME = "is.karpus@gmail.com";
     private static final String[] SCOPES = {CalendarScopes.CALENDAR};
     private static boolean mTempData = true;
+    private String mNewSummary;
+    private String mNewColor;
 
     /**
      * Attempt to call the API, after verifying that all the preconditions are
@@ -418,7 +460,7 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
     }
 
     String mCalendarId;
-    String mCalendarData[] = {null, null};
+    String mCalendarData[] = {null, null, null};
     String mStartTime;
     String mEndTime;
 
@@ -454,6 +496,12 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
             try {
 
                 switch (mAction) {
+                    case 4:
+                        updateEventNameColor(mStartTime);
+                        break;
+                    case 3:
+                        //do nothing. calendar service initialisation
+                        break;
                     case 2:
                         updateEventTime();
                         break;
@@ -467,7 +515,6 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
                         mTempData = false;
                         break;
                     case 0:
-                        //TODO:put time for deleting from db and calendar
                         deleteEventFromCalendar(mDeleteTime);
                         break;
                 }
@@ -478,9 +525,13 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
         }
 
         private void deleteEventFromCalendar(String startTime) throws IOException {
-            ArrayList<String> arrayList = mDbHandler.readOneEventFromDB(startTime);
-            mService.events().delete(mCalendarId, arrayList.get(1)).execute();
-            mDbHandler.deleteEventFromDb(startTime);
+            try {
+                ArrayList<String> arrayList = mDbHandler.readOneEventFromDB(startTime);
+                mService.events().delete(mCalendarId, arrayList.get(1)).execute();
+                mDbHandler.deleteEventFromDb(startTime);
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
         }
 
         private void updateEventTime() throws IOException {
@@ -535,6 +586,7 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
             if (mTempData) {
                 mSummary = mCalendarData[0];
                 mStartTime = mCalendarData[1];
+                mColor = mCalendarData[2];
                 mEndTime = mStartTime;
                 addEvent();
                 mTempData = false;
@@ -607,6 +659,29 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
             }
         }
 
+        private void updateEventNameColor(String startTime) throws IOException {
+            String newSummary = mNewSummary;
+            String newColor = mNewColor;
+            ArrayList<String> arrayList = mDbHandler.readOneEventFromDB(startTime);
+            String eventId = arrayList.get(1);
+            String calendarId = arrayList.get(0);
+            // Retrieve the event from the API
+            Event event = mService.events().get(calendarId, eventId).execute();
+            // Make a change
+            event.setSummary(newSummary);
+            // Update the event
+            if (isDeviceOnline()) {
+                event = mService.events().update(calendarId, event.getId(), event).execute();
+                System.out.printf("Event name/color update: %s\n", event.getHtmlLink());
+                mDbHandler.updateEventNameColor(startTime, newSummary, newColor, eventId);
+                mDbHandler.closeDB();
+            } else {
+                eventId = "not_synced";
+                mDbHandler.updateEventNameColor(startTime, newSummary, newColor, eventId);
+                mDbHandler.closeDB();
+            }
+        }
+
         private void addUnsyncedEventsToCalendar() throws IOException {
             Cursor unsyncedEvents = mDbHandler.readUnsyncedEventFromDB();
             String startTimeDb;
@@ -668,6 +743,7 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
         //Log.d(TAG, "Add to Google Diary");
         mCalendarData[0] = ba.name;
         mCalendarData[1] = String.valueOf(ms);
+        mCalendarData[2] = String.valueOf(ba.getColor(ba.name));
         callCalendarApi(1);
     }
 
@@ -734,7 +810,7 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
             });
             btn.setText(ba.name);
             btn.setBackgroundColor(ba.getColor(ba.name));
-            btn.setTextColor(MainActivity.this.getContrastColor(ba.color));
+
 
             //Insert the Button in defined position
             GridLayout.Spec row = GridLayout.spec(rowIndex, 1);
@@ -812,8 +888,7 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
                     public void onClick(DialogInterface dialog, int id) {
                         dialog.dismiss();
                     }
-                });
-                /*
+                })
                 .setNegativeButton("Delete", new DialogInterface.OnClickListener() {
                     public void onClick(DialogInterface dialog, int id) {
                         AlertDialog.Builder bldr = new AlertDialog.Builder(MainActivity.this);
@@ -841,7 +916,6 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
                         dialog.dismiss();
                     }
                 });
-                */
         AlertDialog dialog = builder.create();
         dialog.setCancelable(true);
         dialog.show();
@@ -999,7 +1073,6 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
                         Button btn = (Button) view.findViewById(R.id.btnItem);
                         btn.setBackgroundColor(ba.getColor(ba.name));
                         btn.setText(ba.name);
-                        btn.setTextColor(MainActivity.this.getContrastColor(ba.color));
                         btn.setOnClickListener(new View.OnClickListener() {
                             @Override
                             public void onClick(View v) {
@@ -1024,8 +1097,14 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
         gv.setAdapter(adapter);
     }
 
+    private static final String TAG = "------Activity Say";
 
-
+    private Toolbar toolbar;
+    private Menu menu;
+    private int status = 0;
+    private SharedPreferences mShared;
+    private SharedPreferences.Editor mSharedEditor;
+    private ThreadForActualTime actualTime;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -1098,6 +1177,12 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
         callCalendarApi(3);
         ///-------------
 
+
+//        if (actualTime == null) {
+//            actualTime = new ThreadForActualTime();
+//            //    actualTime.start();
+//        }
+
 /*
 For actual time, update every 1000 ms
  */
@@ -1125,7 +1210,7 @@ For actual time, update every 1000 ms
                                 // Log.d(TAG,"Timer Tick");
                             }
                         },
-                        0, 1000);
+                        1000, 1000);
 
     }
 
@@ -1188,7 +1273,6 @@ For actual time, update every 1000 ms
                 btnA.setWidth(120);
                 btnA.setText(ba.name);
                 btnA.setBackgroundColor(ba.getColor(ba.name));
-                btnA.setTextColor(MainActivity.this.getContrastColor(ba.color));
                 btnA.setOnClickListener(new View.OnClickListener() {
                     @Override
                     public void onClick(View v) {
@@ -1351,13 +1435,12 @@ For actual time, update every 1000 ms
                     public void onClick(DialogInterface dialog, int id) {
                         // ba.name=tvButtonAcivity.getText().toString();
                         btn.setText(ba.name);
-
                         ba.color = s.color;
                         btn.setBackgroundColor(ba.color);
-                        btn.setTextColor(MainActivity.this.getContrastColor(ba.color));
-
-
-
+                        mNewColor = String.valueOf(ba.color);
+                        mNewSummary = ba.name;
+                        mUpdateTime = String.valueOf(ba.ms);
+                        callCalendarApi(4);
                         createActivityLog();
                         Toast.makeText(MainActivity.this, "Change" + spinner.getItemAtPosition(0).toString() + "now Name=" + ba.name, Toast.LENGTH_SHORT).show();
 
@@ -1378,9 +1461,10 @@ For actual time, update every 1000 ms
                                         new DialogInterface.OnClickListener() {
                                             public void onClick(DialogInterface dlg,
                                                                 int id) {
+                                                mDeleteTime = String.valueOf(ba.ms);
+                                                callCalendarApi(0);
                                                 MainActivity.this.listLogActivity.remove(ba);
                                                 MainActivity.this.createActivityLog();
-
                                                 dlg.cancel();
                                             }
                                         })
@@ -1461,7 +1545,7 @@ For actual time, update every 1000 ms
         // }
     }
 
-// Saved Data From Field MyName & My Calendar
+
     public void clickSaveSettings(View view) {
         sPref = this.getPreferences(MODE_PRIVATE);
 
@@ -1563,26 +1647,40 @@ For actual time, update every 1000 ms
         dialog.show();
     }
 
-    //Add from DB Activities in AcivityLog
-    private void addFromDB()
-    {
-
-    }
-
-    //Clear all from  DataBase
-    private void clearLogActivityFromDB() {
-
+    public void clearLogActivityFromDB() {
         Toast.makeText(this, "Clean Log From DB", Toast.LENGTH_SHORT).show();
     }
 
 
     @Override
     public void onResume() {
-         super.onResume();
+//        this.myName = sPref.getString("myName", "");
+//        this.nameCalendar = sPref.getString("myCalendar", "");
+        super.onResume();
+        if (MainActivity.this.actualTime != null) {
+            MainActivity.this.actualTime.pauseOff();//Возобновляем работу потока
+        }
+        // Log.d("======OnResume=====","Thread if != null begin");
     }
 
     @Override
     public void onPause() {
+//        SharedPreferences.Editor ed = sPref.edit();
+//        int size=this.listActivity.size();
+//        ed.putInt("sizeListActivity",size);
+//        for(int i=0;i<size;i++)
+//        {
+//            ed.putString("buttonAcivityName"+i,this.listActivity.get(i).name);
+//            ed.putInt("buttonAcivityColor"+i,this.listActivity.get(i).color);
+//        }
+//        ed.commit();
+        //  this.listActivity.clear();
         super.onPause();
-}
+
+
+        if (MainActivity.this.actualTime != null) {
+            MainActivity.this.actualTime.pauseOn();//Приостанавливаем работу потока
+        }
+        // Log.d("======OnPause=====","Thread if != null stop");
+    }
 }
