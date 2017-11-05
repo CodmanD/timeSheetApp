@@ -73,6 +73,16 @@ public class DBHandler {
         dbHelper.close();
     }
 
+    public void updateEventNameColor(String dateTimeStart, String newSummary, String newColor, String eventId) {
+        dbHelper = new DBHelper(mContext);
+        db = dbHelper.getWritableDatabase();
+        db.execSQL("UPDATE calendarTable SET eventName = '" + newSummary + "' WHERE dateTimeStart = '" + dateTimeStart + "'");
+        db.execSQL("UPDATE calendarTable SET color = '" + newColor + "' WHERE dateTimeStart = '" + dateTimeStart + "'");
+        db.execSQL("UPDATE calendarTable SET eventId = '" + eventId + "' WHERE dateTimeStart = '" + dateTimeStart + "'");
+        db.close();
+        dbHelper.close();
+    }
+
     public Cursor readAllEventsFromDB() {
         dbHelper = new DBHelper(mContext);
         db = dbHelper.getWritableDatabase();

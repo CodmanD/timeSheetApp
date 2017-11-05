@@ -148,7 +148,7 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
     Date startDate = new Date();
     Date currentDate = new Date();
     DateFormat df = new DateFormat();
-    String mColor = "#aaaaaa";
+    String mColor;
     static String nameCalendar = "";
     static String myName = "";
     SharedPreferences sPref;
@@ -251,6 +251,8 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
     private static final String PREF_ACCOUNT_NAME = "is.karpus@gmail.com";
     private static final String[] SCOPES = {CalendarScopes.CALENDAR};
     private static boolean mTempData = true;
+    private String mNewSummary;
+    private String mNewColor;
 
     /**
      * Attempt to call the API, after verifying that all the preconditions are
@@ -458,7 +460,7 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
     }
 
     String mCalendarId;
-    String mCalendarData[] = {null, null};
+    String mCalendarData[] = {null, null, null};
     String mStartTime;
     String mEndTime;
 
@@ -494,6 +496,12 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
             try {
 
                 switch (mAction) {
+                    case 4:
+                        updateEventNameColor(mStartTime);
+                        break;
+                    case 3:
+                        //do nothing. calendar service initialisation
+                        break;
                     case 2:
                         updateEventTime();
                         break;
@@ -507,7 +515,6 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
                         mTempData = false;
                         break;
                     case 0:
-                        //TODO:put time for deleting from db and calendar
                         deleteEventFromCalendar(mDeleteTime);
                         break;
                 }
@@ -518,9 +525,13 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
         }
 
         private void deleteEventFromCalendar(String startTime) throws IOException {
-            ArrayList<String> arrayList = mDbHandler.readOneEventFromDB(startTime);
-            mService.events().delete(mCalendarId, arrayList.get(1)).execute();
-            mDbHandler.deleteEventFromDb(startTime);
+            try {
+                ArrayList<String> arrayList = mDbHandler.readOneEventFromDB(startTime);
+                mService.events().delete(mCalendarId, arrayList.get(1)).execute();
+                mDbHandler.deleteEventFromDb(startTime);
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
         }
 
         private void updateEventTime() throws IOException {
@@ -575,6 +586,7 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
             if (mTempData) {
                 mSummary = mCalendarData[0];
                 mStartTime = mCalendarData[1];
+                mColor = mCalendarData[2];
                 mEndTime = mStartTime;
                 addEvent();
                 mTempData = false;
@@ -647,6 +659,29 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
             }
         }
 
+        private void updateEventNameColor(String startTime) throws IOException {
+            String newSummary = mNewSummary;
+            String newColor = mNewColor;
+            ArrayList<String> arrayList = mDbHandler.readOneEventFromDB(startTime);
+            String eventId = arrayList.get(1);
+            String calendarId = arrayList.get(0);
+            // Retrieve the event from the API
+            Event event = mService.events().get(calendarId, eventId).execute();
+            // Make a change
+            event.setSummary(newSummary);
+            // Update the event
+            if (isDeviceOnline()) {
+                event = mService.events().update(calendarId, event.getId(), event).execute();
+                System.out.printf("Event name/color update: %s\n", event.getHtmlLink());
+                mDbHandler.updateEventNameColor(startTime, newSummary, newColor, eventId);
+                mDbHandler.closeDB();
+            } else {
+                eventId = "not_synced";
+                mDbHandler.updateEventNameColor(startTime, newSummary, newColor, eventId);
+                mDbHandler.closeDB();
+            }
+        }
+
         private void addUnsyncedEventsToCalendar() throws IOException {
             Cursor unsyncedEvents = mDbHandler.readUnsyncedEventFromDB();
             String startTimeDb;
@@ -708,6 +743,7 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
         //Log.d(TAG, "Add to Google Diary");
         mCalendarData[0] = ba.name;
         mCalendarData[1] = String.valueOf(ms);
+        mCalendarData[2] = String.valueOf(ba.getColor(ba.name));
         callCalendarApi(1);
     }
 
@@ -1399,11 +1435,12 @@ For actual time, update every 1000 ms
                     public void onClick(DialogInterface dialog, int id) {
                         // ba.name=tvButtonAcivity.getText().toString();
                         btn.setText(ba.name);
-
                         ba.color = s.color;
                         btn.setBackgroundColor(ba.color);
-
-
+                        mNewColor = String.valueOf(ba.color);
+                        mNewSummary = ba.name;
+                        mUpdateTime = String.valueOf(ba.ms);
+                        callCalendarApi(4);
                         createActivityLog();
                         Toast.makeText(MainActivity.this, "Change" + spinner.getItemAtPosition(0).toString() + "now Name=" + ba.name, Toast.LENGTH_SHORT).show();
 
@@ -1424,9 +1461,10 @@ For actual time, update every 1000 ms
                                         new DialogInterface.OnClickListener() {
                                             public void onClick(DialogInterface dlg,
                                                                 int id) {
+                                                mDeleteTime = String.valueOf(ba.ms);
+                                                callCalendarApi(0);
                                                 MainActivity.this.listLogActivity.remove(ba);
                                                 MainActivity.this.createActivityLog();
-
                                                 dlg.cancel();
                                             }
                                         })
