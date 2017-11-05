@@ -549,7 +549,7 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
                 if (!mIdFlag) {
                     mCalendarId = "primary";
                 }
-                event = mService.events().update(mCalendarId, event.getId(), event).execute();
+                event = mService.events().insert(mCalendarId, event).execute();
                 System.out.printf("Event created: %s\n", event.getHtmlLink());
                 eventId = event.getId();
             } else
