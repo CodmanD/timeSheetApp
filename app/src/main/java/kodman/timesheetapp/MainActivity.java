@@ -84,35 +84,12 @@ import pub.devrel.easypermissions.EasyPermissions;
 
 public class MainActivity extends AppCompatActivity implements EasyPermissions.PermissionCallbacks {
     private static final String TAG = "------Activity Say";
-
-
-    private ArrayList<ButtonActivity> listActivity = new ArrayList<>();//All buttons activity for current  time
-    private ArrayList<ButtonActivity> listLogActivity = new ArrayList<>();
-    private ArrayAdapter<ButtonActivity> adapterListLogActivity;
-    private ArrayList<ButtonActivity> listSetActivity = new ArrayList<>();
-    private String mDeleteTime;
-    private String mUpdateTime;
-    private String mNewStartTime;
-    private Resources res;
-    private ListView lvActivity;
-    private Time startTime = new Time();
-    private Date startDate = new Date();
-    private Date currentDate = new Date();
-    private DateFormat df = new DateFormat();
-    private String mColor = "#aaaaaa";
-    static String nameCalendar = "";
-    static String myName = "";
-    private SharedPreferences sPref;
-    private long ms;
-
-
     private Toolbar toolbar;
     private Menu menu;
     private int status = 0;
     private SharedPreferences mShared;
     private SharedPreferences.Editor mSharedEditor;
 
-<<<<<<< HEAD
     ArrayList<ButtonActivity> listActivity = new ArrayList<>();//All buttons activity for current  time
     ArrayList<ButtonActivity> listLogActivity = new ArrayList<>();
     ArrayAdapter<ButtonActivity> adapterListLogActivity;
@@ -131,8 +108,7 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
     static String myName = "";
     SharedPreferences sPref;
     Long ms;
-=======
->>>>>>> 70ce4379aceb2bfd5d0134e0314796c9e4388c75
+
 
     class ButtonActivity {
         String name;
@@ -141,7 +117,8 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
         String date = new SimpleDateFormat("dd.MM.yyyy").format(startDate);
         long ms = System.currentTimeMillis();
         ;
-         public ButtonActivity() {
+
+        public ButtonActivity() {
 
         }
 
@@ -153,34 +130,34 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
         public ButtonActivity(String name, int color) {
             this.name = name;
             this.color = color;
-         }
+        }
 
         private int getColor(String name) {
 
             if (name.equals(res.getString(R.string.nothing)))
-                this.color=res.getColor(R.color.colorNothing);
+                this.color = res.getColor(R.color.colorNothing);
 
             if (name.equals(res.getString(R.string.relaxing)))
-                this.color=res.getColor(R.color.colorRelaxing);
+                this.color = res.getColor(R.color.colorRelaxing);
             if (name.equals(res.getString(R.string.sleeping)))
-                this.color=res.getColor(R.color.colorSleeping);
+                this.color = res.getColor(R.color.colorSleeping);
             if (name.equals(res.getString(R.string.working)))
-                this.color=res.getColor(R.color.colorWorking);
+                this.color = res.getColor(R.color.colorWorking);
             if (name.equals(res.getString(R.string.exercising)))
-                this.color=res.getColor(R.color.colorExercising);
+                this.color = res.getColor(R.color.colorExercising);
             if (name.equals(res.getString(R.string.reading)))
-                this.color=res.getColor(R.color.colorReading);
+                this.color = res.getColor(R.color.colorReading);
             if (name.equals(res.getString(R.string.travelling)))
-                this.color=res.getColor(R.color.colorTravelling);
+                this.color = res.getColor(R.color.colorTravelling);
             if (name.equals(res.getString(R.string.eating)))
-                this.color=res.getColor(R.color.colorEating);
+                this.color = res.getColor(R.color.colorEating);
             if (name.equals(res.getString(R.string.washing)))
-                this.color=res.getColor(R.color.colorWashing);
+                this.color = res.getColor(R.color.colorWashing);
             if (name.equals(res.getString(R.string.newButton)))
-                this.color=res.getColor(R.color.colorText);
+                this.color = res.getColor(R.color.colorText);
 
             return this.color;
-         }
+        }
 
     }
 
@@ -200,16 +177,14 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
 
 
     //
-    public static int getContrastColor( int color)
-    {
-    // Counting the perceptive luminance - human eye favors green color...
+    public static int getContrastColor(int color) {
+        // Counting the perceptive luminance - human eye favors green color...
         double a = 1 - (0.299 * Color.red(color) + 0.587 * Color.green(color) + 0.114 * Color.blue(color)) / 255;
-        return a < 0.5 ?  Color.BLACK : Color.WHITE;
+        return a < 0.5 ? Color.BLACK : Color.WHITE;
     }
 
 
-    public void undoClick(View view)
-    {
+    public void undoClick(View view) {
         if (MainActivity.this.listLogActivity.size() == 0) return;
         ButtonActivity ba = MainActivity.this.listLogActivity.get(0);
         try {
@@ -220,7 +195,7 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
         }
         MainActivity.this.adapterListLogActivity.remove(ba);
         createActivityLog();
-      }
+    }
 
     //------for work with Google Diary---------------------------------------------------------------
     GoogleAccountCredential mCredential;
@@ -1082,8 +1057,6 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
     }
 
 
-
-
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         Log.d(TAG, "onCreate");
@@ -1410,17 +1383,12 @@ For actual time, update every 1000 ms
                         btn.setText(ba.name);
                         ba.color = s.color;
                         btn.setBackgroundColor(ba.color);
-<<<<<<< HEAD
                         mNewColor = String.valueOf(ba.color);
                         mNewSummary = ba.name;
                         mUpdateTime = String.valueOf(ba.ms);
                         callCalendarApi(4);
-=======
                         btn.setTextColor(MainActivity.this.getContrastColor(ba.color));
 
-
-
->>>>>>> 70ce4379aceb2bfd5d0134e0314796c9e4388c75
                         createActivityLog();
                         Toast.makeText(MainActivity.this, "Change" + spinner.getItemAtPosition(0).toString() + "now Name=" + ba.name, Toast.LENGTH_SHORT).show();
 
@@ -1525,7 +1493,7 @@ For actual time, update every 1000 ms
         // }
     }
 
-// Saved Data From Field MyName & My Calendar
+    // Saved Data From Field MyName & My Calendar
     public void clickSaveSettings(View view) {
         sPref = this.getPreferences(MODE_PRIVATE);
 
@@ -1628,8 +1596,7 @@ For actual time, update every 1000 ms
     }
 
     //Add from DB Activities in AcivityLog
-    private void addFromDB()
-    {
+    private void addFromDB() {
 
     }
 
@@ -1642,11 +1609,11 @@ For actual time, update every 1000 ms
 
     @Override
     public void onResume() {
-         super.onResume();
+        super.onResume();
     }
 
     @Override
     public void onPause() {
         super.onPause();
-}
+    }
 }
