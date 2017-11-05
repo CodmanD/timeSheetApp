@@ -140,6 +140,8 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
     ArrayAdapter<ButtonActivity> adapterListLogActivity;
     ArrayList<ButtonActivity> listSetActivity = new ArrayList<>();
     String mDeleteTime;
+    String mUpdateTime;
+    String mNewStartTime;
     Resources res;
     ListView lvActivity;
     Time startTime = new Time();
@@ -492,6 +494,9 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
             try {
 
                 switch (mAction) {
+                    case 2:
+                        updateEventTime();
+                        break;
                     case 1:
                         if (isDeviceOnline()) {
                             addEventToCalendar();
@@ -516,6 +521,11 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
             ArrayList<String> arrayList = mDbHandler.readOneEventFromDB(startTime);
             mService.events().delete(mCalendarId, arrayList.get(1)).execute();
             mDbHandler.deleteEventFromDb(startTime);
+        }
+
+        private void updateEventTime() throws IOException {
+            updateEventStartTime(mUpdateTime);
+            mDbHandler.deleteEventFromDb(mUpdateTime);
         }
 
         boolean mIdFlag = false;
@@ -612,7 +622,8 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
             }
         }
 
-        private void updateEventStartTime(String startTime, String newStartTime) throws IOException {
+        private void updateEventStartTime(String startTime) throws IOException {
+            String newStartTime = mNewStartTime;
             ArrayList<String> arrayList = mDbHandler.readOneEventFromDB(startTime);
             String eventId = arrayList.get(1);
             String calendarId = arrayList.get(0);
@@ -700,6 +711,10 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
         callCalendarApi(1);
     }
 
+    private void updateGoogleDiary() {
+        //  Log.d(TAG, "Update from Google Diary");
+        callCalendarApi(2);
+    }
 
     //Delete From Google Diary
     private void removeGoogleDiary() {
@@ -1261,9 +1276,7 @@ For actual time, update every 1000 ms
                 Date lastDate = new Date(ba.ms);
                 int lastHour = lastDate.getHours();
                 int lastMinutes = lastDate.getMinutes();
-
                 Log.d(TAG, "al=" + hour + ":" + minute + "  last=" + lastHour + ":" + lastMinutes + "  cur=" + curHour + ":" + curMinutes);
-
                 //Toast.makeText(MainActivity.this,"curTime="+new Date(currentTime)+"  |selectedTime="+new Date(selectedTime),Toast.LENGTH_SHORT).show();
                 //Toast.makeText(MainActivity.this,"curTime="+currentTime+"  |selectedTime="+selectedTime,Toast.LENGTH_SHORT).show();
                 if (hour > curHour || (hour == curHour && minute > curMinutes) || hour < lastHour || (hour == lastHour && minute < lastMinutes)) {
@@ -1285,11 +1298,13 @@ For actual time, update every 1000 ms
                     @Override
                     public void onClick(DialogInterface
                                                 dialog, int which) {
-
-
                         ba.time = new SimpleDateFormat("HH:mm:ss").format(date);
                         ba.date = new SimpleDateFormat("dd.MM.yyyy").format(date);
+                        mUpdateTime = String.valueOf(ba.ms);
                         ba.ms = date.getTime();
+                        mNewStartTime = String.valueOf(ba.ms);
+                        updateGoogleDiary();
+
                         createActivityLog();
                         Toast.makeText(MainActivity.this,
                                 "Выбранное время чч:мм : " + date.toString(),
