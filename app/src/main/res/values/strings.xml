@@ -28,8 +28,8 @@
     <string name="emailReportTo">Email report to:</string>
     <string name="subject">Subject:</string>
     <string name="message">Message:</string>
-    <string name="reportStartDate">Report start date</string>
-    <string name="reportEndDate">Report end date</string>
+    <string name="reportStartDate">Report start \ndate</string>
+    <string name="reportEndDate">Report end \ndate</string>
     <string name="email">Email</string>
     <string name="changeActivity">Change activity</string>
     <string name="delete">Delete</string>

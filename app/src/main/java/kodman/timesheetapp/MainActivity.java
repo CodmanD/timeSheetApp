@@ -3,6 +3,7 @@ package kodman.timesheetapp;
 import android.Manifest;
 import android.accounts.AccountManager;
 import android.app.Dialog;
+import android.app.FragmentTransaction;
 import android.app.TimePickerDialog;
 import android.content.Context;
 import android.content.DialogInterface;
@@ -103,6 +104,9 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
                     synchronized (MainActivity.this)
                     {
                         //Log.d(TAG, "Thread=================TICK");
+                        if (toolbar == null) {
+                            toolbar = fragmentExport.getToolbar();
+                        }
                         toolbar.post(new Runnable() {
                             @Override
                             public void run() {
@@ -154,6 +158,7 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
     static String myName = "";
     SharedPreferences sPref;
     Long ms;
+    FragmentExport fragmentExport;
 
     class ButtonActivity {
         String name;
@@ -1483,12 +1488,11 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
                 return true;
             case R.id.action_export:
                 this.status = 2;
-                this.setContentView(R.layout.screen_email);
-                toolbar = (Toolbar) this.findViewById(R.id.toolBar_MainActivity);
-
-                toolbar.setTitle("00:00:00");
-                this.setSupportActionBar(toolbar);
-
+                setContentView(R.layout.activity_main_fragment);
+                fragmentExport = new FragmentExport();
+                FragmentTransaction fragmentTransaction = getFragmentManager().beginTransaction();
+                fragmentTransaction.add(R.id.fragmentContainer, fragmentExport);
+                fragmentTransaction.commit();
                 //   Toast.makeText(this, "Export", Toast.LENGTH_SHORT).show();
                 return true;
             case R.id.action_share:
@@ -1496,7 +1500,7 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
                 this.setContentView(R.layout.screen_share);
                 toolbar = (Toolbar) this.findViewById(R.id.toolBar_MainActivity);
 
-                toolbar.setTitle("00:00:00");
+//                toolbar.setTitle("00:00:00");
                 this.setSupportActionBar(toolbar);
                 
                 //Open Google play app link

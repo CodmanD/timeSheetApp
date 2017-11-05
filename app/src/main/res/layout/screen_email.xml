@@ -7,7 +7,7 @@
     android:background="@color/colorPrimaryDark">
 
     <android.support.v7.widget.Toolbar
-        android:id="@+id/toolBar_MainActivity"
+        android:id="@+id/toolBar_export"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:background="?attr/colorPrimaryDark"
@@ -29,7 +29,8 @@
         android:textColor="@color/colorText"
         android:textSize="24sp"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/toolBar_MainActivity" />
+        app:layout_constraintTop_toBottomOf="@+id/toolBar_export" />
+
 
     <EditText
         android:id="@+id/fe_email_et"
@@ -182,8 +183,9 @@
     <TextView
         android:id="@+id/fe_calendar_startd_tv"
         tools:text="1/12/2017"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
+        android:gravity="center"
+        android:layout_width="120dp"
+        android:layout_height="30dp"
         android:layout_marginEnd="8dp"
         android:layout_marginStart="8dp"
         android:layout_marginTop="12dp"
@@ -196,8 +198,9 @@
     <TextView
         tools:text="1/12/2017"
         android:id="@+id/fe_calendar_endd_tv"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
+        android:gravity="center"
+        android:layout_width="120dp"
+        android:layout_height="30dp"
         android:layout_marginBottom="8dp"
         android:layout_marginEnd="8dp"
         android:layout_marginStart="8dp"
