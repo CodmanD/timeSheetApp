@@ -143,6 +143,7 @@
         android:background="@color/colorButton"
         android:onClick="clickCleanLog"
         android:text="@string/cleanLog"
+        android:textColor="@color/colorText"
         app:layout_constraintBottom_toBottomOf="@+id/textView5"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="0.857"
