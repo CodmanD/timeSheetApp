@@ -87,23 +87,20 @@ import pub.devrel.easypermissions.EasyPermissions;
 public class MainActivity extends AppCompatActivity implements EasyPermissions.PermissionCallbacks {
 
     class ThreadForActualTime extends Thread {
-        boolean isPause=false;
+        boolean isPause = false;
 
         @Override
         public void run() {
             try {
                 while (true) {
-                    synchronized (this)
-                    {
-                        while(this.isPause)
-                        {
+                    synchronized (this) {
+                        while (this.isPause) {
                             this.wait();
                         }
                     }
 
                     Thread.sleep(1000);
-                    synchronized (MainActivity.this)
-                    {
+                    synchronized (MainActivity.this) {
                         //Log.d(TAG, "Thread=================TICK");
                         if (toolbar == null) {
                             toolbar = fragmentExport.getToolbar();
@@ -115,30 +112,30 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
                                 Date curDate = new Date();
                                 String time = new SimpleDateFormat("HH:mm:ss").format(curDate);
                                 toolbar.setTitle(time);
-                                if(MainActivity.this.listLogActivity.size()>0&&MainActivity.this.status==0)
-                                {
-                                    long timeDiff=System.currentTimeMillis()-MainActivity.this.listLogActivity.get(0).ms;
+                                if (MainActivity.this.listLogActivity.size() > 0 && MainActivity.this.status == 0) {
+                                    long timeDiff = System.currentTimeMillis() - MainActivity.this.listLogActivity.get(0).ms;
                                     Date moment = new Date(timeDiff);
-                                    time=new SimpleDateFormat("mm:ss").format(moment)+" min:sec";
-                                     ((TextView)MainActivity.this.findViewById(R.id.tvLastLap)).setText(time);
+                                    time = new SimpleDateFormat("mm:ss").format(moment) + " min:sec";
+                                    ((TextView) MainActivity.this.findViewById(R.id.tvLastLap)).setText(time);
                                 }
 
                             }
                         });
                     }
                 }
-            }
-            catch (InterruptedException ex) {
-                Log.d(TAG,"--Daemon Thread :"+ex.getMessage());
+            } catch (InterruptedException ex) {
+                Log.d(TAG, "--Daemon Thread :" + ex.getMessage());
             }
         }
+
         public synchronized void pauseOn()//включаем паузу
         {
-            this.isPause=true;
+            this.isPause = true;
         }
+
         public synchronized void pauseOff()//выключаем паузу
         {
-            this.isPause=false;
+            this.isPause = false;
             this.notify();
         }
     }
@@ -147,7 +144,7 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
     ArrayList<ButtonActivity> listLogActivity = new ArrayList<>();
     ArrayAdapter<ButtonActivity> adapterListLogActivity;
     ArrayList<ButtonActivity> listSetActivity = new ArrayList<>();
-
+    String mDeleteTime;
     Resources res;
     ListView lvActivity;
     Time startTime = new Time();
@@ -166,7 +163,8 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
         int color;
         String time = new SimpleDateFormat("HH:mm:ss").format(startDate);
         String date = new SimpleDateFormat("dd.MM.yyyy").format(startDate);
-        long ms=System.currentTimeMillis();;
+        long ms = System.currentTimeMillis();
+        ;
 
         public ButtonActivity() {
 
@@ -233,16 +231,18 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
 
     public void undoClick(View view) {
         if (MainActivity.this.listLogActivity.size() == 0) return;
-        ButtonActivity ba = MainActivity.this.listLogActivity.remove(0);
+        ButtonActivity ba = MainActivity.this.listLogActivity.get(0);
+        try {
+            mDeleteTime = String.valueOf(ba.ms);
+            MainActivity.this.removeGoogleDiary();
+        } catch (Exception ex) {
+            ex.printStackTrace();
+        }
         MainActivity.this.adapterListLogActivity.remove(ba);
         createActivityLog();
         // MainActivity.this.adapterListLogActivity.notifyDataSetChanged();
-        MainActivity.this.removeGoogleDiary(ba);
-        try{
-        new MakeRequestTask(mCredential, 0).deleteEventFromCalendar(""+ba.ms);
-        }
-        catch(Exception ex)
-        {}
+
+
     }
 
     //------for work with Google Diary---------------------------------------------------------------
@@ -509,7 +509,7 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
                         break;
                     case 0:
                         //TODO:put time for deleting from db and calendar
-                        deleteEventFromCalendar(mStartTime);
+                        deleteEventFromCalendar(mDeleteTime);
                         break;
                 }
             } catch (IOException e) {
@@ -708,11 +708,9 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
 
 
     //Delete From Google Diary
-    private void removeGoogleDiary(ButtonActivity ba) {
+    private void removeGoogleDiary() {
         //  Log.d(TAG, "Remove from Google Diary");
-        mCalendarData[0] = ba.name;
-        mCalendarData[1] = String.valueOf(ms);
-        callCalendarApi(2);
+        callCalendarApi(0);
     }
 
     //----------------End Block For Google Service------------------------------------------------------------
@@ -744,7 +742,7 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
                 @Override
                 public void onClick(View v) {
 
-                    AlertDialog.Builder builder=new AlertDialog.Builder(MainActivity.this);
+                    AlertDialog.Builder builder = new AlertDialog.Builder(MainActivity.this);
                     builder.setTitle(res.getString(R.string.deleteActivity))
                             .setPositiveButton(R.string.yes, new DialogInterface.OnClickListener() {
                                 @Override
@@ -761,8 +759,8 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
                                 }
                             }).setCancelable(true);
 
-                        builder.create().show();
-                   // Toast.makeText(MainActivity.this, "Click", Toast.LENGTH_SHORT).show();
+                    builder.create().show();
+                    // Toast.makeText(MainActivity.this, "Click", Toast.LENGTH_SHORT).show();
                 }
             });
             btn.setText(ba.name);
@@ -998,8 +996,8 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
         int[] color = {Red, Green, Blue};
         return color;
     }
-    public int[] calcColor(int[] color1, int[] color2)
-    {
+
+    public int[] calcColor(int[] color1, int[] color2) {
         int[] color = {(color1[0] + color2[0]) / 2, (color1[1] + color2[1]) / 2, (color1[2] + color2[2]) / 2};
         return color;
     }
@@ -1038,6 +1036,7 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
                                 BA.date = new SimpleDateFormat("dd.MM.yyyy").format(date);
                                 BA.time = new SimpleDateFormat("HH:mm:ss").format(date);
                                 ms = System.currentTimeMillis();
+                                BA.ms = ms;
                                 MainActivity.this.listLogActivity.add(0, BA);
                                 createActivityLog();
                                 getListViewSize(MainActivity.this.lvActivity);
@@ -1060,7 +1059,8 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
     private int status = 0;
     private SharedPreferences mShared;
     private SharedPreferences.Editor mSharedEditor;
-    private  ThreadForActualTime actualTime;
+    private ThreadForActualTime actualTime;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         Log.d(TAG, "onCreate");
@@ -1098,30 +1098,27 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
         this.nameCalendar = sPref.getString("myCalendar", "");
 
 
-        Log.d(TAG,"OnCREATE Initialzed list Activities");
+        Log.d(TAG, "OnCREATE Initialzed list Activities");
         //Initialzed list Activities
-        if(sPref.contains("sizeListActivity")&&this.listActivity.size()==0)
-        {
+        if (sPref.contains("sizeListActivity") && this.listActivity.size() == 0) {
 
 
-            int size=sPref.getInt("sizeListActivity",0);
+            int size = sPref.getInt("sizeListActivity", 0);
 
-            Log.d(TAG," Initialzed list Activities From shareds ="+size);
-         //   this.listActivity=new ArrayList<>();
+            Log.d(TAG, " Initialzed list Activities From shareds =" + size);
+            //   this.listActivity=new ArrayList<>();
             for (int i = 0; i < size; i++) {
                 this.listActivity.add(new ButtonActivity
                         (sPref.getString("buttonAcivityName" + i, ""),
                                 sPref.getInt("buttonAcivityColor" + i, res.getColor(R.color.colorText))));
-                }
-
-
-        }
-        else
-            {
-                this.createList();
             }
-    //  this.createList();
-       //------------------------------------------------------------------
+
+
+        } else {
+            this.createList();
+        }
+        //  this.createList();
+        //------------------------------------------------------------------
 
 
         this.addToGridViewButtonsActivity();
@@ -1136,7 +1133,6 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
         ///-------------
 
 
-
 //        if (actualTime == null) {
 //            actualTime = new ThreadForActualTime();
 //            //    actualTime.start();
@@ -1145,7 +1141,7 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
 /*
 For actual time, update every 1000 ms
  */
- new java.util.Timer().schedule
+        new java.util.Timer().schedule
                 (
                         new TimerTask() {
                             public void run() {
@@ -1156,35 +1152,32 @@ For actual time, update every 1000 ms
                                         Date curDate = new Date();
                                         String time = new SimpleDateFormat("HH:mm:ss").format(curDate);
                                         toolbar.setTitle(time);
-                                        if(MainActivity.this.listLogActivity.size()>0&&MainActivity.this.status==0)
-                                        {
-                                            long timeDiff=System.currentTimeMillis()-MainActivity.this.listLogActivity.get(0).ms;
+                                        if (MainActivity.this.listLogActivity.size() > 0 && MainActivity.this.status == 0) {
+                                            long timeDiff = System.currentTimeMillis() - MainActivity.this.listLogActivity.get(0).ms;
                                             Date moment = new Date(timeDiff);
-                                            time=new SimpleDateFormat("mm:ss").format(moment)+" min:sec";
-                                            ((TextView)MainActivity.this.findViewById(R.id.tvLastLap)).setText(time);
+                                            time = new SimpleDateFormat("mm:ss").format(moment) + " min:sec";
+                                            ((TextView) MainActivity.this.findViewById(R.id.tvLastLap)).setText(time);
                                         }
 
                                     }
                                 });
 
-                               // Log.d(TAG,"Timer Tick");
+                                // Log.d(TAG,"Timer Tick");
                             }
                         },
-                        1000,1000);
+                        1000, 1000);
 
     }
 
     @Override
-    public void onDestroy()
-    {
+    public void onDestroy() {
         SharedPreferences.Editor ed = sPref.edit();
-        int size=this.listActivity.size();
-        Log.d(TAG,"DESTROY SIZE="+size);
-        ed.putInt("sizeListActivity",size);
-        for(int i=0;i<size;i++)
-        {
-            ed.putString("buttonAcivityName"+i,this.listActivity.get(i).name);
-            ed.putInt("buttonAcivityColor"+i,this.listActivity.get(i).color);
+        int size = this.listActivity.size();
+        Log.d(TAG, "DESTROY SIZE=" + size);
+        ed.putInt("sizeListActivity", size);
+        for (int i = 0; i < size; i++) {
+            ed.putString("buttonAcivityName" + i, this.listActivity.get(i).name);
+            ed.putInt("buttonAcivityColor" + i, this.listActivity.get(i).color);
         }
         ed.commit();
         this.listActivity.clear();
@@ -1238,7 +1231,7 @@ For actual time, update every 1000 ms
                 btnA.setOnClickListener(new View.OnClickListener() {
                     @Override
                     public void onClick(View v) {
-                        Toast.makeText(MainActivity.this,"Click name= "+ba.name,Toast.LENGTH_SHORT).show();
+                        Toast.makeText(MainActivity.this, "Click name= " + ba.name, Toast.LENGTH_SHORT).show();
                         createDialogForLogActivity(ba, btnA);
                     }
                 });
@@ -1287,7 +1280,7 @@ For actual time, update every 1000 ms
                 } else {
                     date.setHours(hour);
                     date.setMinutes(minute);
-                    Toast.makeText(MainActivity.this,"Ok Change time "+date.toString(),Toast.LENGTH_SHORT).show();
+                    Toast.makeText(MainActivity.this, "Ok Change time " + date.toString(), Toast.LENGTH_SHORT).show();
                 }
             }
         };
@@ -1307,6 +1300,7 @@ For actual time, update every 1000 ms
                         Toast.makeText(MainActivity.this,
                                 "Выбранное время чч:мм : " + date.toString(),
                                 Toast.LENGTH_LONG).show();
+
                     }
                 });
 
@@ -1406,7 +1400,7 @@ For actual time, update every 1000 ms
                 })
                 .setNeutralButton("Cancel", new DialogInterface.OnClickListener() {
                     public void onClick(DialogInterface dialog, int id) {
-                        ba.name=btn.getText().toString();
+                        ba.name = btn.getText().toString();
                         dialog.dismiss();
                     }
                 })
@@ -1421,6 +1415,7 @@ For actual time, update every 1000 ms
                                                                 int id) {
                                                 MainActivity.this.listLogActivity.remove(ba);
                                                 MainActivity.this.createActivityLog();
+
                                                 dlg.cancel();
                                             }
                                         })
@@ -1615,23 +1610,19 @@ For actual time, update every 1000 ms
     }
 
 
-
     @Override
-    public void onResume()
-    {
+    public void onResume() {
 //        this.myName = sPref.getString("myName", "");
 //        this.nameCalendar = sPref.getString("myCalendar", "");
         super.onResume();
-       if(MainActivity.this.actualTime!=null)
-        {
+        if (MainActivity.this.actualTime != null) {
             MainActivity.this.actualTime.pauseOff();//Возобновляем работу потока
         }
-       // Log.d("======OnResume=====","Thread if != null begin");
+        // Log.d("======OnResume=====","Thread if != null begin");
     }
 
     @Override
-    public void onPause()
-    {
+    public void onPause() {
 //        SharedPreferences.Editor ed = sPref.edit();
 //        int size=this.listActivity.size();
 //        ed.putInt("sizeListActivity",size);
@@ -1641,15 +1632,11 @@ For actual time, update every 1000 ms
 //            ed.putInt("buttonAcivityColor"+i,this.listActivity.get(i).color);
 //        }
 //        ed.commit();
-      //  this.listActivity.clear();
+        //  this.listActivity.clear();
         super.onPause();
 
 
-
-
-
-        if(MainActivity.this.actualTime!=null)
-        {
+        if (MainActivity.this.actualTime != null) {
             MainActivity.this.actualTime.pauseOn();//Приостанавливаем работу потока
         }
         // Log.d("======OnPause=====","Thread if != null stop");
