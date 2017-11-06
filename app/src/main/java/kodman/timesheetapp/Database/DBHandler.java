@@ -33,7 +33,7 @@ public class DBHandler {
     public Cursor readUnsyncedEventFromDB() {
         dbHelper = new DBHelper(mContext);
         db = dbHelper.getWritableDatabase();
-        return db.rawQuery("SELECT * FROM calendarTable WHERE eventId LIKE 'not_synced' AND eventId LIKE 'deleted'", null);
+        return db.rawQuery("SELECT * FROM calendarTable WHERE eventId LIKE 'not_synced' OR eventId LIKE 'deleted'", null);
     }
 
     public ArrayList<String> readOneEventFromDB(String dateTimeStart) {

@@ -504,9 +504,11 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
                         break;
                     case 1:
                         if (isDeviceOnline()) {
+                            Log.e("online", "online");
                             addEventToCalendar();
                             addUnsyncedEventsToCalendar();
                         } else {
+                            Log.e("notonline", "notonline");
                             addEventToCalendar();
                         }
                         mTempData = false;
@@ -627,8 +629,6 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
                 EventDateTime endTime = new EventDateTime().setDateTime(endDateTime);
                 event.setEnd(endTime);
                 // Update the event
-
-
                 event = mService.events().update(calendarId, event.getId(), event).execute();
                 System.out.printf("Event end time updated: %s\n", event.getHtmlLink());
                 mDbHandler.updateEvent(mStartTime, mEndTime, eventId);
@@ -697,6 +697,7 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
 
         private void addUnsyncedEventsToCalendar() throws IOException {
             mIsCreateAvailable = false;
+            Log.e("start unsynced", "start unsynced");
             Cursor unsyncedEvents = mDbHandler.readUnsyncedEventFromDB();
             String startTimeDb;
             String eventNameDb;
@@ -726,21 +727,24 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
                 if (tempEventId.equals("deleted")) {
                     mService.events().delete(mCalendarId, startTimeDb).execute();
                     mDbHandler.deleteEventFromDb(startTimeDb);
+                    System.out.printf("Event deleted: %s\n", startTimeDb);
+                } else {
+                    Event event = new Event().setSummary(eventNameDb);
+                    Date start = new Date(Long.parseLong(startTimeDb));
+                    Date end = new Date(Long.parseLong(endTimeDb));
+                    DateTime startDateTime = new DateTime(start, TimeZone.getTimeZone("UTC"));
+                    DateTime endDateTime = new DateTime(end, TimeZone.getTimeZone("UTC"));
+                    EventDateTime startTime = new EventDateTime()
+                            .setDateTime(startDateTime);
+                    EventDateTime endTime = new EventDateTime().setDateTime(endDateTime);
+                    event.setStart(startTime);
+                    event.setEnd(endTime);
+                    event = mService.events().insert(mCalendarId, event).execute();
+                    String eventId = event.getId();
+                    mDbHandler.deleteUnsyncedEventFromDb(startTimeDb);
+                    System.out.printf("Event synced: %s\n", event.getHtmlLink());
+                    mDbHandler.writeOneEventToDB(eventNameDb, mCalendarId, eventId, startTimeDb, endTimeDb, mColor);
                 }
-                Event event = new Event().setSummary(eventNameDb);
-                String start = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'", Locale.getDefault()).format(Long.parseLong(startTimeDb));
-                DateTime startDateTime = new DateTime(start);
-                DateTime endDateTime = new DateTime(start);
-                EventDateTime startTime = new EventDateTime()
-                        .setDateTime(startDateTime);
-                EventDateTime endTime = new EventDateTime().setDateTime(endDateTime);
-                event.setStart(startTime);
-                event.setEnd(endTime);
-                event = mService.events().insert(mCalendarId, event).execute();
-                String eventId = event.getId();
-                mDbHandler.deleteUnsyncedEventFromDb(startTimeDb);
-                System.out.printf("Event synced: %s\n", event.getHtmlLink());
-                mDbHandler.writeOneEventToDB(eventNameDb, mCalendarId, eventId, startTimeDb, endTimeDb, mColor);
             }
             mDbHandler.closeDB();
             mIsCreateAvailable = true;
