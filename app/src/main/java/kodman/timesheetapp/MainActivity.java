@@ -222,6 +222,11 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
 
     public void undoClick(View view) {
         if (MainActivity.this.listLogActivity.size() == 0) return;
+        if(!mIsCreateAvailable)
+        {
+            Toast.makeText(this,"Please wait.Previous operation is performed",Toast.LENGTH_SHORT).show();
+                return;
+        }
         ButtonActivity ba = MainActivity.this.listLogActivity.get(0);
         try {
             mDeleteTime = String.valueOf(ba.ms);
@@ -1081,6 +1086,11 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
                         btn.setOnClickListener(new View.OnClickListener() {
                             @Override
                             public void onClick(View v) {
+                                if(!mIsCreateAvailable)
+                                {
+                                    Toast.makeText(MainActivity.this,"Please wait.Previous operation is performed",Toast.LENGTH_SHORT).show();
+                                    return;
+                                }
                                 Date date = new Date();
                                 ButtonActivity BA = new ButtonActivity(ba.name);
                                 BA.date = new SimpleDateFormat("dd.MM.yyyy").format(date);
@@ -1840,13 +1850,13 @@ For actual time, update every 1000 ms
                     // Если пользоваетель снял галочку, удаляем активность из спика на отправку
 
                     if (!compoundButton.isChecked()) {
-                        for (ButtonActivity bt : listActivityToSend) {
-                            if (bt.name.equals(listActivity.get(position).name)) {
-                                listActivityToSend.remove(position);
-                            }
-                        }
+                       // for (ButtonActivity bt : listActivityToSend) {
+                       //     if (bt.name.equals(listActivity.get(position).name)) {
+                        //        listActivityToSend.remove(position);
+                        //    }
+                       // }
                     } else {
-                        listActivityToSend.add(listActivity.get(position));
+                        //listActivityToSend.add(listActivity.get(position));
                     }
 
                 }
