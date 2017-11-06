@@ -7,15 +7,16 @@ import android.app.DialogFragment;
 import android.app.Fragment;
 import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.content.res.Resources;
 import android.database.Cursor;
-import android.database.sqlite.SQLiteDatabase;
 import android.graphics.drawable.Drawable;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
-import android.support.annotation.RequiresApi;
+import android.provider.MediaStore;
+import android.support.v4.content.FileProvider;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
@@ -35,10 +36,14 @@ import android.widget.ListView;
 import android.widget.TextView;
 
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.FileWriter;
+import java.io.IOException;
 import java.text.DateFormat;
+import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.HashMap;
@@ -59,47 +64,49 @@ public class FragmentExport extends Fragment implements View.OnClickListener {
     private static final String END = "end";
     private static final String START = "start";
     private String dataKey;
-    // Хранит последние данные введенные пользователем в соответсвующие поля
+    // Stores the last data entered by the user in the corresponding fields
     private String latestEmail;
     private String latestSubject;
     private String latestMessage;
 
     private Context fContext;
 
-    // Хранит данные выбранного периода отправки пользовательских данных
+    // Stores the data of the selected period for sending user data
     private HashMap<String, Integer> userDataMap;
-    // Хранит последние данные введенные польхователем в поля
+    // Stores the last data entered by the user in the fields
     private HashMap<String, String> lastUserEmailData;
     // View elements
     private EditText emailEt;
     private EditText subjectEt;
     private EditText messageEt;
-    private TextView startData;
-    private TextView endData;
+    private TextView startDataTv;
+    private TextView endDataTv;
     private ImageButton startDCalendar;
     private ImageButton endDCalendar;
     private Button sendEmail;
     private ListView includeLv;
     private Toolbar toolbar;
     private View thisView;
+    Resources res;
+    ArrayList<ButtonActivity> listActivity;
+    private ArrayList<String[]> allUserEventList;
+    private ArrayList<String[]> filterEventUserList;
+    private ArrayList<String> notSendEventName;
 
     public Toolbar getToolbar() {
         if (toolbar == null) {
-            toolbar = (Toolbar) thisView.findViewById(R.id.toolBar_export);
+            toolbar = (Toolbar) thisView.findViewById(R.id.toolBar_screen_email);
         }
         return toolbar;
     }
 
-    Resources res;
-    ArrayList<ButtonActivity> listActivity;
-    ArrayList<ButtonActivity> listActivityToSend;
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
-        // Создем наш фрагмент и инициализируем его
+        // Create fragment and initialise him
         View view = inflater.inflate(R.layout.screen_email, container, false);
         fContext = view.getContext();
-        toolbar = (Toolbar) view.findViewById(R.id.toolBar_export);
+        toolbar = (Toolbar) view.findViewById(R.id.toolBar_screen_email);
         AppCompatActivity activity = (AppCompatActivity) getActivity();
         activity.setSupportActionBar(toolbar);
         activity.getSupportActionBar().setDisplayHomeAsUpEnabled(true);
@@ -110,20 +117,20 @@ public class FragmentExport extends Fragment implements View.OnClickListener {
         return view;
     }
 
-    // Настраимваем и инициализируем все view элементы
+    // Setup and initialize all view elements
     private void setupUI(View container) {
         emailEt = (EditText) container.findViewById(R.id.fe_email_et);
         subjectEt = (EditText) container.findViewById(R.id.fe_subject_et);
         messageEt = (EditText) container.findViewById(R.id.fe_message_et5);
-        startData = (TextView) container.findViewById(R.id.fe_calendar_startd_tv);
-        endData = (TextView) container.findViewById(R.id.fe_calendar_endd_tv);
+        startDataTv = (TextView) container.findViewById(R.id.fe_calendar_startd_tv);
+        endDataTv = (TextView) container.findViewById(R.id.fe_calendar_endd_tv);
         startDCalendar = (ImageButton) container.findViewById(R.id.fe_calendar_startd_ib);
         endDCalendar = (ImageButton) container.findViewById(R.id.fe_calendar_endd_ib);
         sendEmail = (Button) container.findViewById(R.id.fe_send_email_bt);
         includeLv = (ListView) container.findViewById(R.id.include_lv);
 
-        startData.setOnClickListener(this);
-        endData.setOnClickListener(this);
+        startDataTv.setOnClickListener(this);
+        endDataTv.setOnClickListener(this);
         startDCalendar.setOnClickListener(this);
         endDCalendar.setOnClickListener(this);
         sendEmail.setOnClickListener(this);
@@ -138,7 +145,7 @@ public class FragmentExport extends Fragment implements View.OnClickListener {
             lastUserEmailData = baseDataMaster.getEmailData();
         }
 
-        // Если пользовватель уже вводил данные, автоматически зополняем поля
+        // Еif the user has already entered data, automatically fill in the fields
         if (!baseDataMaster.getEmailData().isEmpty()) {
             lastUserEmailData = baseDataMaster.getEmailData();
             emailEt.setText(lastUserEmailData.get(BaseDataHelper.User.EMAIL));
@@ -146,7 +153,7 @@ public class FragmentExport extends Fragment implements View.OnClickListener {
             messageEt.setText(lastUserEmailData.get(BaseDataHelper.User.MESSAGE));
         }
 
-        // Устанваливаем в textView первый и последний день предыдущего месяца
+        // We set the first and last day of the previous month in textView
         Calendar calendarlast = Calendar.getInstance();
         calendarlast.add(Calendar.MONTH, 0);
         calendarlast.set(Calendar.DAY_OF_MONTH, 1);
@@ -158,8 +165,8 @@ public class FragmentExport extends Fragment implements View.OnClickListener {
         calendarlast.set(Calendar.DAY_OF_MONTH, 1);
         calendarlast.add(Calendar.DATE, -1);
         DateFormat sdf = new SimpleDateFormat("dd/MM/yyyy");
-        startData.setText("01/" + calendarFirst.get(Calendar.MONTH) + "/" + calendarFirst.get(Calendar.YEAR));
-        endData.setText(sdf.format(lastDayOfMonth));
+        startDataTv.setText("01/" + calendarFirst.get(Calendar.MONTH) + "/" + calendarFirst.get(Calendar.YEAR));
+        endDataTv.setText(sdf.format(lastDayOfMonth));
 
         showIncludeItems();
     }
@@ -184,7 +191,7 @@ public class FragmentExport extends Fragment implements View.OnClickListener {
 
     @Override
     public void onClick(View view) {
-        // Получаем id вызванной view
+        // get id called view element
         int view_id = view.getId();
         switch (view_id) {
             case R.id.fe_calendar_endd_ib:
@@ -215,76 +222,132 @@ public class FragmentExport extends Fragment implements View.OnClickListener {
             lastUserEmailData = baseDataMaster.getEmailData();
         }
 
-        // Сохраняем данные введенные пользователем в переменные
+        // Save data entered by the user in variables
         latestEmail = emailEt.getText().toString();
         latestSubject = subjectEt.getText().toString();
         latestMessage = messageEt.getText().toString();
 
-        // Если пользователь менял последние сохраненные данные, обновзяем их
+        // If the user changed the last saved data, we will update them
         if (!latestEmail.equals(lastUserEmailData.get(BaseDataHelper.User.EMAIL))
                 || !latestSubject.equals(lastUserEmailData.get(BaseDataHelper.User.SUBJECT))
                 || !latestMessage.equals(lastUserEmailData.get(BaseDataHelper.User.MESSAGE))) {
 
-            // Сохраняем новые данные в локальную базу данных
+            //Save the new data to the local database
             lastUserEmailData.put(BaseDataHelper.User.EMAIL, emailEt.getText().toString());
             lastUserEmailData.put(BaseDataHelper.User.SUBJECT, subjectEt.getText().toString());
             lastUserEmailData.put(BaseDataHelper.User.MESSAGE, messageEt.getText().toString());
 
             baseDataMaster.insertEmailData(lastUserEmailData);
         }
+        // Get all user event from sqlDB to allUserEventLit
+        allUserEventList = new ArrayList<>();
+        filterEventUserList = new ArrayList<>();
+
+        DBHandler dbHandler = new DBHandler(fContext);
+        Cursor curCSV = dbHandler.readAllEventsFromDB();
+        while (curCSV.moveToNext()) {
+            //Which column you want to exprort
+            String arrStr[] = {curCSV.getString(0), curCSV.getString(1), curCSV.getString(2),
+                    curCSV.getString(3), curCSV.getString(4), curCSV.getString(5)};
+            allUserEventList.add(arrStr);
+        }
+        curCSV.close();
+
+        // Do filter to send data
+        String startData = startDataTv.getText().toString();
+        SimpleDateFormat dateFormat = new SimpleDateFormat("dd/MM/yyyy");
+        long startDataMillisec = 0;
+        String endData = endDataTv.getText().toString();
+        long endDataMilisec = 0;
+
+        try {
+            Date start = dateFormat.parse(startData);
+            startDataMillisec = start.getTime();
+            Date end = dateFormat.parse(endData);
+            endDataMilisec = end.getTime();
+
+        } catch (ParseException e) {
+            e.printStackTrace();
+        }
 
 
-        // Готовим файл *.csv к отправке
-        String fileName = createCsvFile();
-        File filelocation = new File(Environment.getExternalStorageDirectory().getAbsolutePath(), fileName);
-        Uri path = Uri.fromFile(filelocation);
-        // Создаем интент с экшеном на отправку
-        Intent emailIntent = new Intent(android.content.Intent.ACTION_SENDTO);
-        // Заполняем данными: тип текста, адрес, сабж и собственно текст письма
+        for (String[] temp : allUserEventList) {
+            long start = Long.parseLong(temp[4]);
+            long end = Long.parseLong(temp[5]);
+
+            if (start > startDataMillisec && end < endDataMilisec) {
+                filterEventUserList.add(temp);
+            }
+        }
+
+        for (int i = 0; filterEventUserList.size() > i; i++) {
+            String[] temp = filterEventUserList.get(i);
+            for (String name : notSendEventName) {
+                if (temp[2].contains(name)) {
+                    filterEventUserList.remove(i);
+                }
+            }
+        }
+
+
+        // extract the * .csv file to send
+        File csvFile = createCSVFIle(filterEventUserList);
+        String authoritets = fContext.getApplicationContext().getPackageName();
+        Uri fileUri = FileProvider.getUriForFile(fContext, authoritets, csvFile);
+
+        // Create content with action to send
+        Intent emailIntent = new Intent(android.content.Intent.ACTION_SEND);
+        emailIntent.setFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
+        // We fill in the data: type of text, address, subject and the actual text of the letter
         emailIntent.setType("text/plain");
-        emailIntent.putExtra(android.content.Intent.EXTRA_EMAIL, latestEmail);
+        emailIntent.putExtra(android.content.Intent.EXTRA_EMAIL, new String[]{latestEmail});
         emailIntent.putExtra(android.content.Intent.EXTRA_SUBJECT, latestSubject);
         emailIntent.putExtra(android.content.Intent.EXTRA_TEXT, latestMessage);
-        emailIntent.putExtra(Intent.EXTRA_STREAM, path);
-        /* Отправляем на выбор!*/
+        emailIntent.putExtra(MediaStore.EXTRA_OUTPUT, fileUri);
+        /* go to change*/
         fContext.startActivity(Intent.createChooser(emailIntent, "Send mail..."));
     }
 
-    private String createCsvFile() {
-        DBHandler dbHandler = new DBHandler(fContext);
-        File exportDir = new File(Environment.getExternalStorageDirectory(), "");
+    public File createCSVFIle(ArrayList<String[]> listToSend) {
+        final String USER_NAME_PREFERENCES = "user_name_sp";
+        final String USER_NAME = "name";
+        String username = "default";
+
+        SharedPreferences sharedPreferences = fContext.getSharedPreferences(USER_NAME_PREFERENCES, Context.MODE_PRIVATE);
+        if (sharedPreferences.contains(USER_NAME)) {
+            if (!sharedPreferences.getString(USER_NAME, "").isEmpty()) {
+                username = sharedPreferences.getString(USER_NAME, "");
+            }
+        }
+
+
+        String fileName = username + "-timeSheetApp.csv";
+        File exportDir = new File(Environment.getExternalStorageDirectory(), "csv_patch");
         if (!exportDir.exists()) {
             exportDir.mkdirs();
         }
-        String username = "default";
-        String fileName = username + "-timeSheetApp.csv";
         File file = new File(exportDir, fileName);
+
         try {
             file.createNewFile();
-            CSVWriter csvWrite = new CSVWriter(new FileWriter(file));
-
-            Cursor curCSV = dbHandler.readAllEventsFromDB();
-            csvWrite.writeNext(curCSV.getColumnNames());
-            while (curCSV.moveToNext()) {
-                //Which column you want to exprort
-                String arrStr[] = {curCSV.getString(0), curCSV.getString(1), curCSV.getString(2),
-                        curCSV.getString(3), curCSV.getString(4), curCSV.getString(5)};
-                csvWrite.writeNext(arrStr);
+            CSVWriter writer = new CSVWriter(new FileWriter(file));
+            for (String[] temp : listToSend) {
+                writer.writeNext(temp);
             }
-            csvWrite.close();
-            curCSV.close();
-        } catch (Exception sqlEx) {
-            Log.e("MainActivity", sqlEx.getMessage(), sqlEx);
-        }
+            writer.close();
 
-        return fileName;
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return file;
     }
 
+
     /**
-     * Говимся к показу виджета календаря польхователю и обрвботки данныъ
+     * ГWe'll go to the calendar widget's widget display and data processing
      *
-     * @param view_id - id view элемента по которому тапнул пользователь.
-     *                в зависимости от него обрабатываем информацию по своему
+     * @param view_id - id view of the element by which the user touched.
+     *                  depending on it, we process the information according to our
      */
     private void openCalendar(int view_id) {
         // Проверяем userDataMap на null.
@@ -302,74 +365,74 @@ public class FragmentExport extends Fragment implements View.OnClickListener {
     }
 
     /**
-     * Этот класс используется для показа пользователю DataPicker dialog
-     * В нем реализована логика сохранения даты типа start и end в HashMap
+     * This class is used to show the user a DataPicker dialog
+     * It implements the logic of storing a start and end date in HashMap
      */
     @SuppressLint("ValidFragment")
     protected class DatePicker extends DialogFragment
             implements DatePickerDialog.OnDateSetListener {
 
-        // Ключ, отвечает за то, какую дату мы считываем, start data or end data;
-        // key может иметь 2 значения : start или end;
+        // The key is responsible for what date we are reading, start data or end data;
+        // key can have 2 values: start or end;
         private String key = null;
 
         /**
-         * Показываем виджет календаря пользователю
+         * Show User DataPiker dialog
          */
         @Override
         public Dialog onCreateDialog(Bundle savedInstanceState) {
-            // определяем текущую дату
+            // determine the current date
             final Calendar c = Calendar.getInstance();
             int year = c.get(Calendar.YEAR);
             int month = c.get(Calendar.MONTH);
             int day = c.get(Calendar.DAY_OF_MONTH);
 
-            // создаем DatePickerDialog и возвращаем его
             Dialog picker = new DatePickerDialog(getActivity(), this,
                     year, month, day);
             return picker;
         }
 
         /**
-         * Метод сохраняет данные полученные dataPicker от пользователя
-         *
-         * @param datePicker - виджет календаря
-         * @param year       - год выбранный пользователем
-         * @param month      - месяц выбранный пользователем
-         * @param day        - день выбранный пользователем
+         * The method stores the data received by the dataPicker from the user
+         *            *
+         *   * @param datePicker - calendar widget
+         *           * @param year is the year chosen by the user
+         *           * @param month - the month chosen by the user
+         *           * @param day - day selected by the user
+         *          
          */
         @Override
         public void onDateSet(android.widget.DatePicker datePicker, int year,
                               int month, int day) {
-            // Объявляем переменну EditText, которой позже присвоем ссылку на
-            // startData || endData (EditText)
-            // Это нужно для того, что бы указать выбранную дату в правильном EditText
-            TextView varEditText = startData;
+            // Declare the EditText variable, which we will later assign a link to
+            // startData || endDataTv (EditText)
+            // This is necessary in order to specify the selected date in the correct EditText
+            TextView varEditText = startDataTv;
             key = dataKey;
-            // В зависимости от ключа, присваеваем varEditText нужную нам ссылку
+            // Depending on the key, we assign varEditText the link we need
             if (key != null) {
                 if (key.equals(START)) {
-                    varEditText = startData;
-                } else varEditText = endData;
+                    varEditText = startDataTv;
+                } else varEditText = endDataTv;
             }
-            // Сохраняем нащи данные в HashMap
+            // Save the data in the HashMap
             userDataMap.put(key + DAY, day);
-            // Делепем инкремент ++month потому что
-            // счет месяцев в dataPicker наченается с 0 а не с 1
+            // Do increment ++month because
+            // the months count in the datePicker starts with 0 and not with 1
             userDataMap.put(key + MONTH, ++month);
             userDataMap.put(key + YEAR, year);
-            // Присваеваем новое значение в EditText
+            // set new var in EditText
             varEditText.setText(day + " / " + month + " / " + year);
         }
     }
 
-    // Показываем список пользовательских активностей
+    // We show the list of user activities
     private void showIncludeItems() {
 
         listActivity = new ArrayList<>();
 
         DBHandler dbHandler = new DBHandler(fContext);
-        Cursor cursor = dbHandler.readActivitiesFromDB();
+        Cursor cursor = dbHandler.readAllEventsFromDB();
 
         cursor.moveToFirst();
         while (!cursor.isAfterLast()) {
@@ -378,7 +441,6 @@ public class FragmentExport extends Fragment implements View.OnClickListener {
             Log.d(LOG_TAG, "getActivities");
         }
         cursor.close();
-        listActivityToSend = listActivity;
         CustomArrayAdapter arrayListArrayAdapter = new CustomArrayAdapter(fContext, listActivity);
 
         includeLv.setAdapter(arrayListArrayAdapter);
@@ -427,17 +489,23 @@ public class FragmentExport extends Fragment implements View.OnClickListener {
             checkBox.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
                 @Override
                 public void onCheckedChanged(CompoundButton compoundButton, boolean b) {
-
-                    // Если пользоваетель снял галочку, удаляем активность из спика на отправку
+                    if (notSendEventName == null) {
+                        notSendEventName = new ArrayList<>();
+                    }
+                    // If the user unchecked, we delete the activity from the list to send
 
                     if (!compoundButton.isChecked()) {
-                        for (ButtonActivity bt : listActivityToSend) {
+                        for (ButtonActivity bt : listActivity) {
                             if (bt.name.equals(listActivity.get(position).name)) {
-                                listActivityToSend.remove(position);
+                                notSendEventName.add(listActivity.get(position).name);
                             }
                         }
                     } else {
-                        listActivityToSend.add(listActivity.get(position));
+                        for (int i = 0; notSendEventName.size() > i; i++) {
+                            if (notSendEventName.get(i).contains(listActivity.get(position).name)) {
+                                notSendEventName.remove(i);
+                            }
+                        }
                     }
 
                 }
