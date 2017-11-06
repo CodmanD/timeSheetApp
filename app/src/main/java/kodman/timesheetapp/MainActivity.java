@@ -2,7 +2,10 @@ package kodman.timesheetapp;
 
 import android.Manifest;
 import android.accounts.AccountManager;
+import android.annotation.SuppressLint;
+import android.app.DatePickerDialog;
 import android.app.Dialog;
+import android.app.DialogFragment;
 import android.app.TimePickerDialog;
 import android.content.Context;
 import android.content.DialogInterface;
@@ -11,14 +14,19 @@ import android.content.SharedPreferences;
 import android.content.pm.ActivityInfo;
 import android.content.res.Resources;
 import android.database.Cursor;
+import android.database.sqlite.SQLiteDatabase;
+import android.database.sqlite.SQLiteOpenHelper;
 import android.graphics.Color;
 import android.graphics.drawable.ColorDrawable;
 import android.graphics.drawable.Drawable;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
+import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.Environment;
+import android.provider.BaseColumns;
 import android.support.annotation.NonNull;
 import android.support.annotation.RequiresApi;
 import android.support.v7.app.AlertDialog;
@@ -35,9 +43,12 @@ import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
+import android.widget.CheckBox;
+import android.widget.CompoundButton;
 import android.widget.EditText;
 import android.widget.GridLayout;
 import android.widget.GridView;
+import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.ListAdapter;
@@ -65,6 +76,8 @@ import com.google.api.services.calendar.model.EventDateTime;
 
 import org.w3c.dom.Text;
 
+import java.io.File;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.net.UnknownHostException;
 import java.text.SimpleDateFormat;
@@ -73,16 +86,20 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.TimeZone;
 import java.util.TimerTask;
 
 import kodman.timesheetapp.Database.DBHandler;
+import kodman.timesheetapp.Database.ExportDB.BaseDataHelper;
+import kodman.timesheetapp.Database.ExportDB.BaseDataMaster;
+import kodman.timesheetapp.Database.ExportDB.CSVWriter;
 import pub.devrel.easypermissions.AfterPermissionGranted;
 import pub.devrel.easypermissions.EasyPermissions;
 
-public class MainActivity extends AppCompatActivity implements EasyPermissions.PermissionCallbacks {
+public class MainActivity extends AppCompatActivity implements EasyPermissions.PermissionCallbacks,View.OnClickListener {
     private static final String TAG = "------Activity Say";
     private Toolbar toolbar;
     private Menu menu;
@@ -90,33 +107,33 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
     private SharedPreferences mShared;
     private SharedPreferences.Editor mSharedEditor;
 
-    ArrayList<ButtonActivity> listActivity = new ArrayList<>();//All buttons activity for current  time
-    ArrayList<ButtonActivity> listLogActivity = new ArrayList<>();
-    ArrayAdapter<ButtonActivity> adapterListLogActivity;
-    ArrayList<ButtonActivity> listSetActivity = new ArrayList<>();
-    String mDeleteTime;
-    String mUpdateTime;
-    String mNewStartTime;
-    Resources res;
-    ListView lvActivity;
+    private ArrayList<ButtonActivity> listActivity = new ArrayList<>();//All buttons activity for current  time
+    private ArrayList<ButtonActivity> listLogActivity = new ArrayList<>();
+    private  ArrayAdapter<ButtonActivity> adapterListLogActivity;
+    private  ArrayList<ButtonActivity> listSetActivity = new ArrayList<>();
+    private  String mDeleteTime;
+    private  String mUpdateTime;
+    private  String mNewStartTime;
+    private  Resources res;
+    private  ListView lvActivity;
     Time startTime = new Time();
-    Date startDate = new Date();
+    private  Date startDate = new Date();
     Date currentDate = new Date();
-    DateFormat df = new DateFormat();
-    String mColor;
-    static String nameCalendar = "";
-    static String myName = "";
-    SharedPreferences sPref;
-    Long ms;
+    private  DateFormat df = new DateFormat();
+    private  String mColor;
+    private  static String nameCalendar = "";
+    private  static String myName = "";
+    private  SharedPreferences sPref;
+    private   Long ms;
+    static String  actualTime;
 
 
     class ButtonActivity {
         String name;
         int color;
-        String time = new SimpleDateFormat("HH:mm:ss").format(startDate);
-        String date = new SimpleDateFormat("dd.MM.yyyy").format(startDate);
-        long ms = System.currentTimeMillis();
-        ;
+        String time ;
+        String date ;
+        long ms;
 
         public ButtonActivity() {
 
@@ -125,13 +142,32 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
         public ButtonActivity(String name) {
             this.name = name;
             this.color = getColor(this.name);
+            this.ms=System.currentTimeMillis();
+            setDatetime();
         }
 
         public ButtonActivity(String name, int color) {
             this.name = name;
             this.color = color;
+            this.ms=System.currentTimeMillis();
+
+            setDatetime();
         }
 
+        public ButtonActivity(String name, int color,long ms) {
+            this.name = name;
+            this.color = color;
+            this.ms=ms;
+
+            setDatetime();
+        }
+
+        public void setDatetime()
+        {
+            Date startDate=new Date(this.ms);
+            this.date= new SimpleDateFormat("dd.MM.yyyy").format(startDate);
+            this.time=new SimpleDateFormat("HH:mm:ss").format(startDate);
+        }
         private int getColor(String name) {
 
             if (name.equals(res.getString(R.string.nothing)))
@@ -1067,25 +1103,9 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
         setContentView(R.layout.activity_main);
         setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
         this.res = this.getResources();
-        //  setContentView(R.layout.screen_settings);
         toolbar = (Toolbar) this.findViewById(R.id.toolBar_MainActivity);
-
-        //if(toolbar==null)
-        //    Log.d(TAG,"NULL");
         this.setSupportActionBar(toolbar);
-        toolbar.setTitleTextColor(Color.WHITE);
-        toolbar.setSubtitleTextColor(Color.WHITE);
 
-
-        //toolbar.setNavigationIcon(R.mipmap.ic_add_circle_white_36dp);
-
-        toolbar.setNavigationOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-
-                Log.d(TAG, "Icon Click");
-            }
-        });
 
         //---Read from SharedPreferences ------------
         sPref = this.getPreferences(MODE_PRIVATE);
@@ -1113,7 +1133,8 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
         } else {
             this.createList();
         }
-        //  this.createList();
+        if(this.listActivity.size() == 0)
+          this.createList();
         //------------------------------------------------------------------
 
 
@@ -1129,7 +1150,7 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
         ///-------------
 
 //Read From DataBase
-        addFromAcivitiesFromDB();
+        addAcivitiesFromDB();
         this.createActivityLog();
 /*
 For actual time, update every 1000 ms
@@ -1138,12 +1159,14 @@ For actual time, update every 1000 ms
                 (
                         new TimerTask() {
                             public void run() {
+                                if(toolbar==null) return;
                                 toolbar.post(new Runnable() {
                                     @Override
                                     public void run() {
 
                                         Date curDate = new Date();
                                         String time = new SimpleDateFormat("HH:mm:ss").format(curDate);
+                                       MainActivity.actualTime=time;
                                         toolbar.setTitle(time);
                                         if (MainActivity.this.listLogActivity.size() > 0 && MainActivity.this.status == 0) {
                                             long timeDiff = System.currentTimeMillis() - MainActivity.this.listLogActivity.get(0).ms;
@@ -1483,17 +1506,16 @@ For actual time, update every 1000 ms
     private void createScreenSettings() {
         this.setContentView(R.layout.screen_settings);
         toolbar = (Toolbar) this.findViewById(R.id.toolBar_Setting);
-        toolbar.setTitle("00:00:00");
+        toolbar.setTitle(MainActivity.actualTime);
         this.setSupportActionBar(toolbar);
         this.addToGridLayoutSettings();
-        // if (!nameCalendar.equals("")) {
+
         EditText editTextCalendar = (EditText) this.findViewById(R.id.editTextCalendar);
         editTextCalendar.setText(sPref.getString("myCalendar", ""));
-        // }
-        // if (!myName.equals("")) {
+
         EditText editTextName = (EditText) this.findViewById(R.id.editTextName);
         editTextName.setText(sPref.getString("myName", ""));
-        // }
+
     }
 
     // Saved Data From Field MyName & My Calendar
@@ -1537,7 +1559,7 @@ For actual time, update every 1000 ms
                 this.setContentView(R.layout.activity_main);
                 toolbar = (Toolbar) this.findViewById(R.id.toolBar_MainActivity);
 
-                toolbar.setTitle("00:00:00");
+                toolbar.setTitle( MainActivity.actualTime);
                 this.setSupportActionBar(toolbar);
                 this.addToGridViewButtonsActivity();
                 this.createActivityLog();
@@ -1550,12 +1572,12 @@ For actual time, update every 1000 ms
                 return true;
             case R.id.action_export:
                 this.status = 2;
-                this.setContentView(R.layout.screen_email);
-                toolbar = (Toolbar) this.findViewById(R.id.toolBar_MainActivity);
+               // this.setContentView(R.layout.screen_email);
+               // toolbar = (Toolbar) this.findViewById(R.id.toolBar_MainActivity);
 
-                toolbar.setTitle("00:00:00");
-                this.setSupportActionBar(toolbar);
-
+               // toolbar.setTitle(MainActivity.actualTime);
+               // this.setSupportActionBar(toolbar);
+                createScreenEmail();
                 //   Toast.makeText(this, "Export", Toast.LENGTH_SHORT).show();
                 return true;
             case R.id.action_share:
@@ -1563,8 +1585,14 @@ For actual time, update every 1000 ms
                 this.setContentView(R.layout.screen_share);
                 toolbar = (Toolbar) this.findViewById(R.id.toolBar_MainActivity);
 
-                toolbar.setTitle("00:00:00");
+                toolbar.setTitle(MainActivity.actualTime);
                 this.setSupportActionBar(toolbar);
+                String appPackageName = "kodman.timesheetapp";
+                try {
+                    startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse("market://details?id=" + appPackageName)));
+                } catch (android.content.ActivityNotFoundException anfe) {
+                    startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse("https://play.google.com/store/apps/details?id=" + appPackageName)));
+                }
                 //   Toast.makeText(this, "Share", Toast.LENGTH_SHORT).show();
                 return true;
         }
@@ -1599,7 +1627,7 @@ For actual time, update every 1000 ms
     }
 
     //Add from DB Activities in AcivityLog
-    private void addFromAcivitiesFromDB()
+    private void addAcivitiesFromDB()
     {
        // String query = "SELECT * FROM calendarTable";
         DBHandler mDbHandler = new DBHandler(getApplicationContext());
@@ -1615,17 +1643,30 @@ For actual time, update every 1000 ms
 
         while(cursor.moveToNext())
         {
-            String id=cursor.getString(0);
-           String name=cursor.getString(2);
-            long startTime=Long.parseLong(cursor.getString(4));
+
+            String id=cursor.getString(cursor.getColumnIndex("_id"));
+           String name=cursor.getString(cursor.getColumnIndex("eventName"));
+
+            long startTime=Long.parseLong(cursor.getString(cursor.getColumnIndex("dateTimeStart")));
+            long endTime=Long.parseLong(cursor.getString(cursor.getColumnIndex("dateTimeEnd")));
          //   String color=cursor.getString(6);
-            int  color=Integer.parseInt(cursor.getString(6));
-            Log.d(TAG,"Id:"+id+"Name = "+name+"Color = "+color+"time = "+startTime );
+            int color;
+            try{
+              color=Integer.parseInt(cursor.getString(cursor.getColumnIndex("color")));
+            }
+            catch(Exception ex)
+            {
+                 color=Color.WHITE;
+                Log.d(TAG,"EXCEPTION  Id:"+id+"Name = "+name+"Color = "+color+"start = "+startTime+"end = "+endTime );
+            }
+            Log.d(TAG,"Id:"+id+"Name = "+name+"Color = "+color+"start = "+startTime+"end = "+endTime );
 
             ButtonActivity ba=new ButtonActivity(name,color);
             ba.ms=startTime;
+            ba.setDatetime();
             this.listLogActivity.add(0,ba);
         }
+        cursor.close();
 
     }
 
@@ -1634,7 +1675,7 @@ For actual time, update every 1000 ms
 
         DBHandler mDbHandler = new DBHandler(getApplicationContext());
         mDbHandler.clearEventsTable();
-       Log.d(TAG,"Clean DB");
+        Log.d(TAG,"Clean DB");
         // Toast.makeText(this, "Clean Log From DB", Toast.LENGTH_SHORT).show();
     }
 
@@ -1648,4 +1689,449 @@ For actual time, update every 1000 ms
     public void onPause() {
         super.onPause();
     }
+
+
+
+
+
+    /*
+    START EMAIL_SCREEN+++++++++++++++++++++++++++++++++++++++++++
+     */
+        private static final String LOG_TAG = "FragmentExport";
+  private static final int DIALOG_DATE = 1;
+
+    private static final String DAY = "day";
+    private static final String MONTH = "month";
+    private static final String YEAR = "year";
+    private static final String END = "end";
+    private static final String START = "start";
+    private String dataKey;
+    // Хранит последние данные введенные пользователем в соответсвующие поля
+    private String latestEmail;
+    private String latestSubject;
+    private String latestMessage;
+    private EditText emailEt;
+    private EditText subjectEt;
+  private EditText messageEt;
+    private TextView startData;
+    private TextView endData;
+    private ImageButton startDCalendar;
+    private ImageButton endDCalendar;
+    private Button sendEmail;
+    private ListView includeLv;
+    ArrayList<ButtonActivity> listActivityToSend;
+    // Хранит данные выбранного периода отправки пользовательских данных
+    private HashMap<String, Integer> userDataMap;
+
+    // Хранит последние данные введенные польхователем в поля
+    private HashMap<String, String> lastUserEmailData;
+
+    private void createScreenEmail()
+    {
+        this.setContentView(R.layout.screen_email);
+        toolbar = (Toolbar)this.findViewById(R.id.toolBar_screen_email);
+        toolbar.setTitle(MainActivity.actualTime);
+        this.setSupportActionBar(toolbar);
+        setupUI();
+    }
+
+
+//    private Context fContext;
+
+//
+private void setupUI() {
+    toolbar = (Toolbar) this.findViewById(R.id.toolBar_MainActivity);
+    emailEt = (EditText) this.findViewById(R.id.fe_email_et);
+    subjectEt = (EditText) this.findViewById(R.id.fe_subject_et);
+    messageEt = (EditText) this.findViewById(R.id.fe_message_et5);
+    startData = (TextView) this.findViewById(R.id.fe_calendar_startd_tv);
+    endData = (TextView) this.findViewById(R.id.fe_calendar_endd_tv);
+    startDCalendar = (ImageButton)this.findViewById(R.id.fe_calendar_startd_ib);
+    endDCalendar = (ImageButton)this.findViewById(R.id.fe_calendar_endd_ib);
+    sendEmail = (Button) this.findViewById(R.id.fe_send_email_bt);
+    includeLv = (ListView) this.findViewById(R.id.include_lv);
+
+    startData.setOnClickListener(this);
+    endData.setOnClickListener(this);
+    startDCalendar.setOnClickListener(this);
+    endDCalendar.setOnClickListener(this);
+    sendEmail.setOnClickListener(this);
+
+    updateUI();
+}
+
+    private void updateUI() {
+        BaseDataMaster baseDataMaster = BaseDataMaster.getDataMaster(MainActivity.this);
+        if (lastUserEmailData == null) {
+            lastUserEmailData = baseDataMaster.getEmailData();
+        }
+
+        // Если пользовватель уже вводил данные, автоматически зополняем поля
+        if (!baseDataMaster.getEmailData().isEmpty()) {
+            lastUserEmailData = baseDataMaster.getEmailData();
+            emailEt.setText(lastUserEmailData.get(BaseDataHelper.User.EMAIL));
+            subjectEt.setText(lastUserEmailData.get(BaseDataHelper.User.SUBJECT));
+            messageEt.setText(lastUserEmailData.get(BaseDataHelper.User.MESSAGE));
+        }
+
+        // Устанваливаем в textView первый и последний день предыдущего месяца
+        Calendar calendarlast = Calendar.getInstance();
+        calendarlast.add(Calendar.MONTH, 0);
+        calendarlast.set(Calendar.DAY_OF_MONTH, 1);
+        calendarlast.add(Calendar.DATE, -1);
+        Date lastDayOfMonth = calendarlast.getTime();
+
+        Calendar calendarFirst = Calendar.getInstance();
+        calendarFirst.add(Calendar.MONTH, 0);
+        calendarlast.set(Calendar.DAY_OF_MONTH, 1);
+        calendarlast.add(Calendar.DATE, -1);
+        java.text.DateFormat sdf = new SimpleDateFormat("dd/MM/yyyy");
+        startData.setText("01/" + calendarFirst.get(Calendar.MONTH) + "/" + calendarFirst.get(Calendar.YEAR));
+        endData.setText(sdf.format(lastDayOfMonth));
+
+        showIncludeItems();
+    }
+    private void showIncludeItems() {
+
+       // listActivity = new ArrayList<>();
+
+//        DBHandler dbHandler = new DBHandler(MainActivity.this);
+//        Cursor cursor = dbHandler.readActivitiesFromDB();
+//
+//        cursor.moveToFirst();
+//        while (!cursor.isAfterLast()) {
+//            listActivity.add(new ButtonActivity(cursor.getString(1)));
+//            cursor.moveToNext();
+//            Log.d(LOG_TAG, "getActivities");
+//        }
+//        cursor.close();
+        listActivityToSend = listActivity;
+        CustomArrayAdapter arrayListArrayAdapter = new CustomArrayAdapter(MainActivity.this, listActivity);
+
+        includeLv.setAdapter(arrayListArrayAdapter);
+    }
+
+    public class CustomArrayAdapter extends ArrayAdapter<ArrayList<ButtonActivity>> {
+
+        public CustomArrayAdapter(Context context, ArrayList values) {
+            super(context, R.layout.list_item, values);
+        }
+
+        @Override
+        public View getView(final int position, View convertView, ViewGroup parent) {
+            View v = convertView;
+
+            if (v == null) {
+                LayoutInflater vi;
+                vi = LayoutInflater.from(getContext());
+                v = vi.inflate(R.layout.include_activity_item, null);
+            }
+            TextView textView = (TextView) v.findViewById(R.id.ia_action_name);
+            CheckBox checkBox = (CheckBox) v.findViewById(R.id.ia_checkbox);
+
+            checkBox.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+                @Override
+                public void onCheckedChanged(CompoundButton compoundButton, boolean b) {
+
+                    // Если пользоваетель снял галочку, удаляем активность из спика на отправку
+
+                    if (!compoundButton.isChecked()) {
+                        for (ButtonActivity bt : listActivityToSend) {
+                            if (bt.name.equals(listActivity.get(position).name)) {
+                                listActivityToSend.remove(position);
+                            }
+                        }
+                    } else {
+                        listActivityToSend.add(listActivity.get(position));
+                    }
+
+                }
+            });
+            ButtonActivity activity = listActivity.get(position);
+            textView.setText(activity.name);
+            textView.setBackgroundColor(activity.color);
+            return v;
+        }
+    }
+
+    @Override
+    public void onClick(View view) {
+        Toast.makeText(MainActivity.this,"Click",Toast.LENGTH_SHORT).show();
+        // Получаем id вызванной view
+        int view_id = view.getId();
+        switch (view_id) {
+            case R.id.fe_calendar_endd_ib:
+                Log.d(LOG_TAG, "endDate_et");
+                openCalendar(view_id);
+                break;
+            case R.id.fe_calendar_endd_tv:
+                Log.d(LOG_TAG, "endDate_ib");
+                openCalendar(view_id);
+                break;
+            case R.id.fe_calendar_startd_tv:
+                Log.d(LOG_TAG, "startDate_et");
+                openCalendar(view_id);
+                break;
+            case R.id.fe_calendar_startd_ib:
+                Log.d(LOG_TAG, "startDate_ib");
+                openCalendar(view_id);
+                break;
+            case R.id.fe_send_email_bt:
+                sendUserData();
+                break;
+        }
+    }
+
+    private void sendUserData() {
+
+        BaseDataMaster baseDataMaster = BaseDataMaster.getDataMaster(MainActivity.this);
+        if (lastUserEmailData == null || lastUserEmailData.size() == 0) {
+            lastUserEmailData = baseDataMaster.getEmailData();
+        }
+
+        // Сохраняем данные введенные пользователем в переменные
+        latestEmail = emailEt.getText().toString();
+        latestSubject = subjectEt.getText().toString();
+        latestMessage = messageEt.getText().toString();
+
+        // Если пользователь менял последние сохраненные данные, обновзяем их
+        if (!latestEmail.equals(lastUserEmailData.get(BaseDataHelper.User.EMAIL))
+                || !latestSubject.equals(lastUserEmailData.get(BaseDataHelper.User.SUBJECT))
+                || !latestMessage.equals(lastUserEmailData.get(BaseDataHelper.User.MESSAGE))) {
+
+            // Сохраняем новые данные в локальную базу данных
+            lastUserEmailData.put(BaseDataHelper.User.EMAIL, emailEt.getText().toString());
+            lastUserEmailData.put(BaseDataHelper.User.SUBJECT, subjectEt.getText().toString());
+            lastUserEmailData.put(BaseDataHelper.User.MESSAGE, messageEt.getText().toString());
+
+            baseDataMaster.insertEmailData(lastUserEmailData);
+
+        }
+        /// Готовим файл *.csv к отправке
+        String fileName = createCsvFile();
+        File filelocation = new File(Environment.getExternalStorageDirectory().getAbsolutePath(), fileName);
+        Uri path = Uri.fromFile(filelocation);
+        // Создаем интент с экшеном на отправку
+        Intent emailIntent = new Intent(android.content.Intent.ACTION_SENDTO);
+        // Заполняем данными: тип текста, адрес, сабж и собственно текст письма
+        emailIntent.setType("text/plain");
+        emailIntent.putExtra(android.content.Intent.EXTRA_EMAIL, latestEmail);
+        emailIntent.putExtra(android.content.Intent.EXTRA_SUBJECT, latestSubject);
+        emailIntent.putExtra(android.content.Intent.EXTRA_TEXT, latestMessage);
+        emailIntent.putExtra(Intent.EXTRA_STREAM, path);
+        /* Отправляем на выбор!*/
+        MainActivity.this.startActivity(Intent.createChooser(emailIntent, "Send mail..."));
+    }
+
+    private String createCsvFile() {
+        DBHandler dbHandler = new DBHandler(MainActivity.this);
+        File exportDir = new File(Environment.getExternalStorageDirectory(), "");
+        if (!exportDir.exists()) {
+            exportDir.mkdirs();
+        }
+        String username = "default";
+        String fileName = username + "-timeSheetApp.csv";
+        File file = new File(exportDir, fileName);
+        try {
+            file.createNewFile();
+            CSVWriter csvWrite = new CSVWriter(new FileWriter(file));
+
+            Cursor curCSV = dbHandler.readAllEventsFromDB();
+            csvWrite.writeNext(curCSV.getColumnNames());
+            while (curCSV.moveToNext()) {
+                //Which column you want to exprort
+                String arrStr[] = {curCSV.getString(0), curCSV.getString(1), curCSV.getString(2),
+                        curCSV.getString(3), curCSV.getString(4), curCSV.getString(5)};
+                csvWrite.writeNext(arrStr);
+            }
+            csvWrite.close();
+            curCSV.close();
+        } catch (Exception sqlEx) {
+            Log.e("MainActivity", sqlEx.getMessage(), sqlEx);
+        }
+
+        return fileName;
+    }
+
+    private void openCalendar(int view_id) {
+        // Проверяем userDataMap на null.
+        if (userDataMap == null) {
+            userDataMap = new HashMap<>();
+        }
+
+        DialogFragment dialogFragment = new DatePicker();
+        if (view_id == R.id.fe_calendar_endd_tv || view_id == R.id.fe_calendar_endd_ib) {
+            dataKey = END;
+        } else if (view_id == R.id.fe_calendar_startd_tv || view_id == R.id.fe_calendar_startd_ib) {
+            dataKey = START;
+        }
+        dialogFragment.show(getFragmentManager(), "dataPicker");
+    }
+
+    @SuppressLint("ValidFragment")
+    protected class DatePicker extends DialogFragment
+            implements DatePickerDialog.OnDateSetListener {
+
+        // Ключ, отвечает за то, какую дату мы считываем, start data or end data;
+        // key может иметь 2 значения : start или end;
+        private String key = null;
+
+        /**
+         * Показываем виджет календаря пользователю
+         */
+        @Override
+        public Dialog onCreateDialog(Bundle savedInstanceState) {
+            // определяем текущую дату
+            final Calendar c = Calendar.getInstance();
+            int year = c.get(Calendar.YEAR);
+            int month = c.get(Calendar.MONTH);
+            int day = c.get(Calendar.DAY_OF_MONTH);
+
+            // создаем DatePickerDialog и возвращаем его
+            Dialog picker = new DatePickerDialog(getActivity(), this,
+                    year, month, day);
+            return picker;
+        }
+
+        /**
+         * Метод сохраняет данные полученные dataPicker от пользователя
+         *
+         * @param datePicker - виджет календаря
+         * @param year       - год выбранный пользователем
+         * @param month      - месяц выбранный пользователем
+         * @param day        - день выбранный пользователем
+         */
+        @Override
+        public void onDateSet(android.widget.DatePicker datePicker, int year,
+                              int month, int day) {
+            // Объявляем переменну EditText, которой позже присвоем ссылку на
+            // startData || endData (EditText)
+            // Это нужно для того, что бы указать выбранную дату в правильном EditText
+            TextView varEditText = startData;
+            key = dataKey;
+            // В зависимости от ключа, присваеваем varEditText нужную нам ссылку
+            if (key != null) {
+                if (key.equals(START)) {
+                    varEditText = startData;
+                } else varEditText = endData;
+            }
+            // Сохраняем нащи данные в HashMap
+            userDataMap.put(key + DAY, day);
+            // Делепем инкремент ++month потому что
+            // счет месяцев в dataPicker наченается с 0 а не с 1
+            userDataMap.put(key + MONTH, ++month);
+            userDataMap.put(key + YEAR, year);
+            // Присваеваем новое значение в EditText
+            varEditText.setText(day + " / " + month + " / " + year);
+        }
+    }
+//////////////////////////////////////////////////////////////////////////////////////////////
+
+//    // Показываем список пользовательских активностей
+//    private void showIncludeItems() {
+//
+//        listActivity = new ArrayList<>();
+//
+//        DBHandler dbHandler = new DBHandler(fContext);
+//        Cursor cursor = dbHandler.readActivitiesFromDB();
+//
+//        cursor.moveToFirst();
+//        while (!cursor.isAfterLast()) {
+//            listActivity.add(new ButtonActivity(cursor.getString(1)));
+//            cursor.moveToNext();
+//            Log.d(LOG_TAG, "getActivities");
+//        }
+//        cursor.close();
+//        listActivityToSend = listActivity;
+//        CustomArrayAdapter arrayListArrayAdapter = new CustomArrayAdapter(fContext, listActivity);
+//
+//        includeLv.setAdapter(arrayListArrayAdapter);
+//    }
+//
+//
+//
+//    public class CustomArrayAdapter extends ArrayAdapter<ArrayList<ButtonActivity>> {
+//
+//        public CustomArrayAdapter(Context context, ArrayList values) {
+//            super(context, R.layout.list_item, values);
+//        }
+//
+//        @Override
+//        public View getView(final int position, View convertView, ViewGroup parent) {
+//            View v = convertView;
+//
+//            if (v == null) {
+//                LayoutInflater vi;
+//                vi = LayoutInflater.from(getContext());
+//                v = vi.inflate(R.layout.include_activity_item, null);
+//            }
+//            TextView textView = (TextView) v.findViewById(R.id.ia_action_name);
+//            CheckBox checkBox = (CheckBox) v.findViewById(R.id.ia_checkbox);
+//
+//            checkBox.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+//                @Override
+//                public void onCheckedChanged(CompoundButton compoundButton, boolean b) {
+//
+//                    // Если пользоваетель снял галочку, удаляем активность из спика на отправку
+//
+//                    if (!compoundButton.isChecked()) {
+//                        for (ButtonActivity bt : listActivityToSend) {
+//                            if (bt.name.equals(listActivity.get(position).name)) {
+//                                listActivityToSend.remove(position);
+//                            }
+//                        }
+//                    } else {
+//                        listActivityToSend.add(listActivity.get(position));
+//                    }
+//
+//                }
+//            });
+//            ButtonActivity activity = listActivity.get(position);
+//            textView.setText(activity.name);
+//            textView.setBackgroundColor(activity.color);
+//            return v;
+//        }
+//    }
+//
+//    class User implements BaseColumns {
+//        public  final String TABLE_NAME = "latest_data";
+//        public  final String EMAIL = " email ";
+//        public  final String SUBJECT = " subject ";
+//        public  final String MESSAGE = " message ";
+//    }
+//
+//    class BaseDataHelper extends SQLiteOpenHelper {
+//
+//        public static final String DB_NAME = "timeSheetApp_sendEmailDB";
+//        public static final int DB_VERSION = 1;
+//
+//        User user= new User();
+//
+//         String SCRIPT_CREATE_TBL_MAIN = " CREATE TABLE " +
+//                user.TABLE_NAME + " ( " +
+//                user._ID + " INTEGER PRIMARY KEY AUTOINCREMENT, " +
+//               user.EMAIL + " TEXT, " +
+//                user.SUBJECT + " TEXT, " +
+//                user.MESSAGE + " TEXT " +
+//                " );";
+//
+//        public BaseDataHelper(Context context) {
+//            super(context, DB_NAME, null, DB_VERSION);
+//        }
+//
+//        @Override
+//        public void onCreate(SQLiteDatabase db) {
+//            db.execSQL(SCRIPT_CREATE_TBL_MAIN);
+//        }
+//
+//        @Override
+//        public void onUpgrade(SQLiteDatabase sqLiteDatabase, int i, int i1) {
+//            sqLiteDatabase.execSQL("DROP TABLE " + user.TABLE_NAME);
+//            onCreate(sqLiteDatabase);
+//        }
+//    }
+//
+    /*
+    +++++++++++++++++++++++++++++++++++++++++ End EMAIL SCREEN
+     */
 }
