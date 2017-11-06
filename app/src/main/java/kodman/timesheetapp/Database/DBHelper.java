@@ -23,12 +23,6 @@ class DBHelper extends SQLiteOpenHelper {
                 + "dateTimeEnd text,"
                 + "color text"
                 + ");");
-        db.execSQL("create table activityTable ("
-                + "_id integer primary key autoincrement,"
-                + "buttonName text,"
-                + "eventName text"
-                + ");");
-
     }
 
 
