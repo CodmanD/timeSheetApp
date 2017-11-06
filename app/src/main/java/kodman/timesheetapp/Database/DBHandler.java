@@ -86,7 +86,7 @@ public class DBHandler {
     public Cursor readAllEventsFromDB() {
         dbHelper = new DBHelper(mContext);
         db = dbHelper.getWritableDatabase();
-        return db.rawQuery("SELECT * FROM calendarTable ORDER BY dateTimeStart DESC", null);
+        return db.rawQuery("SELECT * FROM calendarTable ORDER BY dateTimeStart ASC", null);
     }
 
     public void clearEventsTable() {

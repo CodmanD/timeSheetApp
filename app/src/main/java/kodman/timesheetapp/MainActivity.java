@@ -1667,6 +1667,7 @@ For actual time, update every 1000 ms
             this.listLogActivity.add(0,ba);
         }
         cursor.close();
+        mDbHandler.closeDB();
 
     }
 
@@ -1677,6 +1678,7 @@ For actual time, update every 1000 ms
         mDbHandler.clearEventsTable();
         Log.d(TAG,"Clean DB");
         // Toast.makeText(this, "Clean Log From DB", Toast.LENGTH_SHORT).show();
+        mDbHandler.closeDB();
     }
 
 
@@ -1949,7 +1951,7 @@ private void setupUI() {
         } catch (Exception sqlEx) {
             Log.e("MainActivity", sqlEx.getMessage(), sqlEx);
         }
-
+        dbHandler.closeDB();
         return fileName;
     }
 
