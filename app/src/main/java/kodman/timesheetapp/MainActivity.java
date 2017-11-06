@@ -150,7 +150,6 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
             this.name = name;
             this.color = color;
             this.ms = System.currentTimeMillis();
-
             setDatetime();
         }
 
@@ -1020,6 +1019,7 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
             public void onClick(DialogInterface dialog, int which) {
 
                 MainActivity.this.listActivity.add(ba);
+                Toast.makeText(MainActivity.this, "Click Save color = "+ba.color, Toast.LENGTH_SHORT).show();
                 MainActivity.this.addToGridLayoutSettings();
                 //Toast.makeText(MainActivity.this, "Click Save", Toast.LENGTH_SHORT).show();
                 dialog.dismiss();
@@ -1109,11 +1109,12 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
                                     return;
                                 }
                                 Date date = new Date();
-                                ButtonActivity BA = new ButtonActivity(ba.name);
+                                ButtonActivity BA = new ButtonActivity(ba.name,ba.color);
                                 BA.date = new SimpleDateFormat("dd.MM.yyyy").format(date);
                                 BA.time = new SimpleDateFormat("HH:mm:ss").format(date);
                                 ms = System.currentTimeMillis();
                                 BA.ms = ms;
+                                Toast.makeText(MainActivity.this,"color"+BA.color,Toast.LENGTH_SHORT).show();
                                 MainActivity.this.listLogActivity.add(0, BA);
                                 createActivityLog();
                                 getListViewSize(MainActivity.this.lvActivity);
