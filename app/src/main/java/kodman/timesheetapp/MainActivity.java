@@ -222,10 +222,9 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
 
     public void undoClick(View view) {
         if (MainActivity.this.listLogActivity.size() == 0) return;
-        if(!mIsCreateAvailable)
-        {
-            Toast.makeText(this,"Please wait.Previous operation is performed",Toast.LENGTH_SHORT).show();
-                return;
+        if (!mIsCreateAvailable) {
+            Toast.makeText(this, "Please wait.Previous operation is performed", Toast.LENGTH_SHORT).show();
+            return;
         }
         ButtonActivity ba = MainActivity.this.listLogActivity.get(0);
         try {
@@ -523,13 +522,22 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
         }
 
         private void deleteEventFromCalendar(String startTime) throws IOException {
-            try {
-                ArrayList<String> arrayList = mDbHandler.readOneEventFromDB(startTime);
-                mService.events().delete(mCalendarId, arrayList.get(1)).execute();
-                mDbHandler.deleteEventFromDb(startTime);
-            } catch (Exception e) {
-                e.printStackTrace();
+            mIsCreateAvailable = false;
+            String eventId;
+            if (isDeviceOnline()) {
+                try {
+                    ArrayList<String> arrayList = mDbHandler.readOneEventFromDB(startTime);
+                    mService.events().delete(mCalendarId, arrayList.get(1)).execute();
+                    mDbHandler.deleteEventFromDb(startTime);
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            } else {
+                eventId = "deleted";
+                mDbHandler.updateEventDelete(mStartTime, eventId);
             }
+            mDbHandler.closeDB();
+            mIsCreateAvailable = true;
         }
 
         private void updateEventTime() throws IOException {
@@ -693,10 +701,12 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
             String startTimeDb;
             String eventNameDb;
             String endTimeDb;
+            String tempEventId;
             while (unsyncedEvents.moveToNext()) {
                 eventNameDb = unsyncedEvents.getString(unsyncedEvents.getColumnIndexOrThrow("eventName"));
                 startTimeDb = unsyncedEvents.getString(unsyncedEvents.getColumnIndexOrThrow("dateTimeStart"));
                 endTimeDb = unsyncedEvents.getString(unsyncedEvents.getColumnIndexOrThrow("dateTimeEnd"));
+                tempEventId = unsyncedEvents.getString(unsyncedEvents.getColumnIndexOrThrow("eventId"));
                 String pageToken = null;
                 do {
                     CalendarList calendarList = mService.calendarList().list().setPageToken(pageToken).execute();
@@ -712,6 +722,10 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
                 } while (pageToken != null);
                 if (!mIdFlag) {
                     mCalendarId = "primary";
+                }
+                if (tempEventId.equals("deleted")) {
+                    mService.events().delete(mCalendarId, startTimeDb).execute();
+                    mDbHandler.deleteEventFromDb(startTimeDb);
                 }
                 Event event = new Event().setSummary(eventNameDb);
                 String start = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'", Locale.getDefault()).format(Long.parseLong(startTimeDb));
@@ -1086,9 +1100,8 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
                         btn.setOnClickListener(new View.OnClickListener() {
                             @Override
                             public void onClick(View v) {
-                                if(!mIsCreateAvailable)
-                                {
-                                    Toast.makeText(MainActivity.this,"Please wait.Previous operation is performed",Toast.LENGTH_SHORT).show();
+                                if (!mIsCreateAvailable) {
+                                    Toast.makeText(MainActivity.this, "Please wait.Previous operation is performed", Toast.LENGTH_SHORT).show();
                                     return;
                                 }
                                 Date date = new Date();
@@ -1850,11 +1863,11 @@ For actual time, update every 1000 ms
                     // Если пользоваетель снял галочку, удаляем активность из спика на отправку
 
                     if (!compoundButton.isChecked()) {
-                       // for (ButtonActivity bt : listActivityToSend) {
-                       //     if (bt.name.equals(listActivity.get(position).name)) {
+                        // for (ButtonActivity bt : listActivityToSend) {
+                        //     if (bt.name.equals(listActivity.get(position).name)) {
                         //        listActivityToSend.remove(position);
                         //    }
-                       // }
+                        // }
                     } else {
                         //listActivityToSend.add(listActivity.get(position));
                     }

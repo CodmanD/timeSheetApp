@@ -33,7 +33,7 @@ public class DBHandler {
     public Cursor readUnsyncedEventFromDB() {
         dbHelper = new DBHelper(mContext);
         db = dbHelper.getWritableDatabase();
-        return db.rawQuery("SELECT * FROM calendarTable WHERE eventId LIKE 'not_synced'", null);
+        return db.rawQuery("SELECT * FROM calendarTable WHERE eventId LIKE 'not_synced' AND eventId LIKE 'deleted'", null);
     }
 
     public ArrayList<String> readOneEventFromDB(String dateTimeStart) {
@@ -59,6 +59,14 @@ public class DBHandler {
         dbHelper = new DBHelper(mContext);
         db = dbHelper.getWritableDatabase();
         db.execSQL("UPDATE calendarTable SET dateTimeEnd = '" + dateTimeEnd + "' WHERE dateTimeStart = '" + dateTimeStart + "'");
+        db.execSQL("UPDATE calendarTable SET eventId = '" + eventId + "' WHERE dateTimeStart = '" + dateTimeStart + "'");
+        db.close();
+        dbHelper.close();
+    }
+
+    public void updateEventDelete(String dateTimeStart, String eventId) {
+        dbHelper = new DBHelper(mContext);
+        db = dbHelper.getWritableDatabase();
         db.execSQL("UPDATE calendarTable SET eventId = '" + eventId + "' WHERE dateTimeStart = '" + dateTimeStart + "'");
         db.close();
         dbHelper.close();
