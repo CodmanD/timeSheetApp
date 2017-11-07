@@ -31,5 +31,4 @@
             android:textSize="16sp"
             tools:text="Nothing" />
     </LinearLayout>
-
 </android.support.constraint.ConstraintLayout>

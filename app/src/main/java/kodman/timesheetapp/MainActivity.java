@@ -6,6 +6,8 @@ import android.annotation.SuppressLint;
 import android.app.DatePickerDialog;
 import android.app.Dialog;
 import android.app.DialogFragment;
+
+import android.app.FragmentTransaction;
 import android.app.TimePickerDialog;
 import android.content.Context;
 import android.content.DialogInterface;
@@ -34,6 +36,7 @@ import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.text.format.DateFormat;
 import android.text.format.Time;
+import android.transition.TransitionManager;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
@@ -99,6 +102,7 @@ import kodman.timesheetapp.Database.ExportDB.CSVWriter;
 import pub.devrel.easypermissions.AfterPermissionGranted;
 import pub.devrel.easypermissions.EasyPermissions;
 
+
 public class MainActivity extends AppCompatActivity implements EasyPermissions.PermissionCallbacks, View.OnClickListener {
     private static final String TAG = "------Activity Say";
     private Toolbar toolbar;
@@ -127,6 +131,11 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
     private Long ms;
     static String actualTime;
 
+    @Override
+    public void onPointerCaptureChanged(boolean hasCapture) {
+
+    }
+
 
     class ButtonActivity {
         String name;
@@ -153,11 +162,11 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
 
             setDatetime();
         }
-
         public ButtonActivity(String name, int color, long ms) {
             this.name = name;
             this.color = color;
             this.ms = ms;
+
 
             setDatetime();
         }
@@ -210,7 +219,6 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
         this.listActivity.add(new ButtonActivity(res.getString(R.string.eating)));
         this.listActivity.add(new ButtonActivity(res.getString(R.string.washing)));
     }
-
 
     //
     public static int getContrastColor(int color) {
@@ -284,7 +292,9 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
     @AfterPermissionGranted(REQUEST_PERMISSION_GET_ACCOUNTS)
     private void chooseAccount() {
         if (EasyPermissions.hasPermissions(
-                this, Manifest.permission.GET_ACCOUNTS)) {
+                this, Manifest.permission.GET_ACCOUNTS,
+                Manifest.permission.WRITE_EXTERNAL_STORAGE)) {
+
             String accountName = getPreferences(Context.MODE_PRIVATE)
                     .getString(PREF_ACCOUNT_NAME, null);
             if (accountName != null) {
@@ -295,6 +305,7 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
                 startActivityForResult(
                         mCredential.newChooseAccountIntent(),
                         REQUEST_ACCOUNT_PICKER);
+
             }
         } else {
             // Request the GET_ACCOUNTS permission via a user dialog
@@ -302,7 +313,8 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
                     this,
                     "This app needs to access your Google account (via Contacts).",
                     REQUEST_PERMISSION_GET_ACCOUNTS,
-                    Manifest.permission.GET_ACCOUNTS);
+                    Manifest.permission.GET_ACCOUNTS,
+                    Manifest.permission.WRITE_EXTERNAL_STORAGE);
         }
     }
 
@@ -352,6 +364,7 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
                 }
                 break;
         }
+
     }
 
     /**
@@ -698,6 +711,7 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
         private void addUnsyncedEventsToCalendar() throws IOException {
             mIsCreateAvailable = false;
             Log.e("start unsynced", "start unsynced");
+
             Cursor unsyncedEvents = mDbHandler.readUnsyncedEventFromDB();
             String startTimeDb;
             String eventNameDb;
@@ -727,6 +741,7 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
                 if (tempEventId.equals("deleted")) {
                     mService.events().delete(mCalendarId, startTimeDb).execute();
                     mDbHandler.deleteEventFromDb(startTimeDb);
+
                     System.out.printf("Event deleted: %s\n", startTimeDb);
                 } else {
                     Event event = new Event().setSummary(eventNameDb);
@@ -745,6 +760,7 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
                     System.out.printf("Event synced: %s\n", event.getHtmlLink());
                     mDbHandler.writeOneEventToDB(eventNameDb, mCalendarId, eventId, startTimeDb, endTimeDb, mColor);
                 }
+
             }
             mDbHandler.closeDB();
             mIsCreateAvailable = true;
@@ -1220,6 +1236,7 @@ For actual time, update every 1000 ms
                         },
                         0, 1000);
 
+
     }
 
     @Override
@@ -1609,13 +1626,8 @@ For actual time, update every 1000 ms
                 return true;
             case R.id.action_export:
                 this.status = 2;
-                // this.setContentView(R.layout.screen_email);
-                // toolbar = (Toolbar) this.findViewById(R.id.toolBar_MainActivity);
+                openFragmentExport();
 
-                // toolbar.setTitle(MainActivity.actualTime);
-                // this.setSupportActionBar(toolbar);
-                createScreenEmail();
-                //   Toast.makeText(this, "Export", Toast.LENGTH_SHORT).show();
                 return true;
             case R.id.action_share:
                 this.status = 3;
@@ -1634,6 +1646,35 @@ For actual time, update every 1000 ms
                 return true;
         }
         return super.onOptionsItemSelected(item);
+    }
+
+    private void openFragmentExport() {
+        final String USER_NAME_PREFERENCES = "user_name_sp";
+        final String USER_NAME = "name";
+
+        // save user name, to set name from *.csv file
+        String userName = mCredential.getSelectedAccountName();
+        SharedPreferences sharedPreferencesUserName;
+
+        try {
+            sharedPreferencesUserName = getSharedPreferences(USER_NAME_PREFERENCES, Context.MODE_PRIVATE);
+            if (sharedPreferencesUserName.contains(USER_NAME)) {
+                if (!sharedPreferencesUserName.getString(USER_NAME, "").equals(userName)) {
+                    SharedPreferences.Editor editor = sharedPreferencesUserName.edit();
+                    editor.clear();
+                    editor.putString(USER_NAME, userName);
+                    editor.apply();
+                }
+            }
+        } catch (Resources.NotFoundException e) {
+            e.printStackTrace();
+        }
+
+        // open FragmentExport
+        this.setContentView(R.layout.activity_main_fragment);
+        FragmentTransaction fragmentTransaction = getFragmentManager().beginTransaction();
+        fragmentTransaction.add(R.id.fragmentContainer, new FragmentExport()).commit();
+
     }
 
 
@@ -1722,6 +1763,7 @@ For actual time, update every 1000 ms
     @Override
     public void onPause() {
         super.onPause();
+
     }
 
 
@@ -2165,4 +2207,5 @@ For actual time, update every 1000 ms
     /*
     +++++++++++++++++++++++++++++++++++++++++ End EMAIL SCREEN
      */
-}
+    }
+
