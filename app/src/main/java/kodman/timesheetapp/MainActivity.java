@@ -68,6 +68,7 @@ import com.google.android.gms.common.GoogleApiAvailability;
 import com.google.android.gms.common.api.Api;
 import com.google.api.client.extensions.android.http.AndroidHttp;
 import com.google.api.client.googleapis.extensions.android.gms.auth.GoogleAccountCredential;
+import com.google.api.client.googleapis.extensions.android.gms.auth.UserRecoverableAuthIOException;
 import com.google.api.client.http.HttpTransport;
 import com.google.api.client.json.JsonFactory;
 import com.google.api.client.json.jackson2.JacksonFactory;
@@ -139,9 +140,6 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
     public void onPointerCaptureChanged(boolean hasCapture) {
 
     }
-
-
-
 
 
     //  for create default List Activities
@@ -231,18 +229,15 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
         if (EasyPermissions.hasPermissions(
                 this, Manifest.permission.GET_ACCOUNTS,
                 Manifest.permission.WRITE_EXTERNAL_STORAGE)) {
-
             String accountName = getPreferences(Context.MODE_PRIVATE)
                     .getString(PREF_ACCOUNT_NAME, null);
             if (accountName != null) {
                 mCredential.setSelectedAccountName(accountName);
-                callCalendarApi(3);
             } else {
                 // Start a dialog from which the user can choose an account
                 startActivityForResult(
                         mCredential.newChooseAccountIntent(),
                         REQUEST_ACCOUNT_PICKER);
-
             }
         } else {
             // Request the GET_ACCOUNTS permission via a user dialog
@@ -297,7 +292,7 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
                 break;
             case REQUEST_AUTHORIZATION:
                 if (resultCode == RESULT_OK) {
-                    callCalendarApi(3);
+                    callCalendarApi(1);
                 }
                 break;
         }
@@ -410,24 +405,24 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
     String mCalendarData[] = {null, null, null};
     String mStartTime;
     String mEndTime;
+    private com.google.api.services.calendar.Calendar mService = null;
 
     /**
      * An asynchronous task that handles the Google Calendar API call.
      * Placing the API calls in their own task ensures the UI stays responsive.
      */
     private class MakeRequestTask extends AsyncTask<String[], Void, Void> {
-        private com.google.api.services.calendar.Calendar mService = null;
+
         private int mAction;
         private String mSummary;
         private DBHandler mDbHandler = new DBHandler(getApplicationContext());
-
 
         MakeRequestTask(GoogleAccountCredential credential, int action) {
             HttpTransport transport = AndroidHttp.newCompatibleTransport();
             JsonFactory jsonFactory = JacksonFactory.getDefaultInstance();
             mService = new com.google.api.services.calendar.Calendar.Builder(
-                    transport, jsonFactory, credential)
-                    .setApplicationName("Google Calendar API Android Quickstart")
+                    transport, jsonFactory, mCredential)
+                    .setApplicationName("timeSheetApp")
                     .build();
             mAction = action;
         }
@@ -440,14 +435,14 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
          */
         @Override
         protected Void doInBackground(String[]... params) {
-            try {
 
+            try {
                 switch (mAction) {
                     case 4:
                         updateEventNameColor(mStartTime);
                         break;
                     case 3:
-                        //do nothing. calendar service initialisation
+                        //nothing
                         break;
                     case 2:
                         updateEventTime();
@@ -467,9 +462,13 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
                         deleteEventFromCalendar(mDeleteTime);
                         break;
                 }
+            } catch (UserRecoverableAuthIOException e) {
+                startActivityForResult(e.getIntent(), REQUEST_AUTHORIZATION);
+                mIsCreateAvailable = true;
             } catch (IOException e) {
                 e.printStackTrace();
             }
+
             return null;
         }
 
@@ -712,6 +711,7 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
         @Override
         protected void onCancelled() {
         }
+
     }
 
     //Add to Google diary
@@ -743,11 +743,11 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
     private void addToGridLayoutSettings() {
         GridLayout GL = (GridLayout) this.findViewById(R.id.gridLayoutSettings);
         if (GL.getChildCount() > 0) {
-          //  Toast.makeText(MainActivity.this, "Count listActivity=" + this.listActivity.size(),
-          //          Toast.LENGTH_SHORT).show();
+            //  Toast.makeText(MainActivity.this, "Count listActivity=" + this.listActivity.size(),
+            //          Toast.LENGTH_SHORT).show();
             GL.removeViews(0, GL.getChildCount());
-          //  Toast.makeText(MainActivity.this, "Count after remove =" + GL.getChildCount(),
-           //         Toast.LENGTH_SHORT).show();
+            //  Toast.makeText(MainActivity.this, "Count after remove =" + GL.getChildCount(),
+            //         Toast.LENGTH_SHORT).show();
         }
         Toast.makeText(MainActivity.this, "Count =" + GL.getChildCount(),
                 Toast.LENGTH_SHORT).show();
@@ -973,7 +973,7 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
             @Override
             public void onClick(DialogInterface dialog, int which) {
 
-               // ba.color=
+                // ba.color=
                 MainActivity.this.listActivity.add(ba);
                 MainActivity.this.addToGridLayoutSettings();
                 //Toast.makeText(MainActivity.this, "Click Save", Toast.LENGTH_SHORT).show();
@@ -1069,7 +1069,7 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
                                 BA.time = new SimpleDateFormat("HH:mm:ss").format(date);
                                 ms = System.currentTimeMillis();
                                 BA.ms = ms;
-                                BA.color=ba.color;
+                                BA.color = ba.color;
                                 MainActivity.this.listLogActivity.add(0, BA);
                                 createActivityLog();
                                 getListViewSize(MainActivity.this.lvActivity);
@@ -1085,11 +1085,10 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
         gv.setAdapter(adapter);
     }
 
-public ArrayList<ButtonActivity> getListLogActivity()
-{
+    public ArrayList<ButtonActivity> getListLogActivity() {
 
-    return MainActivity.this.listLogActivity;
-}
+        return MainActivity.this.listLogActivity;
+    }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
