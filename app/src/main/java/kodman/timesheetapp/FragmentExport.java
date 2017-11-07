@@ -64,7 +64,7 @@ public class FragmentExport extends Fragment implements View.OnClickListener {
     private static final String YEAR = "year";
     private static final String END = "end";
     private static final String START = "start";
-    private String dataKey;
+    private static String dataKey;
     // Stores the last data entered by the user in the corresponding fields
     private String latestEmail;
     private String latestSubject;
@@ -73,15 +73,15 @@ public class FragmentExport extends Fragment implements View.OnClickListener {
     private Context fContext;
 
     // Stores the data of the selected period for sending user data
-    private HashMap<String, Integer> userDataMap;
+    private static HashMap<String, Integer> userDataMap;
     // Stores the last data entered by the user in the fields
     private HashMap<String, String> lastUserEmailData;
     // View elements
     private EditText emailEt;
     private EditText subjectEt;
     private EditText messageEt;
-    private TextView startDataTv;
-    private TextView endDataTv;
+    private static TextView startDataTv;
+    private static TextView endDataTv;
     private ImageButton startDCalendar;
     private ImageButton endDCalendar;
     private Button sendEmail;
@@ -115,11 +115,11 @@ public class FragmentExport extends Fragment implements View.OnClickListener {
         AppCompatActivity activity = (AppCompatActivity) getActivity();
 
         activity.setSupportActionBar(toolbar);
-      //  activity.getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+        //  activity.getSupportActionBar().setDisplayHomeAsUpEnabled(true);
 
         //////
-        this.mainActivity=(MainActivity)activity;
-        mainActivity.toolbar=this.toolbar;
+        this.mainActivity = (MainActivity) activity;
+        mainActivity.toolbar = this.toolbar;
         toolbar.setTitle(mainActivity.actualTime);
         ///////////////
 
@@ -178,8 +178,8 @@ public class FragmentExport extends Fragment implements View.OnClickListener {
         calendarFirst.add(Calendar.MONTH, 0);
         calendarlast.set(Calendar.DAY_OF_MONTH, 1);
         calendarlast.add(Calendar.DATE, -1);
-        DateFormat sdf = new SimpleDateFormat("dd/MM/yyyy");
-        startDataTv.setText("01/" + calendarFirst.get(Calendar.MONTH) + "/" + calendarFirst.get(Calendar.YEAR));
+        DateFormat sdf = new SimpleDateFormat("dd / MM / yyyy");
+        startDataTv.setText("01 / " + calendarFirst.get(Calendar.MONTH) + " / " + calendarFirst.get(Calendar.YEAR));
         endDataTv.setText(sdf.format(lastDayOfMonth));
 
         showIncludeItems();
@@ -269,16 +269,16 @@ public class FragmentExport extends Fragment implements View.OnClickListener {
 
         // Do filter to send data
         String startData = startDataTv.getText().toString();
-        SimpleDateFormat dateFormat = new SimpleDateFormat("dd/MM/yyyy");
-        long startDataMillisec = 0;
+        SimpleDateFormat dateFormat = new SimpleDateFormat("dd / MM / yyyy");
+        long startDataFilter = 0;
         String endData = endDataTv.getText().toString();
-        long endDataMilisec = 0;
+        long endDatafilter = 0;
 
         try {
             Date start = dateFormat.parse(startData);
-            startDataMillisec = start.getTime();
+            startDataFilter = start.getTime();
             Date end = dateFormat.parse(endData);
-            endDataMilisec = end.getTime();
+            endDatafilter = end.getTime();
 
         } catch (ParseException e) {
             e.printStackTrace();
@@ -289,25 +289,30 @@ public class FragmentExport extends Fragment implements View.OnClickListener {
             long start = Long.parseLong(temp[4]);
             long end = Long.parseLong(temp[5]);
 
-            if (start > startDataMillisec && end < endDataMilisec) {
+            if (start > startDataFilter && end < endDatafilter) {
                 filterEventUserList.add(temp);
             }
         }
+        if (notSendEventName != null) {
+            for (int i = 0; filterEventUserList.size() > i; i++) {
+                String[] temp = filterEventUserList.get(i);
 
-        for (int i = 0; filterEventUserList.size() > i; i++) {
-            String[] temp = filterEventUserList.get(i);
-            for (String name : notSendEventName) {
-                if (temp[2].contains(name)) {
-                    filterEventUserList.remove(i);
+                for (String name : notSendEventName) {
+                    if (temp[2].contains(name)) {
+                        filterEventUserList.remove(i);
+                    }
                 }
             }
+
         }
 
 
         // extract the * .csv file to send
         File csvFile = createCSVFIle(filterEventUserList);
         String authoritets = fContext.getApplicationContext().getPackageName();
-        Uri fileUri = FileProvider.getUriForFile(fContext, authoritets, csvFile);
+        Uri fileUri = FileProvider.getUriForFile(fContext,
+                authoritets,
+                csvFile);
 
         // Create content with action to send
         Intent emailIntent = new Intent(android.content.Intent.ACTION_SEND);
@@ -317,7 +322,8 @@ public class FragmentExport extends Fragment implements View.OnClickListener {
         emailIntent.putExtra(android.content.Intent.EXTRA_EMAIL, new String[]{latestEmail});
         emailIntent.putExtra(android.content.Intent.EXTRA_SUBJECT, latestSubject);
         emailIntent.putExtra(android.content.Intent.EXTRA_TEXT, latestMessage);
-        emailIntent.putExtra(MediaStore.EXTRA_OUTPUT, fileUri);
+        emailIntent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
+        emailIntent.putExtra(Intent.EXTRA_STREAM, fileUri);
         /* go to change*/
         fContext.startActivity(Intent.createChooser(emailIntent, "Send mail..."));
     }
@@ -348,6 +354,7 @@ public class FragmentExport extends Fragment implements View.OnClickListener {
             for (String[] temp : listToSend) {
                 writer.writeNext(temp);
             }
+            writer.flush();
             writer.close();
 
         } catch (IOException e) {
@@ -361,7 +368,7 @@ public class FragmentExport extends Fragment implements View.OnClickListener {
      * ГWe'll go to the calendar widget's widget display and data processing
      *
      * @param view_id - id view of the element by which the user touched.
-     *                  depending on it, we process the information according to our
+     *                 *                  depending on it, we process the information according to our
      */
     private void openCalendar(int view_id) {
         // Проверяем userDataMap на null.
@@ -383,7 +390,7 @@ public class FragmentExport extends Fragment implements View.OnClickListener {
      * It implements the logic of storing a start and end date in HashMap
      */
     @SuppressLint("ValidFragment")
-    protected class DatePicker extends DialogFragment
+    public static class DatePicker extends DialogFragment
             implements DatePickerDialog.OnDateSetListener {
 
         // The key is responsible for what date we are reading, start data or end data;
@@ -443,32 +450,52 @@ public class FragmentExport extends Fragment implements View.OnClickListener {
     // We show the list of user activities
     private void showIncludeItems() {
 
-       // listActivity = new ArrayList<>();
-        this.listActivity=mainActivity.getListLogActivity();
-        if(this.listActivity.size()<=0)
-        {
+        // listActivity = new ArrayList<>();
+        this.listActivity = mainActivity.getListLogActivity();
+        ArrayList<ButtonActivity> filterActivityList = new ArrayList<>();
+        if (this.listActivity.size() <= 0) {
 
-        DBHandler dbHandler = new DBHandler(fContext);
-        Cursor cursor = dbHandler.readAllEventsFromDB();
+            DBHandler dbHandler = new DBHandler(fContext);
+            Cursor cursor = dbHandler.readAllEventsFromDB();
 
 
-        while (cursor.moveToNext()) {
-            String name= cursor.getString(cursor.getColumnIndex("eventName"));
-            int color;
-            try {
-                color = Integer.parseInt(cursor.getString(cursor.getColumnIndex("color")));
-            } catch (Exception ex) {
-                color = Color.WHITE;
-                Log.d("EXCEPTION", "");
+            while (cursor.moveToNext()) {
+
+                String name = cursor.getString(cursor.getColumnIndex("eventName"));
+                int color;
+                try {
+                    color = Integer.parseInt(cursor.getString(cursor.getColumnIndex("color")));
+                } catch (Exception ex) {
+                    color = Color.WHITE;
+                    Log.d("EXCEPTION", "");
+                }
+
+                // Check if there is already a name in the listActivity
+                for (ButtonActivity activity : listActivity) {
+                    if (activity.name.equals(name)) {
+
+                    }
+                }
+
+
+                Log.d(LOG_TAG, "getActivities");
             }
-            listActivity.add(new ButtonActivity(name,color));
-
-            Log.d(LOG_TAG, "getActivities");
+            cursor.close();
         }
-        cursor.close();
+        // Check if there is already a name in the listActivity
+        for (ButtonActivity activity : listActivity) {
+            int doubleNameCounter = 0;
+            for (ButtonActivity activityS : filterActivityList) {
+                if (activityS.name.equals(activity.name)) {
+                    doubleNameCounter++;
+                }
+            }
+            if (doubleNameCounter == 0) {
+                filterActivityList.add(new ButtonActivity(activity.name, activity.color));
+            }
         }
 
-        CustomArrayAdapter arrayListArrayAdapter = new CustomArrayAdapter(fContext, listActivity);
+        CustomArrayAdapter arrayListArrayAdapter = new CustomArrayAdapter(fContext, filterActivityList);
 
         includeLv.setAdapter(arrayListArrayAdapter);
     }
@@ -492,7 +519,7 @@ public class FragmentExport extends Fragment implements View.OnClickListener {
                 vi = LayoutInflater.from(getContext());
                 v = vi.inflate(R.layout.include_activity_item, null);
             }
-          TextView textView = (TextView) v.findViewById(R.id.ia_action_name);
+            TextView textView = (TextView) v.findViewById(R.id.ia_action_name);
             CheckBox checkBox = (CheckBox) v.findViewById(R.id.ia_checkbox);
 
             checkBox.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {

@@ -109,6 +109,9 @@ import pub.devrel.easypermissions.EasyPermissions;
 
 public class MainActivity extends AppCompatActivity implements EasyPermissions.PermissionCallbacks {
 
+    private final String USER_NAME_PREFERENCES = "user_name_sp";
+    private final String USER_NAME = "name";
+
     private static final String TAG = "------Activity Say";
     public Toolbar toolbar;
     private Menu menu;
@@ -265,6 +268,7 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
     protected void onActivityResult(
             int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
+
         switch (requestCode) {
             case REQUEST_GOOGLE_PLAY_SERVICES:
                 if (resultCode != RESULT_OK) {
@@ -287,6 +291,10 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
                         editor.apply();
                         mCredential.setSelectedAccountName(accountName);
                         callCalendarApi(3);
+
+                        // need to change name from *.csv file
+                        saveUserNameToSharedPref(accountName);
+
                     }
                 }
                 break;
@@ -297,6 +305,13 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
                 break;
         }
 
+    }
+
+    private void saveUserNameToSharedPref(String accountName) {
+        SharedPreferences userNameSp = getSharedPreferences(USER_NAME_PREFERENCES, Context.MODE_PRIVATE);
+        SharedPreferences.Editor editor = userNameSp.edit();
+        editor.putString(USER_NAME, accountName);
+        editor.apply();
     }
 
     /**
