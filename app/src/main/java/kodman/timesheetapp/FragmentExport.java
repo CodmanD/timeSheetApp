@@ -10,6 +10,7 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.res.Resources;
 import android.database.Cursor;
+import android.graphics.Color;
 import android.graphics.drawable.Drawable;
 import android.net.Uri;
 import android.os.Build;
@@ -92,10 +93,13 @@ public class FragmentExport extends Fragment implements View.OnClickListener {
     private ArrayList<String[]> allUserEventList;
     private ArrayList<String[]> filterEventUserList;
     private ArrayList<String> notSendEventName;
+    private MainActivity mainActivity;
+
 
     public Toolbar getToolbar() {
         if (toolbar == null) {
             toolbar = (Toolbar) thisView.findViewById(R.id.toolBar_screen_email);
+
         }
         return toolbar;
     }
@@ -107,9 +111,19 @@ public class FragmentExport extends Fragment implements View.OnClickListener {
         View view = inflater.inflate(R.layout.screen_email, container, false);
         fContext = view.getContext();
         toolbar = (Toolbar) view.findViewById(R.id.toolBar_screen_email);
+
         AppCompatActivity activity = (AppCompatActivity) getActivity();
+
         activity.setSupportActionBar(toolbar);
-        activity.getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+      //  activity.getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+
+        //////
+        this.mainActivity=(MainActivity)activity;
+        mainActivity.toolbar=this.toolbar;
+        toolbar.setTitle(mainActivity.actualTime);
+        ///////////////
+
+
         res = view.getResources();
         thisView = view;
 
@@ -429,18 +443,31 @@ public class FragmentExport extends Fragment implements View.OnClickListener {
     // We show the list of user activities
     private void showIncludeItems() {
 
-        listActivity = new ArrayList<>();
+       // listActivity = new ArrayList<>();
+        this.listActivity=mainActivity.getListLogActivity();
+        if(this.listActivity.size()<=0)
+        {
 
         DBHandler dbHandler = new DBHandler(fContext);
         Cursor cursor = dbHandler.readAllEventsFromDB();
 
-        cursor.moveToFirst();
-        while (!cursor.isAfterLast()) {
-            listActivity.add(new ButtonActivity(cursor.getString(1)));
-            cursor.moveToNext();
+
+        while (cursor.moveToNext()) {
+            String name= cursor.getString(cursor.getColumnIndex("eventName"));
+            int color;
+            try {
+                color = Integer.parseInt(cursor.getString(cursor.getColumnIndex("color")));
+            } catch (Exception ex) {
+                color = Color.WHITE;
+                Log.d("EXCEPTION", "");
+            }
+            listActivity.add(new ButtonActivity(name,color));
+
             Log.d(LOG_TAG, "getActivities");
         }
         cursor.close();
+        }
+
         CustomArrayAdapter arrayListArrayAdapter = new CustomArrayAdapter(fContext, listActivity);
 
         includeLv.setAdapter(arrayListArrayAdapter);
@@ -449,24 +476,6 @@ public class FragmentExport extends Fragment implements View.OnClickListener {
     /**
      * -----------------------------------------------------------------------------
      */
-    class ButtonActivity {
-        String name;
-        int color;
-
-        public ButtonActivity(String name) {
-
-            this.name = name;
-
-        }
-
-        public ButtonActivity(String name, int color) {
-
-            this.name = name;
-            this.color = color;
-
-        }
-
-    }
 
     public class CustomArrayAdapter extends ArrayAdapter<ArrayList<ButtonActivity>> {
 
@@ -483,7 +492,7 @@ public class FragmentExport extends Fragment implements View.OnClickListener {
                 vi = LayoutInflater.from(getContext());
                 v = vi.inflate(R.layout.include_activity_item, null);
             }
-            TextView textView = (TextView) v.findViewById(R.id.ia_action_name);
+          TextView textView = (TextView) v.findViewById(R.id.ia_action_name);
             CheckBox checkBox = (CheckBox) v.findViewById(R.id.ia_checkbox);
 
             checkBox.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {

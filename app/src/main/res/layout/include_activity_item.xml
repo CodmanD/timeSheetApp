@@ -29,6 +29,8 @@
             android:layout_width="120dp"
             android:layout_height="wrap_content"
             android:textSize="16sp"
-            tools:text="Nothing" />
+            tools:text="Nothing"
+            android:textColor="@color/colorText"
+            />
     </LinearLayout>
 </android.support.constraint.ConstraintLayout>
