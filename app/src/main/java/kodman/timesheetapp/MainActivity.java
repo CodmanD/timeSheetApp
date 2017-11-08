@@ -127,6 +127,7 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
     private Menu menu;
     private int status = 0;
     private SharedPreferences mShared;
+    private SharedPreferences.Editor mSharedEditor;
     private ArrayList<ButtonActivity> listActivity = new ArrayList<>();//All buttons activity for current  time
     private ArrayList<ButtonActivity> listLogActivity = new ArrayList<>();
     private ArrayAdapter<ButtonActivity> adapterListLogActivity;
