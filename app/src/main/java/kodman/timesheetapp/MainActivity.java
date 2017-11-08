@@ -482,6 +482,7 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
                 mIsCreateAvailable = true;
             } catch (IOException e) {
                 e.printStackTrace();
+                mIsCreateAvailable = true;
             }
 
             return null;
