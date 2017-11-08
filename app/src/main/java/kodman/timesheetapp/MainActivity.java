@@ -423,7 +423,7 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
             try {
                 switch (mAction) {
                     case 4:
-                        updateEventNameColor(mStartTime);
+                        updateEventNameColor(mUpdateTime);
                         break;
                     case 3:
                         //nothing
