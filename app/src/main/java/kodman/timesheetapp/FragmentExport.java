@@ -115,15 +115,9 @@ public class FragmentExport extends Fragment implements View.OnClickListener {
         AppCompatActivity activity = (AppCompatActivity) getActivity();
 
         activity.setSupportActionBar(toolbar);
-        //  activity.getSupportActionBar().setDisplayHomeAsUpEnabled(true);
-
-        //////
         this.mainActivity = (MainActivity) activity;
         mainActivity.toolbar = this.toolbar;
         toolbar.setTitle(mainActivity.actualTime);
-        ///////////////
-
-
         res = view.getResources();
         thisView = view;
 
@@ -261,8 +255,10 @@ public class FragmentExport extends Fragment implements View.OnClickListener {
         Cursor curCSV = dbHandler.readAllEventsFromDB();
         while (curCSV.moveToNext()) {
             //Which column you want to exprort
-            String arrStr[] = {curCSV.getString(0), curCSV.getString(1), curCSV.getString(2),
-                    curCSV.getString(3), curCSV.getString(4), curCSV.getString(5)};
+            String arrStr[] = {curCSV.getString(curCSV.getColumnIndexOrThrow("eventName")),
+                    curCSV.getString(curCSV.getColumnIndexOrThrow("color")),
+                    curCSV.getString(curCSV.getColumnIndexOrThrow("dateTimeStart")),
+                    curCSV.getString(curCSV.getColumnIndexOrThrow("dateTimeEnd"))};
             allUserEventList.add(arrStr);
         }
         curCSV.close();
@@ -286,8 +282,8 @@ public class FragmentExport extends Fragment implements View.OnClickListener {
 
 
         for (String[] temp : allUserEventList) {
-            long start = Long.parseLong(temp[4]);
-            long end = Long.parseLong(temp[5]);
+            long start = Long.parseLong(temp[2]);
+            long end = Long.parseLong(temp[3]);
 
             if (start > startDataFilter && end < endDatafilter) {
                 filterEventUserList.add(temp);
@@ -298,7 +294,7 @@ public class FragmentExport extends Fragment implements View.OnClickListener {
                 String[] temp = filterEventUserList.get(i);
 
                 for (String name : notSendEventName) {
-                    if (temp[2].contains(name)) {
+                    if (temp[1].contains(name)) {
                         filterEventUserList.remove(i);
                     }
                 }
@@ -329,9 +325,25 @@ public class FragmentExport extends Fragment implements View.OnClickListener {
     }
 
     public File createCSVFIle(ArrayList<String[]> listToSend) {
+
         final String USER_NAME_PREFERENCES = "user_name_sp";
         final String USER_NAME = "name";
         String username = "default";
+        ArrayList<String[]> reformatedListToSend = new ArrayList<>();
+
+        // Convert ms to dd MM yyyy HH:mm:ss and delete color column
+        for (int i = 0; listToSend.size() > i; i++) {
+            String[] temp = listToSend.get(i);
+            String[] newArr = new String[3];
+            Date dateStart = new Date(Long.parseLong(temp[2]));
+            Date dateEnd = new Date(Long.parseLong(temp[3]));
+            newArr[0] = temp[0]; // activity name
+            newArr[1] = dateStart.toString(); // activity start
+            newArr[2] = dateEnd.toString(); // activity end
+
+            reformatedListToSend.add(newArr);
+
+        }
 
         SharedPreferences sharedPreferences = fContext.getSharedPreferences(USER_NAME_PREFERENCES, Context.MODE_PRIVATE);
         if (sharedPreferences.contains(USER_NAME)) {
@@ -351,7 +363,7 @@ public class FragmentExport extends Fragment implements View.OnClickListener {
         try {
             file.createNewFile();
             CSVWriter writer = new CSVWriter(new FileWriter(file));
-            for (String[] temp : listToSend) {
+            for (String[] temp : reformatedListToSend) {
                 writer.writeNext(temp);
             }
             writer.flush();
@@ -468,13 +480,6 @@ public class FragmentExport extends Fragment implements View.OnClickListener {
                 } catch (Exception ex) {
                     color = Color.WHITE;
                     Log.d("EXCEPTION", "");
-                }
-
-                // Check if there is already a name in the listActivity
-                for (ButtonActivity activity : listActivity) {
-                    if (activity.name.equals(name)) {
-
-                    }
                 }
 
 

@@ -30,7 +30,8 @@
         android:textColor="@color/colorText"
         android:textSize="24sp"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/toolBar_screen_email" />
+        app:layout_constraintTop_toBottomOf="@+id/toolBar_screen_email"
+        android:layout_marginLeft="16dp" />
 
     <EditText
         android:id="@+id/fe_email_et"
@@ -40,6 +41,7 @@
         android:layout_marginStart="8dp"
         android:layout_marginTop="8dp"
         android:background="@color/colorText"
+        android:textSize="18sp"
         android:ems="10"
         android:inputType="textEmailAddress"
         app:layout_constraintEnd_toEndOf="parent"
@@ -56,7 +58,8 @@
         android:textColor="@color/colorText"
         android:textSize="24sp"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/fe_email_et" />
+        app:layout_constraintTop_toBottomOf="@+id/fe_email_et"
+        android:layout_marginLeft="8dp" />
 
     <EditText
         android:id="@+id/fe_subject_et"
@@ -66,6 +69,7 @@
         android:layout_marginStart="8dp"
         android:layout_marginTop="8dp"
         android:background="@color/colorText"
+        android:textSize="18sp"
         android:ems="10"
         android:inputType="textPersonName"
         android:text="My time log"
@@ -83,7 +87,8 @@
         android:textColor="@color/colorText"
         android:textSize="24sp"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/fe_subject_et" />
+        app:layout_constraintTop_toBottomOf="@+id/fe_subject_et"
+        android:layout_marginLeft="8dp" />
 
     <EditText
         android:id="@+id/fe_message_et5"
@@ -96,7 +101,7 @@
         android:ems="10"
         android:inputType="textMultiLine"
         android:text="Please find attached my latest activity "
-        android:textSize="24sp"
+        android:textSize="18sp"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/textView15" />
@@ -111,7 +116,8 @@
         android:textColor="@color/colorText"
         android:textSize="18sp"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/fe_message_et5" />
+        app:layout_constraintTop_toBottomOf="@+id/fe_message_et5"
+        android:layout_marginLeft="8dp" />
 
     <TextView
         android:id="@+id/textView17"
@@ -123,7 +129,8 @@
         android:textColor="@color/colorText"
         android:textSize="18sp"
         app:layout_constraintStart_toEndOf="@+id/fe_calendar_startd_ib"
-        app:layout_constraintTop_toBottomOf="@+id/fe_message_et5" />
+        app:layout_constraintTop_toBottomOf="@+id/fe_message_et5"
+        android:layout_marginLeft="36dp" />
 
     <ImageButton
         android:id="@+id/fe_calendar_startd_ib"
