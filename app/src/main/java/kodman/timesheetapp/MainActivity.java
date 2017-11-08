@@ -192,7 +192,6 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
     static final int REQUEST_PERMISSION_GET_ACCOUNTS = 1003;
     private static final String PREF_ACCOUNT_NAME = "is.karpus@gmail.com";
     private static final String[] SCOPES = {CalendarScopes.CALENDAR};
-    private static boolean mTempData = true;
     private String mNewSummary;
     private String mNewColor;
     private static boolean mIsCreateAvailable = true;
@@ -431,6 +430,7 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
         private int mAction;
         private String mSummary;
         private DBHandler mDbHandler = new DBHandler(getApplicationContext());
+        SharedPreferences sharedPreferences = getSharedPreferences("tempData", MODE_PRIVATE);
 
         MakeRequestTask(GoogleAccountCredential credential, int action) {
             HttpTransport transport = AndroidHttp.newCompatibleTransport();
@@ -450,7 +450,6 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
          */
         @Override
         protected Void doInBackground(String[]... params) {
-
             try {
                 switch (mAction) {
                     case 4:
@@ -471,7 +470,9 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
                             Log.e("notonline", "notonline");
                             addEventToCalendar();
                         }
-                        mTempData = false;
+                        SharedPreferences.Editor editor = sharedPreferences.edit();
+                        editor.putBoolean("temp", false);
+                        editor.commit();
                         break;
                     case 0:
                         deleteEventFromCalendar(mDeleteTime);
@@ -553,18 +554,19 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
                 mDbHandler.writeOneEventToDB(mSummary, mCalendarId, eventId, mStartTime, mEndTime, mColor);
                 mDbHandler.closeDB();
             }
-            mTempData = false;
             mIsCreateAvailable = true;
         }
 
         private void addEventToCalendar() throws IOException {
-            if (mTempData) {
+            if (sharedPreferences.getBoolean("temp", true)) {
                 mSummary = mCalendarData[0];
                 mStartTime = mCalendarData[1];
                 mColor = mCalendarData[2];
                 mEndTime = mStartTime;
                 addEvent();
-                mTempData = false;
+                SharedPreferences.Editor editor = sharedPreferences.edit();
+                editor.putBoolean("temp", false);
+                editor.commit();
             } else {
                 mEndTime = mCalendarData[1];
                 updateEvent();
@@ -572,44 +574,46 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
                 mStartTime = mCalendarData[1];
                 mEndTime = mStartTime;
                 addEvent();
-                mTempData = true;
+                SharedPreferences.Editor editor = sharedPreferences.edit();
+                editor.putBoolean("temp", true);
+                editor.commit();
             }
         }
 
         private void updateEvent() throws IOException {
             mIsCreateAvailable = false;
-            ArrayList<String> arrayList = mDbHandler.readOneEventFromDB(mStartTime);
-            if (arrayList.size() == 0) {
-                mTempData = true;
-                return;
-            }
-            String eventId = arrayList.get(1);
-            String calendarId = arrayList.get(0);
-            // Retrieve the event from the API
-            if (isDeviceOnline()) {
-                try {
-                    Event event = mService.events().get(calendarId, eventId).execute();
-                    // Make a change
-                    Date end = new Date(Long.parseLong(mEndTime));
-                    DateTime endDateTime = new DateTime(end, TimeZone.getTimeZone("UTC"));
-                    EventDateTime endTime = new EventDateTime().setDateTime(endDateTime);
-                    event.setEnd(endTime);
-                    // Update the event
-                    event = mService.events().update(calendarId, event.getId(), event).execute();
-                    System.out.printf("Event end time updated: %s\n", event.getHtmlLink());
-                    mDbHandler.updateEvent(mStartTime, mEndTime, eventId);
-                    mDbHandler.closeDB();
-                } catch (com.google.api.client.googleapis.json.GoogleJsonResponseException e) {
-                    e.printStackTrace();
+            Cursor cursor = mDbHandler.readAllEventsFromDB();
+            if (cursor.moveToLast()) {
+                String eventId = cursor.getString(cursor.getColumnIndexOrThrow("eventId"));
+                String calendarId = cursor.getString(cursor.getColumnIndexOrThrow("calendarId"));
+                String startTime = cursor.getString(cursor.getColumnIndexOrThrow("dateTimeStart"));
+                // Retrieve the event from the API
+                if (isDeviceOnline()) {
+                    try {
+                        Event event = mService.events().get(calendarId, eventId).execute();
+                        // Make a change
+                        Date end = new Date(Long.parseLong(mEndTime));
+                        DateTime endDateTime = new DateTime(end, TimeZone.getTimeZone("UTC"));
+                        EventDateTime endTime = new EventDateTime().setDateTime(endDateTime);
+                        event.setEnd(endTime);
+                        // Update the event
+                        event = mService.events().update(calendarId, event.getId(), event).execute();
+                        System.out.printf("Event end time updated: %s\n", event.getHtmlLink());
+                        mDbHandler.updateEvent(startTime, mEndTime, eventId);
+                        mDbHandler.closeDB();
+                    } catch (com.google.api.client.googleapis.json.GoogleJsonResponseException e) {
+                        e.printStackTrace();
+                        eventId = "not_synced";
+                        mDbHandler.updateEvent(startTime, mEndTime, eventId);
+                        mDbHandler.closeDB();
+                    }
+                } else {
                     eventId = "not_synced";
-                    mDbHandler.updateEvent(mStartTime, mEndTime, eventId);
+                    mDbHandler.updateEvent(startTime, mEndTime, eventId);
                     mDbHandler.closeDB();
                 }
-            } else {
-                eventId = "not_synced";
-                mDbHandler.updateEvent(mStartTime, mEndTime, eventId);
-                mDbHandler.closeDB();
             }
+            mDbHandler.closeDB();
             mIsCreateAvailable = true;
         }
 
@@ -670,7 +674,6 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
         private void addUnsyncedEventsToCalendar() throws IOException {
             mIsCreateAvailable = false;
             Log.e("start unsynced", "start unsynced");
-
             Cursor unsyncedEvents = mDbHandler.readUnsyncedEventFromDB();
             String startTimeDb;
             String eventNameDb;
@@ -700,7 +703,6 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
                 if (tempEventId.equals("deleted")) {
                     mService.events().delete(mCalendarId, startTimeDb).execute();
                     mDbHandler.deleteEventFromDb(startTimeDb);
-
                     System.out.printf("Event deleted: %s\n", startTimeDb);
                 } else {
                     Event event = new Event().setSummary(eventNameDb);
@@ -1289,7 +1291,7 @@ For actual time, update every 1000 ms
     private void changeTimeActivity(final ButtonActivity ba) {
         //final Date date= new Date(ba.ms);
         final Date date = new Date();
-        final Date endDate =(ba.endTime==0)? new Date(System.currentTimeMillis()):new Date(ba.endTime);
+        final Date endDate = (ba.endTime == 0) ? new Date(System.currentTimeMillis()) : new Date(ba.endTime);
         final Date startDate = new Date(ba.ms);
         final TimePickerDialog TPD = new TimePickerDialog(this,
                 null, date.getHours(), date.getMinutes(), true) {
@@ -1327,9 +1329,8 @@ For actual time, update every 1000 ms
                         int startMinutes = startDate.getMinutes();
 
 
-
-                        Toast.makeText(MainActivity.this, "satrt " + startHour+":"+startMinutes+
-                                "  end "+endHour+":"+endMinutes, Toast.LENGTH_SHORT).show();
+                        Toast.makeText(MainActivity.this, "satrt " + startHour + ":" + startMinutes +
+                                "  end " + endHour + ":" + endMinutes, Toast.LENGTH_SHORT).show();
 
 
                         if (hour > endHour || (hour == endHour && minute > endMinutes) ||
@@ -1346,9 +1347,9 @@ For actual time, update every 1000 ms
                             Log.e("UPDATE!!", "sf");
                             ba.time = new SimpleDateFormat("HH:mm:ss").format(date);
                             ba.date = new SimpleDateFormat("dd.MM.yyyy").format(date);
-                          //  Toast.makeText(MainActivity.this,
-                          //          "Changed Time : " + date.toString(),
-                             //       Toast.LENGTH_LONG).show();
+                            //  Toast.makeText(MainActivity.this,
+                            //          "Changed Time : " + date.toString(),
+                            //       Toast.LENGTH_LONG).show();
 
                             mUpdateTime = String.valueOf(ba.ms);
                             ba.ms = date.getTime();
@@ -1691,7 +1692,7 @@ For actual time, update every 1000 ms
 
     //Add from DB Activities in AcivityLog
     private void addAcivitiesFromDB() {
-       
+
         DBHandler mDbHandler = new DBHandler(getApplicationContext());
 
         Cursor cursor = mDbHandler.readAllEventsFromDB();
@@ -1709,16 +1710,13 @@ For actual time, update every 1000 ms
 
             long startTime = Long.parseLong(cursor.getString(cursor.getColumnIndex("dateTimeStart")));
             long endTime;
-            try{
+            try {
                 endTime = Long.parseLong(cursor.getString(cursor.getColumnIndex("dateTimeEnd")));
+            } catch (Exception ex) {
+                endTime = 0;
             }
-            catch (Exception ex)
-            {
-                endTime=0;
-            }
-            if(startTime==endTime)
-            {
-                endTime=0;
+            if (startTime == endTime) {
+                endTime = 0;
             }
             //   String color=cursor.getString(6);
             int color;
@@ -1732,7 +1730,7 @@ For actual time, update every 1000 ms
 
             ButtonActivity ba = new ButtonActivity(name, color);
             ba.ms = startTime;
-            ba.endTime=endTime;
+            ba.endTime = endTime;
             ba.setDatetime();
             this.listLogActivity.add(0, ba);
         }
