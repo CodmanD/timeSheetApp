@@ -15,8 +15,6 @@
         android:id="@+id/toolBar_Setting"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-
-
         android:background="?attr/colorPrimaryDark"
         android:minHeight="?attr/actionBarSize"
         android:theme="?attr/actionBarTheme"
