@@ -34,6 +34,7 @@ public class DBHandler {
         dbHelper = new DBHelper(mContext);
         db = dbHelper.getWritableDatabase();
         return db.rawQuery("SELECT * FROM calendarTable WHERE eventId LIKE 'not_synced' OR eventId LIKE 'deleted'", null);
+
     }
 
     public ArrayList<String> readOneEventFromDB(String dateTimeStart) {

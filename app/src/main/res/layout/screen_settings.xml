@@ -15,8 +15,6 @@
         android:id="@+id/toolBar_Setting"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-
-
         android:background="?attr/colorPrimaryDark"
         android:minHeight="?attr/actionBarSize"
         android:theme="?attr/actionBarTheme"
@@ -38,7 +36,8 @@
         android:visibility="visible"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/toolBar_Setting"
-        tools:text="@string/settings" />
+        tools:text="@string/settings"
+        android:layout_marginLeft="32dp" />
 
     <TextView
         android:id="@+id/textView"
@@ -51,7 +50,8 @@
         android:textSize="18sp"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/textView3"
-        tools:text="@string/myName" />
+        tools:text="@string/myName"
+        android:layout_marginLeft="32dp" />
 
     <EditText
         android:id="@+id/editTextName"
