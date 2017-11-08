@@ -111,14 +111,22 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
 
     private final String USER_NAME_PREFERENCES = "user_name_sp";
     private final String USER_NAME = "name";
-
+    static final int REQUEST_ACCOUNT_PICKER = 1000;
+    static final int REQUEST_AUTHORIZATION = 1001;
+    static final int REQUEST_GOOGLE_PLAY_SERVICES = 1002;
+    static final int REQUEST_PERMISSION_GET_ACCOUNTS = 1003;
+    private static final String PREF_ACCOUNT_NAME = "is.karpus@gmail.com";
+    private static final String[] SCOPES = {CalendarScopes.CALENDAR};
+    private static boolean mIsCreateAvailable = true;
     private static final String TAG = "------Activity Say";
+    private static String nameCalendar = "";
+    private static String myName = "";
+    private String mNewSummary;
+    private String mNewColor;
     public Toolbar toolbar;
     private Menu menu;
     private int status = 0;
     private SharedPreferences mShared;
-    private SharedPreferences.Editor mSharedEditor;
-
     private ArrayList<ButtonActivity> listActivity = new ArrayList<>();//All buttons activity for current  time
     private ArrayList<ButtonActivity> listLogActivity = new ArrayList<>();
     private ArrayAdapter<ButtonActivity> adapterListLogActivity;
@@ -133,8 +141,6 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
     Date currentDate = new Date();
     private DateFormat df = new DateFormat();
     private String mColor;
-    private static String nameCalendar = "";
-    private static String myName = "";
     private SharedPreferences sPref;
     private Long ms;
     static String actualTime;
@@ -186,15 +192,6 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
     //------for work with Google Diary---------------------------------------------------------------
     GoogleAccountCredential mCredential;
 
-    static final int REQUEST_ACCOUNT_PICKER = 1000;
-    static final int REQUEST_AUTHORIZATION = 1001;
-    static final int REQUEST_GOOGLE_PLAY_SERVICES = 1002;
-    static final int REQUEST_PERMISSION_GET_ACCOUNTS = 1003;
-    private static final String PREF_ACCOUNT_NAME = "is.karpus@gmail.com";
-    private static final String[] SCOPES = {CalendarScopes.CALENDAR};
-    private String mNewSummary;
-    private String mNewColor;
-    private static boolean mIsCreateAvailable = true;
 
     /**
      * Attempt to call the API, after verifying that all the preconditions are
