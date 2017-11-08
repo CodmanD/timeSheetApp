@@ -1289,8 +1289,8 @@ For actual time, update every 1000 ms
     private void changeTimeActivity(final ButtonActivity ba) {
         //final Date date= new Date(ba.ms);
         final Date date = new Date();
-        final Date curDate = new Date(System.currentTimeMillis());
-        final Date lastDate = new Date(ba.ms);
+        final Date endDate =(ba.endTime==0)? new Date(System.currentTimeMillis()):new Date(ba.endTime);
+        final Date startDate = new Date(ba.ms);
         final TimePickerDialog TPD = new TimePickerDialog(this,
                 null, date.getHours(), date.getMinutes(), true) {
             @Override
@@ -1317,16 +1317,23 @@ For actual time, update every 1000 ms
                     public void onClick(DialogInterface
                                                 dialog, int which) {
 
-                        int curHour = curDate.getHours();
-                        int curMinutes = curDate.getMinutes();
+                        int endHour = endDate.getHours();
+                        int endMinutes = endDate.getMinutes();
 
                         int hour = date.getHours();
                         int minute = date.getMinutes();
 
-                        int lastHour = lastDate.getHours();
-                        int lastMinutes = lastDate.getMinutes();
-                        if (hour > curHour || (hour == curHour && minute > curMinutes) ||
-                                hour < lastHour || (hour == lastHour && minute < lastMinutes)) {
+                        int startHour = startDate.getHours();
+                        int startMinutes = startDate.getMinutes();
+
+
+
+                        Toast.makeText(MainActivity.this, "satrt " + startHour+":"+startMinutes+
+                                "  end "+endHour+":"+endMinutes, Toast.LENGTH_SHORT).show();
+
+
+                        if (hour > endHour || (hour == endHour && minute > endMinutes) ||
+                                hour < startHour || (hour == startHour && minute < startMinutes)) {
                             Toast.makeText(MainActivity.this, "The selected time is not valid for selection", Toast.LENGTH_SHORT).show();
 
                             dialog.dismiss();
@@ -1334,15 +1341,14 @@ For actual time, update every 1000 ms
                         } else {
                             date.setHours(hour);
                             date.setMinutes(minute);
-                            //  Toast.makeText(MainActivity.this, "Ok Change time " + date.toString(), Toast.LENGTH_SHORT).show();
-
+                            //
 
                             Log.e("UPDATE!!", "sf");
                             ba.time = new SimpleDateFormat("HH:mm:ss").format(date);
                             ba.date = new SimpleDateFormat("dd.MM.yyyy").format(date);
-                            Toast.makeText(MainActivity.this,
-                                    "Changed Time : " + date.toString(),
-                                    Toast.LENGTH_LONG).show();
+                          //  Toast.makeText(MainActivity.this,
+                          //          "Changed Time : " + date.toString(),
+                             //       Toast.LENGTH_LONG).show();
 
                             mUpdateTime = String.valueOf(ba.ms);
                             ba.ms = date.getTime();
@@ -1685,7 +1691,7 @@ For actual time, update every 1000 ms
 
     //Add from DB Activities in AcivityLog
     private void addAcivitiesFromDB() {
-        // String query = "SELECT * FROM calendarTable";
+       
         DBHandler mDbHandler = new DBHandler(getApplicationContext());
 
         Cursor cursor = mDbHandler.readAllEventsFromDB();
@@ -1702,7 +1708,18 @@ For actual time, update every 1000 ms
             String name = cursor.getString(cursor.getColumnIndex("eventName"));
 
             long startTime = Long.parseLong(cursor.getString(cursor.getColumnIndex("dateTimeStart")));
-            long endTime = Long.parseLong(cursor.getString(cursor.getColumnIndex("dateTimeEnd")));
+            long endTime;
+            try{
+                endTime = Long.parseLong(cursor.getString(cursor.getColumnIndex("dateTimeEnd")));
+            }
+            catch (Exception ex)
+            {
+                endTime=0;
+            }
+            if(startTime==endTime)
+            {
+                endTime=0;
+            }
             //   String color=cursor.getString(6);
             int color;
             try {
@@ -1715,6 +1732,7 @@ For actual time, update every 1000 ms
 
             ButtonActivity ba = new ButtonActivity(name, color);
             ba.ms = startTime;
+            ba.endTime=endTime;
             ba.setDatetime();
             this.listLogActivity.add(0, ba);
         }

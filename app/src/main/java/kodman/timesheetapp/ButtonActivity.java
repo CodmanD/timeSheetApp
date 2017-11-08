@@ -19,6 +19,7 @@ public class ButtonActivity {
     int color;
     String time;
     String date;
+    long endTime;
     long ms;
     public ButtonActivity(String name) {
         this.name = name;
