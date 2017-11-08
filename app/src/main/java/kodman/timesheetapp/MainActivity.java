@@ -91,8 +91,6 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
     private static final String[] SCOPES = {CalendarScopes.CALENDAR};
     private static boolean mIsCreateAvailable = true;
     private static final String TAG = "------Activity Say";
-    private static String nameCalendar = "";
-    private static String myName = "";
     private String mNewSummary;
     private String mNewColor;
     public Toolbar toolbar;
@@ -114,6 +112,8 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
     Date currentDate = new Date();
     private DateFormat df = new DateFormat();
     private String mColor;
+    private static String nameCalendar = "";
+    private static String myName = "";
     private SharedPreferences sPref;
     private Long ms;
     static String actualTime;
@@ -863,35 +863,7 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
                         dialog.dismiss();
                     }
                 });
-                /*
-                .setNegativeButton("Delete", new DialogInterface.OnClickListener() {
-                    public void onClick(DialogInterface dialog, int id) {
-                        AlertDialog.Builder bldr = new AlertDialog.Builder(MainActivity.this);
-                        bldr.setMessage(res.getString(R.string.delete) + "?")
-                                .setCancelable(false)
-                                .setPositiveButton(R.string.yes,
-                                        new DialogInterface.OnClickListener() {
-                                            public void onClick(DialogInterface dlg,
-                                                                int id) {
-                                                //  MainActivity.this.listLogActivity.remove(ba);
-                                                MainActivity.this.createActivityLog();
-                                                dlg.cancel();
-                                            }
-                                        })
 
-                                .setNegativeButton(R.string.no,
-                                        new DialogInterface.OnClickListener() {
-                                            public void onClick(DialogInterface dlg,
-                                                                int id) {
-                                                dlg.cancel();
-                                            }
-                                        });
-
-                        bldr.create().show();
-                        dialog.dismiss();
-                    }
-                });
-                */
         AlertDialog dialog = builder.create();
         dialog.setCancelable(true);
         dialog.show();
@@ -1065,7 +1037,10 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
                                 BA.ms = ms;
                                 BA.color = ba.color;
                                 MainActivity.this.listLogActivity.add(0, BA);
-                                createActivityLog();
+
+                                MainActivity.this.adapterListLogActivity.notifyDataSetChanged();
+                                MainActivity.this.lvActivity.setAdapter(MainActivity.this.adapterListLogActivity);
+
                                 getListViewSize(MainActivity.this.lvActivity);
                                 MainActivity.this.addGoogleDiary(ba);
                                 Toast.makeText(MainActivity.this,
@@ -1096,7 +1071,6 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
         this.res = this.getResources();
         toolbar = (Toolbar) this.findViewById(R.id.toolBar_MainActivity);
         this.setSupportActionBar(toolbar);
-
 
         //---Read from SharedPreferences ------------
         sPref = this.getPreferences(MODE_PRIVATE);
@@ -1141,7 +1115,7 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
         ///-------------
 
 //Read From DataBase
-        addAcivitiesFromDB();
+        readAcivitiesFromDB();
         this.createActivityLog();
 /*
 For actual time, update every 1000 ms
@@ -1179,6 +1153,10 @@ For actual time, update every 1000 ms
 
     @Override
     public void onDestroy() {
+
+        /**
+         * Add in shareds allowable activities
+         */
         SharedPreferences.Editor ed = sPref.edit();
         int size = this.listActivity.size();
         Log.d(TAG, "DESTROY SIZE=" + size);
@@ -1192,8 +1170,10 @@ For actual time, update every 1000 ms
         super.onDestroy();
     }
 
+    //create Log Activity
     private void createActivityLog() {
         if (listActivity.size() == 0) return;
+
         this.lvActivity = (ListView) this.findViewById(R.id.lvActivity);
 
         adapterListLogActivity = new ArrayAdapter<ButtonActivity>(this,
@@ -1250,6 +1230,7 @@ For actual time, update every 1000 ms
                 return view;
             }
         };
+
         this.adapterListLogActivity.setNotifyOnChange(true);
         this.lvActivity.setAdapter(adapterListLogActivity);
         Log.d(TAG, " start setListHeigth");
@@ -1298,8 +1279,9 @@ For actual time, update every 1000 ms
                         int startHour = startDate.getHours();
                         int startMinutes = startDate.getMinutes();
 
-
-                        Toast.makeText(MainActivity.this, "satrt " + startHour + ":" + startMinutes +
+                Log.d(TAG," start " + startHour + ":" + startMinutes +
+                        "  end " + endHour + ":" + endMinutes);
+                        Toast.makeText(MainActivity.this, "start " + startHour + ":" + startMinutes +
                                 "  end " + endHour + ":" + endMinutes, Toast.LENGTH_SHORT).show();
 
 
@@ -1325,7 +1307,10 @@ For actual time, update every 1000 ms
                             ba.ms = date.getTime();
                             mNewStartTime = String.valueOf(ba.ms);
                             updateGoogleDiary();
-                            createActivityLog();
+                            MainActivity.this.adapterListLogActivity.notifyDataSetChanged();
+                            MainActivity.this.lvActivity.setAdapter(MainActivity.this.adapterListLogActivity);
+
+                        //  createActivityLog();
                         }
                     }
                 });
@@ -1519,11 +1504,12 @@ For actual time, update every 1000 ms
         this.setSupportActionBar(toolbar);
         this.addToGridLayoutSettings();
 
+        String name=sPref.getString("myCalendar", "");
         EditText editTextCalendar = (EditText) this.findViewById(R.id.editTextCalendar);
-        editTextCalendar.setText(sPref.getString("myCalendar", ""));
+        editTextCalendar.setText(MainActivity.nameCalendar);
 
         EditText editTextName = (EditText) this.findViewById(R.id.editTextName);
-        editTextName.setText(sPref.getString("myName", ""));
+        editTextName.setText(MainActivity.myName);
 
     }
 
@@ -1571,6 +1557,7 @@ For actual time, update every 1000 ms
                 toolbar.setTitle(MainActivity.actualTime);
                 this.setSupportActionBar(toolbar);
                 this.addToGridViewButtonsActivity();
+                MainActivity.this.lvActivity.setAdapter(MainActivity.this.adapterListLogActivity);
                 this.createActivityLog();
                 //   Toast.makeText(this, "Home", Toast.LENGTH_SHORT).show();
                 return true;
@@ -1661,7 +1648,7 @@ For actual time, update every 1000 ms
     }
 
     //Add from DB Activities in AcivityLog
-    private void addAcivitiesFromDB() {
+    private void readAcivitiesFromDB() {
 
         DBHandler mDbHandler = new DBHandler(getApplicationContext());
 
@@ -1688,7 +1675,6 @@ For actual time, update every 1000 ms
             if (startTime == endTime) {
                 endTime = 0;
             }
-            //   String color=cursor.getString(6);
             int color;
             try {
                 color = Integer.parseInt(cursor.getString(cursor.getColumnIndex("color")));
@@ -1715,7 +1701,6 @@ For actual time, update every 1000 ms
         DBHandler mDbHandler = new DBHandler(getApplicationContext());
         mDbHandler.clearEventsTable();
         Log.d(TAG, "Clean DB");
-        // Toast.makeText(this, "Clean Log From DB", Toast.LENGTH_SHORT).show();
         mDbHandler.closeDB();
     }
 
