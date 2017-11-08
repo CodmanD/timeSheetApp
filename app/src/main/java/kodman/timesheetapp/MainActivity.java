@@ -1282,7 +1282,8 @@ For actual time, update every 1000 ms
     private void changeTimeActivity(final ButtonActivity ba) {
         //final Date date= new Date(ba.ms);
         final Date date = new Date();
-
+        final Date curDate = new Date(System.currentTimeMillis());
+        final Date lastDate=new Date(ba.ms);
         final TimePickerDialog TPD = new TimePickerDialog(this,
                 null, date.getHours(), date.getMinutes(), true) {
             @Override
@@ -1290,26 +1291,16 @@ For actual time, update every 1000 ms
                                       int hour, int minute) {
                 long currentTime = System.currentTimeMillis();
 
-                Date curDate = new Date(currentTime);
-                int curHour = curDate.getHours();
-                int curMinutes = curDate.getMinutes();
 
-                Date lastDate = new Date(ba.ms);
-                int lastHour = lastDate.getHours();
-                int lastMinutes = lastDate.getMinutes();
-                Log.d(TAG, "al=" + hour + ":" + minute + "  last=" + lastHour + ":" + lastMinutes + "  cur=" + curHour + ":" + curMinutes);
+                date.setHours(hour);
+                date.setMinutes(minute);
+
+
+
+              //  Log.d(TAG, "al=" + hour + ":" + minute + "  last=" + lastHour + ":" + lastMinutes + "  cur=" + curHour + ":" + curMinutes);
                 //Toast.makeText(MainActivity.this,"curTime="+new Date(currentTime)+"  |selectedTime="+new Date(selectedTime),Toast.LENGTH_SHORT).show();
                 //Toast.makeText(MainActivity.this,"curTime="+currentTime+"  |selectedTime="+selectedTime,Toast.LENGTH_SHORT).show();
-                if (hour > curHour || (hour == curHour && minute > curMinutes) || hour < lastHour || (hour == lastHour && minute < lastMinutes)) {
-                    Toast.makeText(MainActivity.this, "The selected time is not valid for selection", Toast.LENGTH_SHORT).show();
 
-                    cancel();
-                    changeTimeActivity(ba);
-                } else {
-                    date.setHours(hour);
-                    date.setMinutes(minute);
-                    Toast.makeText(MainActivity.this, "Ok Change time " + date.toString(), Toast.LENGTH_SHORT).show();
-                }
             }
         };
 
@@ -1319,11 +1310,33 @@ For actual time, update every 1000 ms
                     @Override
                     public void onClick(DialogInterface
                                                 dialog, int which) {
+
+                        int curHour = curDate.getHours();
+                        int curMinutes = curDate.getMinutes();
+
+                        int hour=date.getHours();
+                        int minute=date.getMinutes();
+
+                        int lastHour = lastDate.getHours();
+                        int lastMinutes = lastDate.getMinutes();
+                        if (hour > curHour || (hour == curHour && minute > curMinutes) ||
+                                hour < lastHour || (hour == lastHour && minute < lastMinutes)) {
+                            Toast.makeText(MainActivity.this, "The selected time is not valid for selection", Toast.LENGTH_SHORT).show();
+
+                           dialog.dismiss();
+                            changeTimeActivity(ba);
+                        } else {
+                            date.setHours(hour);
+                            date.setMinutes(minute);
+                          //  Toast.makeText(MainActivity.this, "Ok Change time " + date.toString(), Toast.LENGTH_SHORT).show();
+
+
+
                         Log.e("UPDATE!!", "sf");
                         ba.time = new SimpleDateFormat("HH:mm:ss").format(date);
                         ba.date = new SimpleDateFormat("dd.MM.yyyy").format(date);
                         Toast.makeText(MainActivity.this,
-                                "Выбранное время чч:мм : " + date.toString(),
+                                "Changed Time : " + date.toString(),
                                 Toast.LENGTH_LONG).show();
 
                         mUpdateTime = String.valueOf(ba.ms);
@@ -1331,6 +1344,7 @@ For actual time, update every 1000 ms
                         mNewStartTime = String.valueOf(ba.ms);
                         updateGoogleDiary();
                         createActivityLog();
+                        }
                     }
                 });
 
