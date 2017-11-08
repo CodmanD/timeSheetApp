@@ -587,17 +587,24 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
             String calendarId = arrayList.get(0);
             // Retrieve the event from the API
             if (isDeviceOnline()) {
-                Event event = mService.events().get(calendarId, eventId).execute();
-                // Make a change
-                Date end = new Date(Long.parseLong(mEndTime));
-                DateTime endDateTime = new DateTime(end, TimeZone.getTimeZone("UTC"));
-                EventDateTime endTime = new EventDateTime().setDateTime(endDateTime);
-                event.setEnd(endTime);
-                // Update the event
-                event = mService.events().update(calendarId, event.getId(), event).execute();
-                System.out.printf("Event end time updated: %s\n", event.getHtmlLink());
-                mDbHandler.updateEvent(mStartTime, mEndTime, eventId);
-                mDbHandler.closeDB();
+                try {
+                    Event event = mService.events().get(calendarId, eventId).execute();
+                    // Make a change
+                    Date end = new Date(Long.parseLong(mEndTime));
+                    DateTime endDateTime = new DateTime(end, TimeZone.getTimeZone("UTC"));
+                    EventDateTime endTime = new EventDateTime().setDateTime(endDateTime);
+                    event.setEnd(endTime);
+                    // Update the event
+                    event = mService.events().update(calendarId, event.getId(), event).execute();
+                    System.out.printf("Event end time updated: %s\n", event.getHtmlLink());
+                    mDbHandler.updateEvent(mStartTime, mEndTime, eventId);
+                    mDbHandler.closeDB();
+                } catch (com.google.api.client.googleapis.json.GoogleJsonResponseException e) {
+                    e.printStackTrace();
+                    eventId = "not_synced";
+                    mDbHandler.updateEvent(mStartTime, mEndTime, eventId);
+                    mDbHandler.closeDB();
+                }
             } else {
                 eventId = "not_synced";
                 mDbHandler.updateEvent(mStartTime, mEndTime, eventId);
@@ -1283,7 +1290,7 @@ For actual time, update every 1000 ms
         //final Date date= new Date(ba.ms);
         final Date date = new Date();
         final Date curDate = new Date(System.currentTimeMillis());
-        final Date lastDate=new Date(ba.ms);
+        final Date lastDate = new Date(ba.ms);
         final TimePickerDialog TPD = new TimePickerDialog(this,
                 null, date.getHours(), date.getMinutes(), true) {
             @Override
@@ -1296,8 +1303,7 @@ For actual time, update every 1000 ms
                 date.setMinutes(minute);
 
 
-
-              //  Log.d(TAG, "al=" + hour + ":" + minute + "  last=" + lastHour + ":" + lastMinutes + "  cur=" + curHour + ":" + curMinutes);
+                //  Log.d(TAG, "al=" + hour + ":" + minute + "  last=" + lastHour + ":" + lastMinutes + "  cur=" + curHour + ":" + curMinutes);
                 //Toast.makeText(MainActivity.this,"curTime="+new Date(currentTime)+"  |selectedTime="+new Date(selectedTime),Toast.LENGTH_SHORT).show();
                 //Toast.makeText(MainActivity.this,"curTime="+currentTime+"  |selectedTime="+selectedTime,Toast.LENGTH_SHORT).show();
 
@@ -1314,8 +1320,8 @@ For actual time, update every 1000 ms
                         int curHour = curDate.getHours();
                         int curMinutes = curDate.getMinutes();
 
-                        int hour=date.getHours();
-                        int minute=date.getMinutes();
+                        int hour = date.getHours();
+                        int minute = date.getMinutes();
 
                         int lastHour = lastDate.getHours();
                         int lastMinutes = lastDate.getMinutes();
@@ -1323,27 +1329,26 @@ For actual time, update every 1000 ms
                                 hour < lastHour || (hour == lastHour && minute < lastMinutes)) {
                             Toast.makeText(MainActivity.this, "The selected time is not valid for selection", Toast.LENGTH_SHORT).show();
 
-                           dialog.dismiss();
+                            dialog.dismiss();
                             changeTimeActivity(ba);
                         } else {
                             date.setHours(hour);
                             date.setMinutes(minute);
-                          //  Toast.makeText(MainActivity.this, "Ok Change time " + date.toString(), Toast.LENGTH_SHORT).show();
+                            //  Toast.makeText(MainActivity.this, "Ok Change time " + date.toString(), Toast.LENGTH_SHORT).show();
 
 
+                            Log.e("UPDATE!!", "sf");
+                            ba.time = new SimpleDateFormat("HH:mm:ss").format(date);
+                            ba.date = new SimpleDateFormat("dd.MM.yyyy").format(date);
+                            Toast.makeText(MainActivity.this,
+                                    "Changed Time : " + date.toString(),
+                                    Toast.LENGTH_LONG).show();
 
-                        Log.e("UPDATE!!", "sf");
-                        ba.time = new SimpleDateFormat("HH:mm:ss").format(date);
-                        ba.date = new SimpleDateFormat("dd.MM.yyyy").format(date);
-                        Toast.makeText(MainActivity.this,
-                                "Changed Time : " + date.toString(),
-                                Toast.LENGTH_LONG).show();
-
-                        mUpdateTime = String.valueOf(ba.ms);
-                        ba.ms = date.getTime();
-                        mNewStartTime = String.valueOf(ba.ms);
-                        updateGoogleDiary();
-                        createActivityLog();
+                            mUpdateTime = String.valueOf(ba.ms);
+                            ba.ms = date.getTime();
+                            mNewStartTime = String.valueOf(ba.ms);
+                            updateGoogleDiary();
+                            createActivityLog();
                         }
                     }
                 });
