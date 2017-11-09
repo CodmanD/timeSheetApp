@@ -1043,8 +1043,8 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
 
                                 getListViewSize(MainActivity.this.lvActivity);
                                 MainActivity.this.addGoogleDiary(ba);
-                                Toast.makeText(MainActivity.this,
-                                        ba.name, Toast.LENGTH_SHORT).show();
+                              //  Toast.makeText(MainActivity.this,
+                                //        ba.name, Toast.LENGTH_SHORT).show();
                             }
                         });
                         // Log.d(TAG,"getItem For GridView");
@@ -1142,8 +1142,7 @@ For actual time, update every 1000 ms
 
                                     }
                                 });
-
-                                // Log.d(TAG,"Timer Tick");
+                            // Log.d(TAG,"Timer Tick");
                             }
                         },
                         0, 1000);
