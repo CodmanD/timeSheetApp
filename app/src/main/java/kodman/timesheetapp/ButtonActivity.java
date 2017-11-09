@@ -19,6 +19,7 @@ public class ButtonActivity {
     int color;
     String time;
     String date;
+    long endTime;
     long ms;
     public ButtonActivity(String name) {
         this.name = name;
@@ -50,8 +51,8 @@ public class ButtonActivity {
     }
 
     public int getColor(String name) {
-        Log.d(TAG,res.getString(R.string.nothing));
-        Log.d(TAG,name);
+       // Log.d(TAG,res.getString(R.string.nothing));
+        //Log.d(TAG,name);
         if (name.equals(res.getString(R.string.nothing)))
             this.color = res.getColor(R.color.colorNothing);
 
