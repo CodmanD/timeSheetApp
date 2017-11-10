@@ -116,6 +116,7 @@ public class FragmentExport extends Fragment implements View.OnClickListener {
 
         activity.setSupportActionBar(toolbar);
         this.mainActivity = (MainActivity) activity;
+        //for output actual time
         mainActivity.toolbar = this.toolbar;
         toolbar.setTitle(MainActivity.actualTime);
         res = view.getResources();
