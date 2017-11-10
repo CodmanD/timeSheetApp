@@ -21,7 +21,9 @@ class DBHelper extends SQLiteOpenHelper {
                 + "eventId text,"
                 + "dateTimeStart text,"
                 + "dateTimeEnd text,"
-                + "color integer"
+                + "color integer,"
+                + "deleted integer,"
+                + "synced integer"
                 + ");");
     }
 

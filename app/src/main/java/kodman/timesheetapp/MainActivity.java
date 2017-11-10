@@ -401,6 +401,7 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
         private String mSummary;
         private DBHandler mDbHandler = new DBHandler(getApplicationContext());
         private SharedPreferences sharedPreferences = getSharedPreferences("tempData", MODE_PRIVATE);
+
         MakeRequestTask(GoogleAccountCredential credential, int action) {
             HttpTransport transport = AndroidHttp.newCompatibleTransport();
             JsonFactory jsonFactory = JacksonFactory.getDefaultInstance();
@@ -463,7 +464,6 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
         private void deleteEventFromCalendar(String startTime) throws IOException {
             //set mIsCreateAvailable flag to prevent multiple function call of deleting
             mIsCreateAvailable = false;
-            String eventId;
             //if device online, get eventId to delete event from calendar, if not online set
             //"deleted" to eventId, to synchronize in future
             if (isDeviceOnline()) {
@@ -475,8 +475,7 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
                     e.printStackTrace();
                 }
             } else {
-                eventId = "deleted";
-                mDbHandler.updateEventDelete(mStartTime, eventId);
+                mDbHandler.updateEventDelete(mStartTime, 1);
             }
             mDbHandler.closeDB();
             //set mIsCreateAvailable flag, to allow next actions
@@ -500,7 +499,7 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
             EventDateTime endTime = new EventDateTime().setDateTime(endDateTime);
             event.setStart(startTime);
             event.setEnd(endTime);
-            String eventId;
+            String eventId = "";
             //get list of users calendars and set it id if available. If not available, set id as primary
             if (isDeviceOnline()) {
                 String pageToken = null;
@@ -524,13 +523,12 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
                 System.out.printf("Event created: %s\n", event.getHtmlLink());
                 //get eventId and write event to local database
                 eventId = event.getId();
-                mDbHandler.writeOneEventToDB(mSummary, mCalendarId, eventId, mStartTime, mEndTime, mColor);
+                mDbHandler.writeOneEventToDB(mSummary, mCalendarId, eventId, mStartTime, mEndTime, mColor, 0, 1);
                 mDbHandler.closeDB();
             } else {
                 //if device not online set eventId "not_synced" and write in local database to sync
                 //it when device become online
-                eventId = "not_synced";
-                mDbHandler.writeOneEventToDB(mSummary, mCalendarId, eventId, mStartTime, mEndTime, mColor);
+                mDbHandler.writeOneEventToDB(mSummary, mCalendarId, eventId, mStartTime, mEndTime, mColor, 0, 0);
                 mDbHandler.closeDB();
             }
             mIsCreateAvailable = true;
@@ -570,9 +568,17 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
                 String eventId = cursor.getString(cursor.getColumnIndexOrThrow("eventId"));
                 String calendarId = cursor.getString(cursor.getColumnIndexOrThrow("calendarId"));
                 String startTime = cursor.getString(cursor.getColumnIndexOrThrow("dateTimeStart"));
+                int synced = cursor.getInt(cursor.getColumnIndexOrThrow("synced"));
                 // Retrieve the event from the API
                 if (isDeviceOnline()) {
                     try {
+                        if (synced != 1) {
+                            //if event not synced, they have not eventId, updating event in local database to sync it in future
+                            mDbHandler.updateEvent(startTime, mEndTime, eventId, 0);
+                            mDbHandler.closeDB();
+                            mIsCreateAvailable = true;
+                            return;
+                        }
                         Event event = mService.events().get(calendarId, eventId).execute();
                         // Make a change
                         Date end = new Date(Long.parseLong(mEndTime));
@@ -582,20 +588,18 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
                         // Update the event
                         event = mService.events().update(calendarId, event.getId(), event).execute();
                         System.out.printf("Event end time updated: %s\n", event.getHtmlLink());
-                        mDbHandler.updateEvent(startTime, mEndTime, eventId);
+                        mDbHandler.updateEvent(startTime, mEndTime, eventId, 1);
                         mDbHandler.closeDB();
                     } catch (com.google.api.client.googleapis.json.GoogleJsonResponseException e) {
                         //if bad id, change id to not synced to sync it in future and update
                         // event in local database
                         e.printStackTrace();
-                        eventId = "not_synced";
-                        mDbHandler.updateEvent(startTime, mEndTime, eventId);
+                        mDbHandler.updateEvent(startTime, mEndTime, eventId, 0);
                         mDbHandler.closeDB();
                     }
                 } else {
                     //if device offline updating event in local database to sync it in future
-                    eventId = "not_synced";
-                    mDbHandler.updateEvent(startTime, mEndTime, eventId);
+                    mDbHandler.updateEvent(startTime, mEndTime, eventId, 0);
                     mDbHandler.closeDB();
                 }
             }
@@ -639,12 +643,11 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
                     e.printStackTrace();
                 }
                 System.out.printf("Event time update: %s\n", event.getHtmlLink());
-                mDbHandler.updateEventStartTime(startTime, mNewStartTime, eventId);
+                mDbHandler.updateEventStartTime(startTime, mNewStartTime, eventId, 1);
                 mDbHandler.closeDB();
             } else {
                 //if device offline, set eventId "not_synced" to update in future
-                eventId = "not_synced";
-                mDbHandler.updateEventStartTime(startTime, mNewStartTime, eventId);
+                mDbHandler.updateEventStartTime(startTime, mNewStartTime, eventId, 0);
                 mDbHandler.closeDB();
             }
             //when we change start time, we need to change end time of previous event
@@ -672,12 +675,12 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
             if (isDeviceOnline()) {
                 previousEvent = mService.events().update(calendarId, previousEvent.getId(), previousEvent).execute();
                 System.out.printf("Event time update: %s\n", previousEvent.getHtmlLink());
-                mDbHandler.updateEventEndTime(startTime, mNewStartTime, eventId);
+                mDbHandler.updateEventEndTime(startTime, mNewStartTime, eventId, 1);
                 mDbHandler.closeDB();
             } else {
                 //if device offline, set eventId "not_synced" to update in future and update in local database
                 eventId = "not_synced";
-                mDbHandler.updateEventEndTime(startTime, mNewStartTime, eventId);
+                mDbHandler.updateEventEndTime(startTime, mNewStartTime, eventId, 0);
                 mDbHandler.closeDB();
             }
             mIsCreateAvailable = true;
@@ -699,12 +702,12 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
             if (isDeviceOnline()) {
                 event = mService.events().update(calendarId, event.getId(), event).execute();
                 System.out.printf("Event name/color update: %s\n", event.getHtmlLink());
-                mDbHandler.updateEventNameColor(startTime, newSummary, newColor, eventId);
+                mDbHandler.updateEventNameColor(startTime, newSummary, newColor, eventId, 1);
                 mDbHandler.closeDB();
             } else {
                 //if device offline, set eventId "not_synced" to update in future
                 eventId = "not_synced";
-                mDbHandler.updateEventNameColor(startTime, newSummary, newColor, eventId);
+                mDbHandler.updateEventNameColor(startTime, newSummary, newColor, eventId, 0);
                 mDbHandler.closeDB();
             }
             mIsCreateAvailable = true;
@@ -718,12 +721,15 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
             String eventNameDb;
             String endTimeDb;
             String tempEventId;
+            int deleted;
+            int synced;
             //get events marked "not_synced" and "deleted" from local database to sync it with google calendar
             while (unsyncedEvents.moveToNext()) {
                 eventNameDb = unsyncedEvents.getString(unsyncedEvents.getColumnIndexOrThrow("eventName"));
                 startTimeDb = unsyncedEvents.getString(unsyncedEvents.getColumnIndexOrThrow("dateTimeStart"));
                 endTimeDb = unsyncedEvents.getString(unsyncedEvents.getColumnIndexOrThrow("dateTimeEnd"));
                 tempEventId = unsyncedEvents.getString(unsyncedEvents.getColumnIndexOrThrow("eventId"));
+                deleted = unsyncedEvents.getInt(unsyncedEvents.getColumnIndexOrThrow("deleted"));
                 String pageToken = null;
                 do {
                     //check if calendar id is available
@@ -743,7 +749,7 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
                     mCalendarId = "primary";
                 }
                 //delete events marked "deleted" from google calendar and local database
-                if (tempEventId.equals("deleted")) {
+                if (deleted == 1) {
                     mService.events().delete(mCalendarId, tempEventId).execute();
                     mDbHandler.deleteEventFromDb(startTimeDb);
                     System.out.printf("Event deleted: %s\n", startTimeDb);
@@ -763,7 +769,7 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
                     String eventId = event.getId();
                     mDbHandler.deleteUnsyncedEventFromDb(startTimeDb);
                     System.out.printf("Event synced: %s\n", event.getHtmlLink());
-                    mDbHandler.writeOneEventToDB(eventNameDb, mCalendarId, eventId, startTimeDb, endTimeDb, mColor);
+                    mDbHandler.writeOneEventToDB(eventNameDb, mCalendarId, eventId, startTimeDb, endTimeDb, mColor, 0, 1);
                 }
 
             }
