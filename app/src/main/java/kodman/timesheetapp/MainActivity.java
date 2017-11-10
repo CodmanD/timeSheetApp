@@ -92,7 +92,7 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
     private static boolean mIsCreateAvailable = true;
     private static final String TAG = "------Activity Say";
     private String mNewSummary;
-    private String mNewColor;
+    private int mNewColor;
     public Toolbar toolbar;
     private Menu menu;
     private int status = 0;
@@ -111,7 +111,7 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
     private Date startDate = new Date();
     Date currentDate = new Date();
     private DateFormat df = new DateFormat();
-    private String mColor;
+    private int mColor;
     private static String nameCalendar = "";
     private static String myName = "";
     private SharedPreferences sPref;
@@ -165,7 +165,7 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
     //------for work with Google Diary---------------------------------------------------------------
     GoogleAccountCredential mCredential;
     String mCalendarId;
-    String mCalendarData[] = {null, null, null};
+    String mCalendarData[] = {null, null};
     String mStartTime;
     String mEndTime;
     boolean mIdFlag = false;
@@ -541,14 +541,13 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
             if (sharedPreferences.getBoolean("temp", true)) {
                 mSummary = mCalendarData[0];
                 mStartTime = mCalendarData[1];
-                mColor = mCalendarData[2];
                 mEndTime = mStartTime;
                 addEvent();
                 SharedPreferences.Editor editor = sharedPreferences.edit();
                 editor.putBoolean("temp", false);
                 editor.commit();
-            //if "temp" flag was false, we get endTime and update previous event to set end time
-            //and create new event
+                //if "temp" flag was false, we get endTime and update previous event to set end time
+                //and create new event
             } else {
                 mEndTime = mCalendarData[1];
                 updateEvent();
@@ -615,8 +614,8 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
             // Make a change
             Date start = new Date(Long.parseLong(newStartTime));
             DateTime startDateTime = new DateTime(start, TimeZone.getTimeZone("UTC"));
-            EventDateTime endTime = new EventDateTime().setDateTime(startDateTime);
-            event.setEnd(endTime);
+            EventDateTime eventStartTime = new EventDateTime().setDateTime(startDateTime);
+            event.setStart(eventStartTime);
             // Update the event
             if (isDeviceOnline()) {
                 event = mService.events().update(calendarId, event.getId(), event).execute();
@@ -629,13 +628,36 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
                 mDbHandler.updateEventStartTime(startTime, mNewStartTime, eventId);
                 mDbHandler.closeDB();
             }
+            //when we change start time, we need to change end time of previous event
+            ArrayList<String> previousArrayList = mDbHandler.readPreviousEventFromDB(startTime);
+            eventId = previousArrayList.get(1);
+            calendarId = previousArrayList.get(0);
+            // Retrieve the event from the API by eventId
+            Event previousEvent = mService.events().get(calendarId, eventId).execute();
+            // Make a change
+            Date previousEnd = new Date(Long.parseLong(newStartTime));
+            DateTime previousEndDateTime = new DateTime(previousEnd, TimeZone.getTimeZone("UTC"));
+            EventDateTime previousEndTime = new EventDateTime().setDateTime(previousEndDateTime);
+            previousEvent.setEnd(previousEndTime);
+            // Update the event in calendar and local database
+            if (isDeviceOnline()) {
+                previousEvent = mService.events().update(calendarId, previousEvent.getId(), previousEvent).execute();
+                System.out.printf("Event time update: %s\n", previousEvent.getHtmlLink());
+                mDbHandler.updateEventEndTime(startTime, mNewStartTime, eventId);
+                mDbHandler.closeDB();
+            } else {
+                //if device offline, set eventId "not_synced" to update in future and update in local database
+                eventId = "not_synced";
+                mDbHandler.updateEventEndTime(startTime, mNewStartTime, eventId);
+                mDbHandler.closeDB();
+            }
             mIsCreateAvailable = true;
         }
 
         private void updateEventNameColor(String startTime) throws IOException {
             mIsCreateAvailable = false;
             String newSummary = mNewSummary;
-            String newColor = mNewColor;
+            int newColor = mNewColor;
             //get needed event from database
             ArrayList<String> arrayList = mDbHandler.readOneEventFromDB(startTime);
             String eventId = arrayList.get(1);
@@ -737,7 +759,7 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
         //set event data to array and call calendarApi with needed action
         mCalendarData[0] = ba.name;
         mCalendarData[1] = String.valueOf(ms);
-        mCalendarData[2] = String.valueOf(ba.getColor(ba.name));
+        mColor = ba.getColor(ba.name);
         callCalendarApi(1);
     }
 
@@ -1421,7 +1443,7 @@ For actual time, update every 1000 ms
                         btn.setText(ba.name);
                         ba.color = s.color;
                         btn.setBackgroundColor(ba.color);
-                        mNewColor = String.valueOf(ba.color);
+                        mNewColor = ba.color;
                         mNewSummary = ba.name;
                         mUpdateTime = String.valueOf(ba.ms);
                         callCalendarApi(4);
