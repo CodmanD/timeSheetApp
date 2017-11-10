@@ -101,22 +101,18 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
     private ArrayList<ButtonActivity> listActivity = new ArrayList<>();//All buttons activity for current  time
     private ArrayList<ButtonActivity> listLogActivity = new ArrayList<>();
     private ArrayAdapter<ButtonActivity> adapterListLogActivity;
-    private ArrayList<ButtonActivity> listSetActivity = new ArrayList<>();
     private String mDeleteTime;
     private String mUpdateTime;
     private String mNewStartTime;
     public static Resources res;
     private ListView lvActivity;
-    Time startTime = new Time();
-    private Date startDate = new Date();
-    Date currentDate = new Date();
-    private DateFormat df = new DateFormat();
     private int mColor;
     private static String nameCalendar = "";
     private static String myName = "";
     private SharedPreferences sPref;
     private Long ms;
     static String actualTime;
+    SharedPreferences sharedPreferences;
 
     @Override
     public void onPointerCaptureChanged(boolean hasCapture) {
@@ -160,6 +156,12 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
         }
         MainActivity.this.adapterListLogActivity.remove(ba);
         createActivityLog();
+        if (listLogActivity.size() == 0) {
+            sharedPreferences = getSharedPreferences("tempData", MODE_PRIVATE);
+            SharedPreferences.Editor editor = sharedPreferences.edit();
+            editor.putBoolean("temp", true);
+            editor.commit();
+        }
     }
 
     //------for work with Google Diary---------------------------------------------------------------
@@ -398,8 +400,7 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
         private int mAction;
         private String mSummary;
         private DBHandler mDbHandler = new DBHandler(getApplicationContext());
-        SharedPreferences sharedPreferences = getSharedPreferences("tempData", MODE_PRIVATE);
-
+        private SharedPreferences sharedPreferences = getSharedPreferences("tempData", MODE_PRIVATE);
         MakeRequestTask(GoogleAccountCredential credential, int action) {
             HttpTransport transport = AndroidHttp.newCompatibleTransport();
             JsonFactory jsonFactory = JacksonFactory.getDefaultInstance();
@@ -468,8 +469,8 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
             if (isDeviceOnline()) {
                 try {
                     ArrayList<String> arrayList = mDbHandler.readOneEventFromDB(startTime);
-                    mService.events().delete(mCalendarId, arrayList.get(1)).execute();
                     mDbHandler.deleteEventFromDb(startTime);
+                    mService.events().delete(mCalendarId, arrayList.get(1)).execute();
                 } catch (Exception e) {
                     e.printStackTrace();
                 }
@@ -609,7 +610,7 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
             String eventId = "";
             String calendarId = "";
             String endDb = "";
-            String startDb="";
+            String startDb = "";
             try {
                 ArrayList<String> arrayList = mDbHandler.readOneEventFromDB(startTime);
                 eventId = arrayList.get(1);
@@ -636,7 +637,6 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
                     event = mService.events().update(calendarId, event.getId(), event).execute();
                 } catch (com.google.api.client.googleapis.json.GoogleJsonResponseException e) {
                     e.printStackTrace();
-
                 }
                 System.out.printf("Event time update: %s\n", event.getHtmlLink());
                 mDbHandler.updateEventStartTime(startTime, mNewStartTime, eventId);
@@ -657,7 +657,6 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
                 e.printStackTrace();
                 return;
             }
-
             // Retrieve the event from the API by eventId
             Event previousEvent = mService.events().get(calendarId, eventId).execute();
             // Make a change
@@ -745,7 +744,7 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
                 }
                 //delete events marked "deleted" from google calendar and local database
                 if (tempEventId.equals("deleted")) {
-                    mService.events().delete(mCalendarId, startTimeDb).execute();
+                    mService.events().delete(mCalendarId, tempEventId).execute();
                     mDbHandler.deleteEventFromDb(startTimeDb);
                     System.out.printf("Event deleted: %s\n", startTimeDb);
                 } else {
@@ -1762,15 +1761,16 @@ For actual time, update every 1000 ms
         }
         cursor.close();
         mDbHandler.closeDB();
-
     }
 
     //Clear all from  DataBase
     private void clearLogActivityFromDB() {
-
         DBHandler mDbHandler = new DBHandler(getApplicationContext());
         mDbHandler.clearEventsTable();
         Log.d(TAG, "Clean DB");
+        SharedPreferences.Editor editor = sharedPreferences.edit();
+        editor.putBoolean("temp", true);
+        editor.commit();
         mDbHandler.closeDB();
     }
 
