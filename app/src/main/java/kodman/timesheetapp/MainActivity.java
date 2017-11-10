@@ -606,19 +606,38 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
             mIsCreateAvailable = false;
             //get needed event from database
             String newStartTime = mNewStartTime;
-            ArrayList<String> arrayList = mDbHandler.readOneEventFromDB(startTime);
-            String eventId = arrayList.get(1);
-            String calendarId = arrayList.get(0);
+            String eventId = "";
+            String calendarId = "";
+            String endDb = "";
+            String startDb="";
+            try {
+                ArrayList<String> arrayList = mDbHandler.readOneEventFromDB(startTime);
+                eventId = arrayList.get(1);
+                calendarId = arrayList.get(0);
+                endDb = arrayList.get(3);
+            } catch (IndexOutOfBoundsException e) {
+                e.printStackTrace();
+                return;
+            }
             // Retrieve the event from the API by eventId
             Event event = mService.events().get(calendarId, eventId).execute();
             // Make a change
             Date start = new Date(Long.parseLong(newStartTime));
+            Date end = new Date(Long.parseLong(endDb));
             DateTime startDateTime = new DateTime(start, TimeZone.getTimeZone("UTC"));
+            DateTime endDateTime = new DateTime(end, TimeZone.getTimeZone("UTC"));
             EventDateTime eventStartTime = new EventDateTime().setDateTime(startDateTime);
+            EventDateTime eventEndTime = new EventDateTime().setDateTime(endDateTime);
             event.setStart(eventStartTime);
+            event.setEnd(eventEndTime);
             // Update the event
             if (isDeviceOnline()) {
-                event = mService.events().update(calendarId, event.getId(), event).execute();
+                try {
+                    event = mService.events().update(calendarId, event.getId(), event).execute();
+                } catch (com.google.api.client.googleapis.json.GoogleJsonResponseException e) {
+                    e.printStackTrace();
+
+                }
                 System.out.printf("Event time update: %s\n", event.getHtmlLink());
                 mDbHandler.updateEventStartTime(startTime, mNewStartTime, eventId);
                 mDbHandler.closeDB();
@@ -629,15 +648,26 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
                 mDbHandler.closeDB();
             }
             //when we change start time, we need to change end time of previous event
-            ArrayList<String> previousArrayList = mDbHandler.readPreviousEventFromDB(startTime);
-            eventId = previousArrayList.get(1);
-            calendarId = previousArrayList.get(0);
+            try {
+                ArrayList<String> previousArrayList = mDbHandler.readPreviousEventFromDB(startTime);
+                eventId = previousArrayList.get(1);
+                calendarId = previousArrayList.get(0);
+                startDb = previousArrayList.get(3);
+            } catch (IndexOutOfBoundsException e) {
+                e.printStackTrace();
+                return;
+            }
+
             // Retrieve the event from the API by eventId
             Event previousEvent = mService.events().get(calendarId, eventId).execute();
             // Make a change
+            Date previousStart = new Date(Long.parseLong(startDb));
             Date previousEnd = new Date(Long.parseLong(newStartTime));
+            DateTime previousStartDateTime = new DateTime(previousStart, TimeZone.getTimeZone("UTC"));
             DateTime previousEndDateTime = new DateTime(previousEnd, TimeZone.getTimeZone("UTC"));
+            EventDateTime previousStartTime = new EventDateTime().setDateTime(previousStartDateTime);
             EventDateTime previousEndTime = new EventDateTime().setDateTime(previousEndDateTime);
+            previousEvent.setStart(previousStartTime);
             previousEvent.setEnd(previousEndTime);
             // Update the event in calendar and local database
             if (isDeviceOnline()) {
@@ -1311,6 +1341,16 @@ For actual time, update every 1000 ms
                     public void onClick(DialogInterface
                                                 dialog, int which) {
 
+                    }
+                });
+
+        TPD.setButton(DialogInterface.BUTTON_NEGATIVE,
+                "Cancel", new DialogInterface.
+                        OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface
+                                                dialog, int which) {
+
                         int endHour = endDate.getHours();
                         int endMinutes = endDate.getMinutes();
 
@@ -1353,16 +1393,6 @@ For actual time, update every 1000 ms
 
                             //  createActivityLog();
                         }
-                    }
-                });
-
-        TPD.setButton(DialogInterface.BUTTON_NEGATIVE,
-                "Cancel", new DialogInterface.
-                        OnClickListener() {
-                    @Override
-                    public void onClick(DialogInterface
-                                                dialog, int which) {
-
                     }
                 });
         TPD.show();
