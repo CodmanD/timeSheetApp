@@ -16,7 +16,7 @@ public class DBHandler {
         mContext = context;
     }
     //write one event to local database
-    public void writeOneEventToDB(String eventName, String calendarId, String eventId, String endTime, String startTime, int color) {
+    public void writeOneEventToDB(String eventName, String calendarId, String eventId, String endTime, String startTime, int color, int deleted, int synced) {
         dbHelper = new DBHelper(mContext);
         db = dbHelper.getWritableDatabase();
         ContentValues cv = new ContentValues();
@@ -26,6 +26,8 @@ public class DBHandler {
         cv.put("dateTimeStart", startTime);
         cv.put("dateTimeEnd", endTime);
         cv.put("color", color);
+        cv.put("deleted", deleted);
+        cv.put("synced", synced);
         db.insert("calendarTable", null, cv);
         dbHelper.close();
     }
@@ -33,7 +35,7 @@ public class DBHandler {
     public Cursor readUnsyncedEventFromDB() {
         dbHelper = new DBHelper(mContext);
         db = dbHelper.getWritableDatabase();
-        return db.rawQuery("SELECT * FROM calendarTable WHERE eventId LIKE 'not_synced' OR eventId LIKE 'deleted'", null);
+        return db.rawQuery("SELECT * FROM calendarTable WHERE deleted LIKE '1' OR synced LIKE '0'", null);
 
     }
     //read one event from db with needed start time
@@ -77,44 +79,46 @@ public class DBHandler {
         return arrayList;
     }
     //update end time of event with needed start time. We use it when selecting next activity
-    public void updateEvent(String dateTimeStart, String dateTimeEnd, String eventId) {
+    public void updateEvent(String dateTimeStart, String dateTimeEnd, String eventId, int synced) {
         dbHelper = new DBHelper(mContext);
         db = dbHelper.getWritableDatabase();
         db.execSQL("UPDATE calendarTable SET dateTimeEnd = '" + dateTimeEnd + "' WHERE dateTimeStart = '" + dateTimeStart + "'");
         db.execSQL("UPDATE calendarTable SET eventId = '" + eventId + "' WHERE dateTimeStart = '" + dateTimeStart + "'");
+        db.execSQL("UPDATE calendarTable SET synced = '" + synced + "' WHERE dateTimeStart = '" + dateTimeStart + "'");
         db.close();
         dbHelper.close();
     }
     //change eventId to "deleted" for deleting from google calendar in future
-    public void updateEventDelete(String dateTimeStart, String eventId) {
+    public void updateEventDelete(String dateTimeStart, int deleted) {
         dbHelper = new DBHelper(mContext);
         db = dbHelper.getWritableDatabase();
-        db.execSQL("UPDATE calendarTable SET eventId = '" + eventId + "' WHERE dateTimeStart = '" + dateTimeStart + "'");
+        db.execSQL("UPDATE calendarTable SET deleted = '" + deleted + "' WHERE dateTimeStart = '" + dateTimeStart + "'");
         db.close();
         dbHelper.close();
     }
 
     //update start time of event with needed start time
-    public void updateEventStartTime(String dateTimeStart, String newStartTime, String eventId) {
+    public void updateEventStartTime(String dateTimeStart, String newStartTime, String eventId, int synced) {
         dbHelper = new DBHelper(mContext);
         db = dbHelper.getWritableDatabase();
         db.execSQL("UPDATE calendarTable SET dateTimeStart = '" + newStartTime + "' WHERE dateTimeStart = '" + dateTimeStart + "'");
         db.execSQL("UPDATE calendarTable SET eventId = '" + eventId + "' WHERE dateTimeStart = '" + dateTimeStart + "'");
+        db.execSQL("UPDATE calendarTable SET synced = '" + synced + "' WHERE dateTimeStart = '" + dateTimeStart + "'");
         db.close();
         dbHelper.close();
     }
     //update end time of previous event, when we change time of current event
-    public void updateEventEndTime(String dateTimeEnd, String newEndTime, String eventId) {
+    public void updateEventEndTime(String dateTimeEnd, String newEndTime, String eventId, int synced) {
         dbHelper = new DBHelper(mContext);
         db = dbHelper.getWritableDatabase();
         db.execSQL("UPDATE calendarTable SET dateTimeEnd = '" + newEndTime + "' WHERE dateTimeEnd = '" + dateTimeEnd + "'");
         db.execSQL("UPDATE calendarTable SET eventId = '" + eventId + "' WHERE dateTimeEnd = '" + dateTimeEnd + "'");
+
         db.close();
         dbHelper.close();
     }
-
     //updating event name or color in local database
-    public void updateEventNameColor(String dateTimeStart, String newSummary, int newColor, String eventId) {
+    public void updateEventNameColor(String dateTimeStart, String newSummary, int newColor, String eventId, int synced) {
         dbHelper = new DBHelper(mContext);
         db = dbHelper.getWritableDatabase();
         db.execSQL("UPDATE calendarTable SET eventName = '" + newSummary + "' WHERE dateTimeStart = '" + dateTimeStart + "'");
@@ -143,8 +147,8 @@ public class DBHandler {
     public void deleteUnsyncedEventFromDb(String startTime) {
         dbHelper = new DBHelper(mContext);
         db = dbHelper.getWritableDatabase();
-        db.execSQL("DELETE FROM calendarTable WHERE dateTimeStart LIKE '" + startTime + "' AND eventId LIKE 'not_synced'");
-        db.execSQL("DELETE FROM calendarTable WHERE dateTimeStart LIKE '" + startTime + "' AND eventId LIKE 'deleted'");
+        db.execSQL("DELETE FROM calendarTable WHERE dateTimeStart LIKE '" + startTime + "' AND deleted LIKE '1'");
+        db.execSQL("DELETE FROM calendarTable WHERE dateTimeStart LIKE '" + startTime + "' AND synced LIKE '0'");
         db.close();
         dbHelper.close();
     }
