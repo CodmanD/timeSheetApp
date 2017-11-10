@@ -47,6 +47,7 @@ public class DBHandler {
             arrayList.add(cursor.getString(cursor.getColumnIndexOrThrow("calendarId")));
             arrayList.add(cursor.getString(cursor.getColumnIndexOrThrow("eventId")));
             arrayList.add(cursor.getString(cursor.getColumnIndexOrThrow("eventName")));
+            arrayList.add(cursor.getString(cursor.getColumnIndexOrThrow("dateTimeEnd")));
         } catch (IndexOutOfBoundsException e) {
             e.printStackTrace();
         }
@@ -66,6 +67,7 @@ public class DBHandler {
             arrayList.add(cursor.getString(cursor.getColumnIndexOrThrow("calendarId")));
             arrayList.add(cursor.getString(cursor.getColumnIndexOrThrow("eventId")));
             arrayList.add(cursor.getString(cursor.getColumnIndexOrThrow("eventName")));
+            arrayList.add(cursor.getString(cursor.getColumnIndexOrThrow("dateTimeStart")));
         } catch (IndexOutOfBoundsException e) {
             e.printStackTrace();
         }
