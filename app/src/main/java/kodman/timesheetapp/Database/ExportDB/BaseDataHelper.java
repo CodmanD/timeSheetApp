@@ -11,9 +11,11 @@ import android.provider.BaseColumns;
 
 public class BaseDataHelper extends SQLiteOpenHelper {
 
+    // DataBase store name
     public static final String DB_NAME = "timeSheetApp_sendEmailDB";
     public static final int DB_VERSION = 1;
 
+    //Create a model for storing user data
     public static class User implements BaseColumns {
         public static final String TABLE_NAME = "latest_data";
         public static final String EMAIL = "email";
@@ -21,6 +23,7 @@ public class BaseDataHelper extends SQLiteOpenHelper {
         public static final String MESSAGE = "message";
     }
 
+    // Script to create a data table
     static String SCRIPT_CREATE_TBL_MAIN = " CREATE TABLE " +
             User.TABLE_NAME + " ( " +
             User.EMAIL + " TEXT, " +
