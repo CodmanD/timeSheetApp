@@ -1345,17 +1345,6 @@ For actual time, update every 1000 ms
                     @Override
                     public void onClick(DialogInterface
                                                 dialog, int which) {
-
-                    }
-                });
-
-        TPD.setButton(DialogInterface.BUTTON_NEGATIVE,
-                "Cancel", new DialogInterface.
-                        OnClickListener() {
-                    @Override
-                    public void onClick(DialogInterface
-                                                dialog, int which) {
-
                         int endHour = endDate.getHours();
                         int endMinutes = endDate.getMinutes();
 
@@ -1398,6 +1387,17 @@ For actual time, update every 1000 ms
 
                             //  createActivityLog();
                         }
+                    }
+                });
+
+        TPD.setButton(DialogInterface.BUTTON_NEGATIVE,
+                "Cancel", new DialogInterface.
+                        OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface
+                                                dialog, int which) {
+
+
                     }
                 });
         TPD.show();
