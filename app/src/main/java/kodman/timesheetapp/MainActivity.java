@@ -110,10 +110,9 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
     private int mColor;
     private static String nameCalendar = "";
     private static String myName = "";
-    private SharedPreferences sPref;
     private Long ms;
     static String actualTime;
-    SharedPreferences sharedPreferences;
+    SharedPreferences sPref;
 
     @Override
     public void onPointerCaptureChanged(boolean hasCapture) {
@@ -158,8 +157,8 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
         MainActivity.this.adapterListLogActivity.remove(ba);
         createActivityLog();
         if (listLogActivity.size() == 0) {
-            sharedPreferences = getSharedPreferences("tempData", MODE_PRIVATE);
-            SharedPreferences.Editor editor = sharedPreferences.edit();
+            sPref = getSharedPreferences("tempData", MODE_PRIVATE);
+            SharedPreferences.Editor editor = sPref.edit();
             editor.putBoolean("temp", true);
             editor.commit();
         }
@@ -401,7 +400,7 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
         private int mAction;
         private String mSummary;
         private DBHandler mDbHandler = new DBHandler(getApplicationContext());
-        private SharedPreferences sharedPreferences = getSharedPreferences("tempData", MODE_PRIVATE);
+        private SharedPreferences sPref = getSharedPreferences("tempData", MODE_PRIVATE);
 
         MakeRequestTask(GoogleAccountCredential credential, int action) {
             HttpTransport transport = AndroidHttp.newCompatibleTransport();
@@ -442,7 +441,7 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
                             addEventToCalendar();
                         }
                         //put temp flag to sharedprefs to prevent flag resetting when app closes
-                        SharedPreferences.Editor editor = sharedPreferences.edit();
+                        SharedPreferences.Editor editor = sPref.edit();
                         editor.putBoolean("temp", false);
                         editor.commit();
                         break;
@@ -538,12 +537,12 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
         private void addEventToCalendar() throws IOException {
             //when we creating event by first time("temp" flag was true by default), we set temporary parameters and "temp" flag
             //because we don't know end time of event
-            if (sharedPreferences.getBoolean("temp", true)) {
+            if (sPref.getBoolean("temp", true)) {
                 mSummary = mCalendarData[0];
                 mStartTime = mCalendarData[1];
                 mEndTime = mStartTime;
                 addEvent();
-                SharedPreferences.Editor editor = sharedPreferences.edit();
+                SharedPreferences.Editor editor = sPref.edit();
                 editor.putBoolean("temp", false);
                 editor.commit();
                 //if "temp" flag was false, we get endTime and update previous event to set end time
@@ -555,7 +554,7 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
                 mStartTime = mCalendarData[1];
                 mEndTime = mStartTime;
                 addEvent();
-                SharedPreferences.Editor editor = sharedPreferences.edit();
+                SharedPreferences.Editor editor = sPref.edit();
                 editor.putBoolean("temp", true);
                 editor.commit();
             }
@@ -1750,13 +1749,13 @@ For actual time, update every 1000 ms
 
         // save user name, to set name from *.csv file
         String userName = mCredential.getSelectedAccountName();
-        SharedPreferences sharedPreferencesUserName;
+        SharedPreferences sPrefUserName;
 
         try {
-            sharedPreferencesUserName = getSharedPreferences(USER_NAME_PREFERENCES, Context.MODE_PRIVATE);
-            if (sharedPreferencesUserName.contains(USER_NAME)) {
-                if (!sharedPreferencesUserName.getString(USER_NAME, "").equals(userName)) {
-                    SharedPreferences.Editor editor = sharedPreferencesUserName.edit();
+            sPrefUserName = getSharedPreferences(USER_NAME_PREFERENCES, Context.MODE_PRIVATE);
+            if (sPrefUserName.contains(USER_NAME)) {
+                if (!sPrefUserName.getString(USER_NAME, "").equals(userName)) {
+                    SharedPreferences.Editor editor = sPrefUserName.edit();
                     editor.clear();
                     editor.putString(USER_NAME, userName);
                     editor.apply();
@@ -1851,7 +1850,7 @@ For actual time, update every 1000 ms
         DBHandler mDbHandler = new DBHandler(getApplicationContext());
         mDbHandler.clearEventsTable();
         Log.d(TAG, "Clean DB");
-        SharedPreferences.Editor editor = sharedPreferences.edit();
+        SharedPreferences.Editor editor = sPref.edit();
         editor.putBoolean("temp", true);
         editor.commit();
         mDbHandler.closeDB();
