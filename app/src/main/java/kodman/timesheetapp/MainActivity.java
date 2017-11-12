@@ -13,6 +13,7 @@ import android.content.pm.ActivityInfo;
 import android.content.res.Resources;
 import android.database.Cursor;
 import android.graphics.Color;
+import android.graphics.Point;
 import android.graphics.drawable.Drawable;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
@@ -812,18 +813,19 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
 
 
     //add widgets to GridLayoutSetting
-    private void addToGridLayoutSettings() {
+    private void createGridLayoutSettings() {
         GridLayout GL = this.findViewById(R.id.gridLayoutSettings);
         if (GL.getChildCount() > 0) {
-            //  Toast.makeText(MainActivity.this, "Count listActivity=" + this.listActivity.size(),
-            //          Toast.LENGTH_SHORT).show();
             GL.removeViews(0, GL.getChildCount());
-            //  Toast.makeText(MainActivity.this, "Count after remove =" + GL.getChildCount(),
-            //         Toast.LENGTH_SHORT).show();
         }
-        Toast.makeText(MainActivity.this, "Count =" + GL.getChildCount(),
-                Toast.LENGTH_SHORT).show();
-        int rowIndex = 0, columnIndex = 0;
+
+            Point size=new Point();
+            getWindowManager().getDefaultDisplay().getSize(size);
+                 int w=size.x;
+
+                int rowIndex = 0, columnIndex = 0;
+
+        //Add available  ButtonAcivity on the screen
         for (int i = 0; i < this.listActivity.size(); i++, rowIndex++) {
 
             if (rowIndex >= 7) {
@@ -832,30 +834,15 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
             }
             final ButtonActivity ba = this.listActivity.get(i);
             final Button btn = new Button(this);
-
+            btn.setWidth(w/3-10);
+            btn.setLines(1);
+            //assing listeners for Buttons
             btn.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
 
-                    AlertDialog.Builder builder = new AlertDialog.Builder(MainActivity.this);
-                    builder.setTitle(res.getString(R.string.deleteActivity))
-                            .setPositiveButton(R.string.yes, new DialogInterface.OnClickListener() {
-                                @Override
-                                public void onClick(DialogInterface dialog, int which) {
-                                    MainActivity.this.listActivity.remove(ba);
-                                    addToGridLayoutSettings();
-                                    dialog.cancel();
-                                }
-                            })
-                            .setNegativeButton(R.string.no, new DialogInterface.OnClickListener() {
-                                @Override
-                                public void onClick(DialogInterface dialog, int which) {
-                                    dialog.cancel();
-                                }
-                            }).setCancelable(true);
+                    changeButtonAcivity(ba,btn);
 
-                    builder.create().show();
-                    // Toast.makeText(MainActivity.this, "Click", Toast.LENGTH_SHORT).show();
                 }
             });
             btn.setText(ba.name);
@@ -875,6 +862,7 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
         if (GL.getChildCount() >= 21) return;
 
         Button btn = new Button(this);
+        //assing listener for the Button
         btn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -882,52 +870,115 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
             }
         });
 
+        //add Last Button with title "+New"
         if (rowIndex >= 7) {
             columnIndex++;
             rowIndex = 0;
         }
         btn.setText(R.string.newButton);
-
+        btn.setWidth(w/3-20);
 
         GridLayout.Spec row = GridLayout.spec(rowIndex, 1);
         GridLayout.Spec column = GridLayout.spec(columnIndex, 1);
         GridLayout.LayoutParams gridLayoutParam = new GridLayout.LayoutParams(row, column);
         GL.addView(btn, gridLayoutParam);
 
+
+    }
+
+    //For changer or remove Activity
+    private void changeButtonAcivity(final ButtonActivity ba,final Button btn)
+    {
+
+        AlertDialog.Builder builder = new AlertDialog.Builder(this,android.R.style.Theme_Holo_Light_Dialog);
+
+        LayoutInflater inflater = MainActivity.this.getLayoutInflater();
+        final View view = inflater.inflate(R.layout.dialog, null);
+        final EditText editText = view.findViewById(R.id.editTextDialog);
+        editText.setText(ba.name);
+
+        builder.setView(view)
+                .setPositiveButton("Change this acivity", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int id) {
+
+
+                        String nameButton = editText.getText().toString();
+                        //Checking max characters
+
+
+                        //checking the button for uniqueness
+                        if (!MainActivity.this.uniqueButtonActivity(nameButton,btn.getText().toString(),false))
+                               {
+                            Toast.makeText(MainActivity.this, "Activity with this name exists",
+                                    Toast.LENGTH_SHORT).show();
+                            dialog.dismiss();
+                            changeButtonAcivity( ba, btn);
+                        } else
+                            {
+                                if(nameButton.length()>25)
+                                    nameButton.substring(0,24);
+                            ba.name = nameButton;
+                            //add and set color for the button
+                            setColorFromDialog(ba,false);
+                            dialog.cancel();
+
+                        }
+                    }
+                })
+                .setNeutralButton("Cancel", new DialogInterface.OnClickListener() {
+                    public void onClick(DialogInterface dialog, int id) {
+                        dialog.cancel();
+                    }
+                })
+                .setNegativeButton(res.getText(R.string.delete),new DialogInterface.OnClickListener(){
+                            public void onClick(DialogInterface dialog, int id) {
+
+                                MainActivity.this.listActivity.remove(ba);
+                                createGridLayoutSettings();
+                                dialog.cancel();
+                            }
+        });
+
+        AlertDialog dialog = builder.create();
+        dialog.setCancelable(true);
+        dialog.show();
     }
 
 
     //------For click on button +New
     private void clickNewButton(final View v) {
 
-        Toast.makeText(MainActivity.this, "Click New Button",
-                Toast.LENGTH_SHORT).show();
+      //  Toast.makeText(MainActivity.this, "Click New Button",
+      //          Toast.LENGTH_SHORT).show();
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
         builder.setMessage(R.string.dialogNewButton);
         LayoutInflater inflater = MainActivity.this.getLayoutInflater();
         final View view = inflater.inflate(R.layout.dialog, null);
+        final EditText editText = view.findViewById(R.id.editTextDialog);
+        editText.setText(R.string.newActivity);
+
         builder.setView(view)
-                .setPositiveButton("Create new button", new DialogInterface.OnClickListener() {
+                .setPositiveButton("Create new activity", new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(DialogInterface dialog, int id) {
 
-                        EditText editText = (EditText) view.findViewById(R.id.editTextDialog);
+                        EditText editText = view.findViewById(R.id.editTextDialog);
                         String nameButton = editText.getText().toString();
-                        if (nameButton.length() > 20) {
-                            Toast.makeText(MainActivity.this, "Maximum  characters in name is 20",
-                                    Toast.LENGTH_SHORT).show();
-                            dialog.dismiss();
-                            clickNewButton(v);
-                        }
-                        if (!MainActivity.this.uniqueButtonActivity(nameButton)) {
-                            Toast.makeText(MainActivity.this, "Maximum  characters in name is 20",
+
+                        //checking the button for uniqueness
+                        if (!MainActivity.this.uniqueButtonActivity(nameButton,((Button)v).getText().toString(),true)) {
+                            Toast.makeText(MainActivity.this, "Activity with this name exists",
                                     Toast.LENGTH_SHORT).show();
                             dialog.dismiss();
                             clickNewButton(v);
                         } else {
                             final ButtonActivity ba = new ButtonActivity(nameButton);
+                            if(nameButton.length()>25)
+                                nameButton.substring(0,24);
                             ba.name = nameButton;
-                            setColorFromDialog(ba);
+                            //add and set color for the button
+                            setColorFromDialog(ba,true);
 
                             dialog.dismiss();
                             Toast.makeText(MainActivity.this, "create",
@@ -948,8 +999,11 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
 
 
     //--------------------for color---------
-    private void setColorFromDialog(final ButtonActivity ba) {
+    private void setColorFromDialog(final ButtonActivity ba,final boolean add ) {
+        //set default color
         ba.color = Color.RED;
+
+        //create Alert for the set colour
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
         builder.setMessage("Choise the color");
         LayoutInflater inflater = MainActivity.this.getLayoutInflater();
@@ -968,7 +1022,7 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
 
             @Override
             public void onProgressChanged(@NonNull SeekBar seekBar, int progress, boolean fromUser) {
-
+                //set colors for  widgets
                 int color1[] = calcColor(fSeekBar.getProgress());
                 int color2[] = calcColor(sSeekBar.getProgress());
                 int colorR[] = calcColor(color1, color2);
@@ -1017,9 +1071,13 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
             @Override
             public void onClick(DialogInterface dialog, int which) {
 
-                MainActivity.this.listActivity.add(ba);
-                MainActivity.this.addToGridLayoutSettings();
-                //Toast.makeText(MainActivity.this, "Click Save", Toast.LENGTH_SHORT).show();
+                //if new Activity to add in list
+                //else only changing her
+                if(add)
+                    MainActivity.this.listActivity.add(ba);
+
+                MainActivity.this.createGridLayoutSettings();
+
                 dialog.dismiss();
             }
         });
@@ -1032,6 +1090,8 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
 
     int Red, Green, Blue;
 
+
+    //calculate the color values
     public int[] calcColor(int progress) {
         if (progress == 0) {
             Red = 255;
@@ -1067,6 +1127,7 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
         return color;
     }
 
+//mix colors
     public int[] calcColor(int[] color1, int[] color2) {
         int[] color = {(color1[0] + color2[0]) / 2, (color1[1] + color2[1]) / 2, (color1[2] + color2[2]) / 2};
         return color;
@@ -1075,15 +1136,26 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
 
 
     // learn the uniqueness of the name
-    private boolean uniqueButtonActivity(String name) {
+    private boolean uniqueButtonActivity(String nameActivity,String nameButton,boolean newButton) {
+        int count=0;
         for (ButtonActivity ba : MainActivity.this.listActivity) {
-            if (ba.name.toUpperCase().equals(name.toUpperCase()))
-                return false;
+            if (ba.name.toUpperCase().equals(nameActivity.toUpperCase()))
+            {
+                if(count==1)
+                    return false;
+                if(newButton)
+                    return false;
+                else
+                if (nameActivity.toUpperCase().equals(nameActivity.toUpperCase()))
+                    count++;
+
+            }
         }
         return true;
     }
 
-    //add  widgets To Layout for Current Activity
+    //add  widgets with available ativities to Home Screen
+    // and assing listeners for their
     private void addToGridViewButtonsActivity() {
         GridView gv = this.findViewById(R.id.gridView);
         ArrayAdapter<ButtonActivity> adapter =
@@ -1111,8 +1183,11 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
                                 BA.date = new SimpleDateFormat("dd.MM.yyyy").format(date);
                                 BA.time = new SimpleDateFormat("HH:mm:ss").format(date);
                                 ms = System.currentTimeMillis();
+                                //Start Time for activity
                                 BA.ms = ms;
                                 BA.color = ba.color;
+
+                                //add formed activity
                                 MainActivity.this.listLogActivity.add(0, BA);
 
                                 MainActivity.this.adapterListLogActivity.notifyDataSetChanged();
@@ -1120,17 +1195,17 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
 
                                 getListViewSize(MainActivity.this.lvActivity);
                                 MainActivity.this.addGoogleDiary(ba);
-                                //  Toast.makeText(MainActivity.this,
-                                //        ba.name, Toast.LENGTH_SHORT).show();
+
                             }
                         });
-                        // Log.d(TAG,"getItem For GridView");
+
                         return view;
                     }
                 };
         gv.setAdapter(adapter);
     }
 
+    //get list activities from Log
     public ArrayList<ButtonActivity> getListLogActivity() {
 
         return MainActivity.this.listLogActivity;
@@ -1177,19 +1252,15 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
         }
         if (this.listActivity.size() == 0)
             this.createList();
-        //------------------------------------------------------------------
-
-
+        //add  widgets with available ativities to Home Screen
+        // and assing listeners for their
         this.addToGridViewButtonsActivity();
-
-        ///------------
 
         // Initialize credentials and service object.
         mCredential = GoogleAccountCredential.usingOAuth2(
                 getApplicationContext(), Arrays.asList(SCOPES))
                 .setBackOff(new ExponentialBackOff());
         callCalendarApi(3);
-        ///-------------
 
 //Read From DataBase
         readAcivitiesFromDB();
@@ -1247,6 +1318,7 @@ For actual time, update every 1000 ms
     }
 
     //create Log Activity
+    //and assing listeners for widgets
     private void createActivityLog() {
         if (listActivity.size() == 0) return;
 
@@ -1277,11 +1349,13 @@ For actual time, update every 1000 ms
                     @Override
                     public void onClick(View v) {
 
-                        Toast.makeText(MainActivity.this, ba.name + "ms = " + ba.ms, Toast.LENGTH_SHORT).show();
+                       //Change start time for activity
                         changeTimeActivity(ba);
                     }
                 });
 
+
+                //fill in the data ListView
                 LinearLayout llForBA = view.
                         findViewById(R.id.llForBA);
 
@@ -1297,7 +1371,8 @@ For actual time, update every 1000 ms
                     @Override
                     public void onClick(View v) {
                         Toast.makeText(MainActivity.this, "Click name= " + ba.name, Toast.LENGTH_SHORT).show();
-                        createDialogForLogActivity(ba, btnA);
+                        //method for change activity
+                        changeNameFromLogActivity(ba, btnA);
                     }
                 });
                 if (llForBA.getChildCount() == 0)
@@ -1316,12 +1391,13 @@ For actual time, update every 1000 ms
 
     // changing the time for activity
     private void changeTimeActivity(final ButtonActivity ba) {
-        //final Date date= new Date(ba.ms);
+
         final Date date = new Date();
+
         final Date endDate = (ba.endTime == 0) ? new Date(System.currentTimeMillis()) : new Date(ba.endTime);
         final Date startDate = new Date(ba.ms);
-        final TimePickerDialog TPD = new TimePickerDialog(this,
-                null, date.getHours(), date.getMinutes(), true) {
+        final TimePickerDialog TPD = new TimePickerDialog(this,android.R.style.Theme_Holo_Dialog,
+                null, startDate.getHours(), startDate.getMinutes(), true) {
             @Override
             public void onTimeChanged(TimePicker view,
                                       int hour, int minute) {
@@ -1330,13 +1406,7 @@ For actual time, update every 1000 ms
 
                 date.setHours(hour);
                 date.setMinutes(minute);
-
-
-                //  Log.d(TAG, "al=" + hour + ":" + minute + "  last=" + lastHour + ":" + lastMinutes + "  cur=" + curHour + ":" + curMinutes);
-                //Toast.makeText(MainActivity.this,"curTime="+new Date(currentTime)+"  |selectedTime="+new Date(selectedTime),Toast.LENGTH_SHORT).show();
-                //Toast.makeText(MainActivity.this,"curTime="+currentTime+"  |selectedTime="+selectedTime,Toast.LENGTH_SHORT).show();
-
-            }
+}
         };
 
         TPD.setButton(DialogInterface.BUTTON_POSITIVE,
@@ -1356,32 +1426,29 @@ For actual time, update every 1000 ms
 
                         Log.d(TAG, " start " + startHour + ":" + startMinutes +
                                 "  end " + endHour + ":" + endMinutes);
-                        Toast.makeText(MainActivity.this, "start " + startHour + ":" + startMinutes +
-                                "  end " + endHour + ":" + endMinutes, Toast.LENGTH_SHORT).show();
-
-
+                        //checking the time for correctness
                         if (hour > endHour || (hour == endHour && minute > endMinutes) ||
                                 hour < startHour || (hour == startHour && minute < startMinutes)) {
                             Toast.makeText(MainActivity.this, "The selected time is not valid for selection", Toast.LENGTH_SHORT).show();
+                            Toast.makeText(MainActivity.this, "start " + startHour + ":" + startMinutes +
+                                    "  end " + endHour + ":" + endMinutes, Toast.LENGTH_SHORT).show();
 
                             dialog.dismiss();
                             changeTimeActivity(ba);
                         } else {
                             date.setHours(hour);
                             date.setMinutes(minute);
-                            //
-
                             Log.e("UPDATE!!", "sf");
                             ba.time = new SimpleDateFormat("HH:mm:ss").format(date);
                             ba.date = new SimpleDateFormat("dd.MM.yyyy").format(date);
-                            //  Toast.makeText(MainActivity.this,
-                            //          "Changed Time : " + date.toString(),
-                            //       Toast.LENGTH_LONG).show();
+
 
                             mUpdateTime = String.valueOf(ba.ms);
                             ba.ms = date.getTime();
                             mNewStartTime = String.valueOf(ba.ms);
+                            //Update Time in GoogleDiary
                             updateGoogleDiary();
+                            //Change LogAcivity
                             MainActivity.this.adapterListLogActivity.notifyDataSetChanged();
                             MainActivity.this.lvActivity.setAdapter(MainActivity.this.adapterListLogActivity);
 
@@ -1405,7 +1472,7 @@ For actual time, update every 1000 ms
     }
 
     //initialize dialog for Buttons from Activity Log
-    private void createDialogForLogActivity(final ButtonActivity ba, final Button btn) {
+    private void changeNameFromLogActivity(final ButtonActivity ba, final Button btn) {
 
 
         int size = MainActivity.this.listActivity.size();
@@ -1414,18 +1481,22 @@ For actual time, update every 1000 ms
             itemsAcivities[i] = MainActivity.this.listActivity.get(i).name;
         }
 
-        AlertDialog.Builder builder = new AlertDialog.Builder(this);
-        builder.setMessage(R.string.dialogLogActivityTitle);
+        AlertDialog.Builder builder = new AlertDialog.Builder(this,android.R.style.Theme_Holo_Light_Dialog);
+
         LayoutInflater inflater = MainActivity.this.getLayoutInflater();
 
 
         View view = inflater.inflate(R.layout.dialog_with_list, null);
-        //  final TextView tvButtonAcivity=(TextView)view.findViewById(R.id.tvNameButtonAcivity);
-        // tvButtonAcivity.setText(ba.name);
+
         final Spinner spinner = view.findViewById(R.id.spinnerAcivityLog);
         ArrayAdapter<String> adapter =
-                new ArrayAdapter<String>(this, android.R.layout.
-                        simple_spinner_item, itemsAcivities);
+                new ArrayAdapter<String>(this, android.R.layout.simple_spinner_dropdown_item,
+                         itemsAcivities);
+      //  adapter.setDropDownViewTheme(android.R.);
+
+//        ArrayAdapter<String> adapter =
+//                new ArrayAdapter<String>(this, R.layout.spinner_activity,
+//                       itemsAcivities);
         spinner.setAdapter(adapter);
 
 
@@ -1439,7 +1510,7 @@ For actual time, update every 1000 ms
         adapter.setDropDownViewResource(android.R.layout.
                 simple_spinner_dropdown_item);
 
-
+//assign listeners
         spinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
 
             @Override
@@ -1552,6 +1623,8 @@ For actual time, update every 1000 ms
     }
 
 
+
+    //Create menu for the toolbar
     @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
@@ -1572,12 +1645,14 @@ For actual time, update every 1000 ms
         return true;
     }
 
+
+    //initialize widgets for Settings screen
     private void createScreenSettings() {
         this.setContentView(R.layout.screen_settings);
         toolbar = this.findViewById(R.id.toolBar_Setting);
         toolbar.setTitle(MainActivity.actualTime);
         this.setSupportActionBar(toolbar);
-        this.addToGridLayoutSettings();
+        this.createGridLayoutSettings();
 
         String name = sPref.getString("myCalendar", "");
         EditText editTextCalendar = this.findViewById(R.id.editTextCalendar);
@@ -1601,18 +1676,14 @@ For actual time, update every 1000 ms
             Toast.makeText(this, "Fill in all the fields ", Toast.LENGTH_SHORT).show();
             return;
         }
-        if (nameCalendar.length() > 40) {
+        if (myName.length() > 40) {
             nameCalendar = "";
             Toast.makeText(this, "Maximum 40 characters", Toast.LENGTH_SHORT).show();
             return;
         }
 
-        if (myName.length() > 20) {
-            myName = "";
-            Toast.makeText(this, "Maximum 20 characters", Toast.LENGTH_SHORT).show();
-            return;
-        }
 
+//Saved the data in SharedPreferences
         SharedPreferences.Editor ed = sPref.edit();
         ed.putString("myName", myName);
         ed.putString("myCalendar", nameCalendar);
@@ -1620,6 +1691,8 @@ For actual time, update every 1000 ms
         Toast.makeText(this, "Click Save:" + nameCalendar + " Name :" + myName, Toast.LENGTH_SHORT).show();
     }
 
+
+    //Action for menu
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         int id = item.getItemId();
@@ -1643,10 +1716,11 @@ For actual time, update every 1000 ms
                 return true;
             case R.id.action_export:
                 this.status = 2;
-
+                //action for Screen Email
                 openFragmentExport();
-
                 return true;
+
+
             case R.id.action_share:
                 this.status = 3;
                 this.setContentView(R.layout.screen_share);
@@ -1655,6 +1729,8 @@ For actual time, update every 1000 ms
                 toolbar.setTitle(MainActivity.actualTime);
                 this.setSupportActionBar(toolbar);
                 String appPackageName = "kodman.timesheetapp";
+
+                //Action for Share
                 try {
                     startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse("market://details?id=" + appPackageName)));
                 } catch (android.content.ActivityNotFoundException anfe) {
@@ -1666,6 +1742,8 @@ For actual time, update every 1000 ms
         return super.onOptionsItemSelected(item);
     }
 
+
+    //action for Screen Email
     private void openFragmentExport() {
         final String USER_NAME_PREFERENCES = "user_name_sp";
         final String USER_NAME = "name";
@@ -1712,7 +1790,6 @@ For actual time, update every 1000 ms
                     public void onClick(DialogInterface dialog, int which) {
 
                         MainActivity.this.listLogActivity.clear();
-                        //   MainActivity.this.createActivityLog();
                         clearLogActivityFromDB();
                         dialog.cancel();
                     }
