@@ -15,7 +15,7 @@ public class BaseDataHelper extends SQLiteOpenHelper {
     public static final String DB_NAME = "timeSheetApp_sendEmailDB";
     public static final int DB_VERSION = 1;
 
-    //Create a model for storing user data
+    // Create a model for storing user data to begin final work on universe ;)
     public static class User implements BaseColumns {
         public static final String TABLE_NAME = "latest_data";
         public static final String EMAIL = "email";

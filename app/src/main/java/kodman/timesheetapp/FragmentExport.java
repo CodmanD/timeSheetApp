@@ -365,22 +365,38 @@ public class FragmentExport extends Fragment implements View.OnClickListener {
 
         String fileName = username + "-timeSheetApp.csv";
         File exportDir = new File(Environment.getExternalStorageDirectory(), "csv_patch");
+        File file = new File(exportDir, fileName);
         if (!exportDir.exists()) {
             exportDir.mkdirs();
         }
-        File file = new File(exportDir, fileName);
+        if (filterEventUserList.size() != 0) {
 
-        try {
-            file.createNewFile();
-            CSVWriter writer = new CSVWriter(new FileWriter(file));
-            for (String[] temp : reformatedListToSend) {
-                writer.writeNext(temp);
+
+            try {
+                file.createNewFile();
+                CSVWriter writer = new CSVWriter(new FileWriter(file));
+                for (String[] temp : reformatedListToSend) {
+                    writer.writeNext(temp);
+                }
+                writer.flush();
+                writer.close();
+
+            } catch (IOException e) {
+                e.printStackTrace();
             }
-            writer.flush();
-            writer.close();
+        } else {
 
-        } catch (IOException e) {
-            e.printStackTrace();
+            try {
+                file.createNewFile();
+                CSVWriter writer = new CSVWriter(new FileWriter(file));
+                String[] temp = new String[]{"for the state period 0 activities"};
+                writer.writeNext(temp);
+                writer.flush();
+                writer.close();
+
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
         }
         return file;
     }
