@@ -19,6 +19,5 @@
         android:layout_height="wrap_content"
         android:gravity="center_horizontal"
         android:spinnerMode="dialog"
-        android:textAlignment="center">
- </Spinner>
+        android:textAlignment="center"></Spinner>
 </LinearLayout>

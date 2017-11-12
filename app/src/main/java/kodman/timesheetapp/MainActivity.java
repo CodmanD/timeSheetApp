@@ -1169,6 +1169,7 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
                         Button btn = view.findViewById(R.id.btnItem);
                         btn.setBackgroundColor(ba.getColor(ba.name));
                         btn.setText(ba.name);
+                        btn.setLines(1);
                         btn.setTextColor(getContrastColor(ba.color));
                         btn.setOnClickListener(new View.OnClickListener() {
                             @Override
@@ -1362,6 +1363,7 @@ For actual time, update every 1000 ms
                 tvStartTime.setText(ba.time);
                 final String name = ba.name;
                 final Button btnA = new Button(MainActivity.this);
+                btnA.setLines(1);
                 btnA.setWidth(120);
                 btnA.setText(ba.name);
                 btnA.setBackgroundColor(ba.getColor(ba.name));
@@ -1480,8 +1482,8 @@ For actual time, update every 1000 ms
             itemsAcivities[i] = MainActivity.this.listActivity.get(i).name;
         }
 
-        AlertDialog.Builder builder = new AlertDialog.Builder(this,android.R.style.Theme_Holo_Light_Dialog);
-
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        builder.setTitle(R.string.MakeChoice);
         LayoutInflater inflater = MainActivity.this.getLayoutInflater();
 
 
@@ -1491,11 +1493,7 @@ For actual time, update every 1000 ms
         ArrayAdapter<String> adapter =
                 new ArrayAdapter<String>(this, android.R.layout.simple_spinner_dropdown_item,
                          itemsAcivities);
-      //  adapter.setDropDownViewTheme(android.R.);
 
-//        ArrayAdapter<String> adapter =
-//                new ArrayAdapter<String>(this, R.layout.spinner_activity,
-//                       itemsAcivities);
         spinner.setAdapter(adapter);
 
 
@@ -1651,6 +1649,8 @@ For actual time, update every 1000 ms
         toolbar = this.findViewById(R.id.toolBar_Setting);
         toolbar.setTitle(MainActivity.actualTime);
         this.setSupportActionBar(toolbar);
+
+        //initialized layout  from available activities
         this.createGridLayoutSettings();
 
         String name = sPref.getString("myCalendar", "");
@@ -1671,6 +1671,7 @@ For actual time, update every 1000 ms
         Toast.makeText(this, "Click Save:" + nameCalendar + " MYName" + myName, Toast.LENGTH_SHORT).show();
         nameCalendar = editTextCalendar.getText().toString();
         myName = editTextName.getText().toString();
+        //validate fields
         if (nameCalendar.equals("") || myName.equals("")) {
             Toast.makeText(this, "Fill in all the fields ", Toast.LENGTH_SHORT).show();
             return;
@@ -1706,12 +1707,12 @@ For actual time, update every 1000 ms
                 this.addToGridViewButtonsActivity();
                 MainActivity.this.lvActivity.setAdapter(MainActivity.this.adapterListLogActivity);
                 this.createActivityLog();
-                //   Toast.makeText(this, "Home", Toast.LENGTH_SHORT).show();
+
                 return true;
             case R.id.action_settings:
                 this.status = 1;
                 createScreenSettings();
-                //   Toast.makeText(this, "Settings", Toast.LENGTH_SHORT).show();
+
                 return true;
             case R.id.action_export:
                 this.status = 2;
@@ -1794,7 +1795,6 @@ For actual time, update every 1000 ms
                     }
                 });
         AlertDialog dialog = builder.create();
-
         dialog.show();
     }
 
@@ -1826,14 +1826,9 @@ For actual time, update every 1000 ms
             if (startTime == endTime) {
                 endTime = 0;
             }
-            int color;
-            try {
-                color = Integer.parseInt(cursor.getString(cursor.getColumnIndex("color")));
-            } catch (Exception ex) {
-                color = Color.WHITE;
-                Log.d(TAG, "EXCEPTION  Id:" + id + "Name = " + name + "Color = " + color + "start = " + startTime + "end = " + endTime);
-            }
-            Log.d(TAG, "Id:" + id + "Name = " + name + "Color = " + color + "start = " + startTime + "end = " + endTime);
+            int color = Integer.parseInt(cursor.getString(cursor.getColumnIndex("color")));
+
+            //Log.d(TAG, "Id:" + id + "Name = " + name + "Color = " + color + "start = " + startTime + "end = " + endTime);
 
             ButtonActivity ba = new ButtonActivity(name, color);
             ba.ms = startTime;

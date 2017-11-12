@@ -43,4 +43,5 @@
     <string name="dialogCleanLog">ARE YOU SURE YOU WANT TO CLEAR THE LOG?</string>
     <string name="deleteActivity">Confirm Delete button ?</string>
     <string name="newActivity">New Activity</string>
+    <string name="MakeChoice">Make your choice</string>
 </resources>
