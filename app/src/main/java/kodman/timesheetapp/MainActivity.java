@@ -91,10 +91,8 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
     private static final String[] SCOPES = {CalendarScopes.CALENDAR};
     private static boolean mIsCreateAvailable = true;
     private static final String TAG = "------Activity Say";
-    private static String nameCalendar = "";
-    private static String myName = "";
     private String mNewSummary;
-    private String mNewColor;
+    private int mNewColor;
     public Toolbar toolbar;
     private Menu menu;
     private int status = 0;
@@ -103,20 +101,18 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
     private ArrayList<ButtonActivity> listActivity = new ArrayList<>();//All buttons activity for current  time
     private ArrayList<ButtonActivity> listLogActivity = new ArrayList<>();
     private ArrayAdapter<ButtonActivity> adapterListLogActivity;
-    private ArrayList<ButtonActivity> listSetActivity = new ArrayList<>();
     private String mDeleteTime;
     private String mUpdateTime;
     private String mNewStartTime;
     public static Resources res;
     private ListView lvActivity;
-    Time startTime = new Time();
-    private Date startDate = new Date();
-    Date currentDate = new Date();
-    private DateFormat df = new DateFormat();
-    private String mColor;
+    private int mColor;
+    private static String nameCalendar = "";
+    private static String myName = "";
     private SharedPreferences sPref;
     private Long ms;
     static String actualTime;
+    SharedPreferences sharedPreferences;
 
     @Override
     public void onPointerCaptureChanged(boolean hasCapture) {
@@ -160,11 +156,21 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
         }
         MainActivity.this.adapterListLogActivity.remove(ba);
         createActivityLog();
+        if (listLogActivity.size() == 0) {
+            sharedPreferences = getSharedPreferences("tempData", MODE_PRIVATE);
+            SharedPreferences.Editor editor = sharedPreferences.edit();
+            editor.putBoolean("temp", true);
+            editor.commit();
+        }
     }
 
     //------for work with Google Diary---------------------------------------------------------------
     GoogleAccountCredential mCredential;
-
+    String mCalendarId;
+    String mCalendarData[] = {null, null};
+    String mStartTime;
+    String mEndTime;
+    boolean mIdFlag = false;
 
     /**
      * Attempt to call the API, after verifying that all the preconditions are
@@ -260,10 +266,8 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
                         editor.apply();
                         mCredential.setSelectedAccountName(accountName);
                         callCalendarApi(3);
-
                         // need to change name from *.csv file
                         saveUserNameToSharedPref(accountName);
-
                     }
                 }
                 break;
@@ -385,10 +389,6 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
         dialog.show();
     }
 
-    String mCalendarId;
-    String mCalendarData[] = {null, null, null};
-    String mStartTime;
-    String mEndTime;
     private com.google.api.services.calendar.Calendar mService = null;
 
     /**
@@ -400,7 +400,7 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
         private int mAction;
         private String mSummary;
         private DBHandler mDbHandler = new DBHandler(getApplicationContext());
-        SharedPreferences sharedPreferences = getSharedPreferences("tempData", MODE_PRIVATE);
+        private SharedPreferences sharedPreferences = getSharedPreferences("tempData", MODE_PRIVATE);
 
         MakeRequestTask(GoogleAccountCredential credential, int action) {
             HttpTransport transport = AndroidHttp.newCompatibleTransport();
@@ -421,6 +421,7 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
         @Override
         protected Void doInBackground(String[]... params) {
             try {
+                //Receiving action code to select action
                 switch (mAction) {
                     case 4:
                         updateEventNameColor(mUpdateTime);
@@ -432,14 +433,14 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
                         updateEventTime();
                         break;
                     case 1:
+                        //adding new event and synchronize offline events if device online
                         if (isDeviceOnline()) {
-                            Log.e("online", "online");
                             addEventToCalendar();
-                            addUnsyncedEventsToCalendar();
+                            addUnsyncedEventsToCalendar();//
                         } else {
-                            Log.e("notonline", "notonline");
                             addEventToCalendar();
                         }
+                        //put temp flag to sharedprefs to prevent flag resetting when app closes
                         SharedPreferences.Editor editor = sharedPreferences.edit();
                         editor.putBoolean("temp", false);
                         editor.commit();
@@ -449,6 +450,7 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
                         break;
                 }
             } catch (UserRecoverableAuthIOException e) {
+                //request permissions to access google calendar
                 startActivityForResult(e.getIntent(), REQUEST_AUTHORIZATION);
                 mIsCreateAvailable = true;
             } catch (IOException e) {
@@ -460,21 +462,23 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
         }
 
         private void deleteEventFromCalendar(String startTime) throws IOException {
+            //set mIsCreateAvailable flag to prevent multiple function call of deleting
             mIsCreateAvailable = false;
-            String eventId;
+            //if device online, get eventId to delete event from calendar, if not online set
+            //"deleted" to eventId, to synchronize in future
             if (isDeviceOnline()) {
                 try {
                     ArrayList<String> arrayList = mDbHandler.readOneEventFromDB(startTime);
-                    mService.events().delete(mCalendarId, arrayList.get(1)).execute();
                     mDbHandler.deleteEventFromDb(startTime);
+                    mService.events().delete(mCalendarId, arrayList.get(1)).execute();
                 } catch (Exception e) {
                     e.printStackTrace();
                 }
             } else {
-                eventId = "deleted";
-                mDbHandler.updateEventDelete(mStartTime, eventId);
+                mDbHandler.updateEventDelete(mStartTime, 1);
             }
             mDbHandler.closeDB();
+            //set mIsCreateAvailable flag, to allow next actions
             mIsCreateAvailable = true;
         }
 
@@ -482,10 +486,9 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
             updateEventStartTime(mUpdateTime);
         }
 
-        boolean mIdFlag = false;
-
         private void addEvent() throws IOException {
             mIsCreateAvailable = false;
+            //creating new event, set start and end time, event name(summary)
             Event event = new Event().setSummary(mSummary);
             Date start = new Date(Long.parseLong(mStartTime));
             Date end = new Date(Long.parseLong(mEndTime));
@@ -496,7 +499,8 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
             EventDateTime endTime = new EventDateTime().setDateTime(endDateTime);
             event.setStart(startTime);
             event.setEnd(endTime);
-            String eventId;
+            String eventId = "";
+            //get list of users calendars and set it id if available. If not available, set id as primary
             if (isDeviceOnline()) {
                 String pageToken = null;
                 do {
@@ -514,29 +518,35 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
                 if (!mIdFlag) {
                     mCalendarId = "primary";
                 }
+                //insert created event to google calendar
                 event = mService.events().insert(mCalendarId, event).execute();
                 System.out.printf("Event created: %s\n", event.getHtmlLink());
+                //get eventId and write event to local database
                 eventId = event.getId();
-                mDbHandler.writeOneEventToDB(mSummary, mCalendarId, eventId, mStartTime, mEndTime, mColor);
+                mDbHandler.writeOneEventToDB(mSummary, mCalendarId, eventId, mStartTime, mEndTime, mColor, 0, 1);
                 mDbHandler.closeDB();
             } else {
-                eventId = "not_synced";
-                mDbHandler.writeOneEventToDB(mSummary, mCalendarId, eventId, mStartTime, mEndTime, mColor);
+                //if device not online set eventId "not_synced" and write in local database to sync
+                //it when device become online
+                mDbHandler.writeOneEventToDB(mSummary, mCalendarId, eventId, mStartTime, mEndTime, mColor, 0, 0);
                 mDbHandler.closeDB();
             }
             mIsCreateAvailable = true;
         }
 
         private void addEventToCalendar() throws IOException {
+            //when we creating event by first time("temp" flag was true by default), we set temporary parameters and "temp" flag
+            //because we don't know end time of event
             if (sharedPreferences.getBoolean("temp", true)) {
                 mSummary = mCalendarData[0];
                 mStartTime = mCalendarData[1];
-                mColor = mCalendarData[2];
                 mEndTime = mStartTime;
                 addEvent();
                 SharedPreferences.Editor editor = sharedPreferences.edit();
                 editor.putBoolean("temp", false);
                 editor.commit();
+                //if "temp" flag was false, we get endTime and update previous event to set end time
+                //and create new event
             } else {
                 mEndTime = mCalendarData[1];
                 updateEvent();
@@ -553,13 +563,22 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
         private void updateEvent() throws IOException {
             mIsCreateAvailable = false;
             Cursor cursor = mDbHandler.readAllEventsFromDB();
+            //get last event from database to get eventId of event and update it in calendar
             if (cursor.moveToLast()) {
                 String eventId = cursor.getString(cursor.getColumnIndexOrThrow("eventId"));
                 String calendarId = cursor.getString(cursor.getColumnIndexOrThrow("calendarId"));
                 String startTime = cursor.getString(cursor.getColumnIndexOrThrow("dateTimeStart"));
+                int synced = cursor.getInt(cursor.getColumnIndexOrThrow("synced"));
                 // Retrieve the event from the API
                 if (isDeviceOnline()) {
                     try {
+                        if (synced != 1) {
+                            //if event not synced, they have not eventId, updating event in local database to sync it in future
+                            mDbHandler.updateEvent(startTime, mEndTime, eventId, 0);
+                            mDbHandler.closeDB();
+                            mIsCreateAvailable = true;
+                            return;
+                        }
                         Event event = mService.events().get(calendarId, eventId).execute();
                         // Make a change
                         Date end = new Date(Long.parseLong(mEndTime));
@@ -569,17 +588,18 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
                         // Update the event
                         event = mService.events().update(calendarId, event.getId(), event).execute();
                         System.out.printf("Event end time updated: %s\n", event.getHtmlLink());
-                        mDbHandler.updateEvent(startTime, mEndTime, eventId);
+                        mDbHandler.updateEvent(startTime, mEndTime, eventId, 1);
                         mDbHandler.closeDB();
                     } catch (com.google.api.client.googleapis.json.GoogleJsonResponseException e) {
+                        //if bad id, change id to not synced to sync it in future and update
+                        // event in local database
                         e.printStackTrace();
-                        eventId = "not_synced";
-                        mDbHandler.updateEvent(startTime, mEndTime, eventId);
+                        mDbHandler.updateEvent(startTime, mEndTime, eventId, 0);
                         mDbHandler.closeDB();
                     }
                 } else {
-                    eventId = "not_synced";
-                    mDbHandler.updateEvent(startTime, mEndTime, eventId);
+                    //if device offline updating event in local database to sync it in future
+                    mDbHandler.updateEvent(startTime, mEndTime, eventId, 0);
                     mDbHandler.closeDB();
                 }
             }
@@ -589,28 +609,78 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
 
         private void updateEventStartTime(String startTime) throws IOException {
             mIsCreateAvailable = false;
+            //get needed event from database
             String newStartTime = mNewStartTime;
-            Log.e("startTime", startTime);
-            Log.e("newstartTime", mNewStartTime);
-            ArrayList<String> arrayList = mDbHandler.readOneEventFromDB(startTime);
-            String eventId = arrayList.get(1);
-            String calendarId = arrayList.get(0);
-            // Retrieve the event from the API
+            String eventId = "";
+            String calendarId = "";
+            String endDb = "";
+            String startDb = "";
+            try {
+                ArrayList<String> arrayList = mDbHandler.readOneEventFromDB(startTime);
+                eventId = arrayList.get(1);
+                calendarId = arrayList.get(0);
+                endDb = arrayList.get(3);
+            } catch (IndexOutOfBoundsException e) {
+                e.printStackTrace();
+                return;
+            }
+            // Retrieve the event from the API by eventId
             Event event = mService.events().get(calendarId, eventId).execute();
             // Make a change
             Date start = new Date(Long.parseLong(newStartTime));
+            Date end = new Date(Long.parseLong(endDb));
             DateTime startDateTime = new DateTime(start, TimeZone.getTimeZone("UTC"));
-            EventDateTime endTime = new EventDateTime().setDateTime(startDateTime);
-            event.setEnd(endTime);
+            DateTime endDateTime = new DateTime(end, TimeZone.getTimeZone("UTC"));
+            EventDateTime eventStartTime = new EventDateTime().setDateTime(startDateTime);
+            EventDateTime eventEndTime = new EventDateTime().setDateTime(endDateTime);
+            event.setStart(eventStartTime);
+            event.setEnd(eventEndTime);
             // Update the event
             if (isDeviceOnline()) {
-                event = mService.events().update(calendarId, event.getId(), event).execute();
+                try {
+                    event = mService.events().update(calendarId, event.getId(), event).execute();
+                } catch (com.google.api.client.googleapis.json.GoogleJsonResponseException e) {
+                    e.printStackTrace();
+                }
                 System.out.printf("Event time update: %s\n", event.getHtmlLink());
-                mDbHandler.updateEventStartTime(startTime, mNewStartTime, eventId);
+                mDbHandler.updateEventStartTime(startTime, mNewStartTime, eventId, 1);
                 mDbHandler.closeDB();
             } else {
+                //if device offline, set eventId "not_synced" to update in future
+                mDbHandler.updateEventStartTime(startTime, mNewStartTime, eventId, 0);
+                mDbHandler.closeDB();
+            }
+            //when we change start time, we need to change end time of previous event
+            try {
+                ArrayList<String> previousArrayList = mDbHandler.readPreviousEventFromDB(startTime);
+                eventId = previousArrayList.get(1);
+                calendarId = previousArrayList.get(0);
+                startDb = previousArrayList.get(3);
+            } catch (IndexOutOfBoundsException e) {
+                e.printStackTrace();
+                return;
+            }
+            // Retrieve the event from the API by eventId
+            Event previousEvent = mService.events().get(calendarId, eventId).execute();
+            // Make a change
+            Date previousStart = new Date(Long.parseLong(startDb));
+            Date previousEnd = new Date(Long.parseLong(newStartTime));
+            DateTime previousStartDateTime = new DateTime(previousStart, TimeZone.getTimeZone("UTC"));
+            DateTime previousEndDateTime = new DateTime(previousEnd, TimeZone.getTimeZone("UTC"));
+            EventDateTime previousStartTime = new EventDateTime().setDateTime(previousStartDateTime);
+            EventDateTime previousEndTime = new EventDateTime().setDateTime(previousEndDateTime);
+            previousEvent.setStart(previousStartTime);
+            previousEvent.setEnd(previousEndTime);
+            // Update the event in calendar and local database
+            if (isDeviceOnline()) {
+                previousEvent = mService.events().update(calendarId, previousEvent.getId(), previousEvent).execute();
+                System.out.printf("Event time update: %s\n", previousEvent.getHtmlLink());
+                mDbHandler.updateEventEndTime(startTime, mNewStartTime, eventId, 1);
+                mDbHandler.closeDB();
+            } else {
+                //if device offline, set eventId "not_synced" to update in future and update in local database
                 eventId = "not_synced";
-                mDbHandler.updateEventStartTime(startTime, mNewStartTime, eventId);
+                mDbHandler.updateEventEndTime(startTime, mNewStartTime, eventId, 0);
                 mDbHandler.closeDB();
             }
             mIsCreateAvailable = true;
@@ -619,7 +689,8 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
         private void updateEventNameColor(String startTime) throws IOException {
             mIsCreateAvailable = false;
             String newSummary = mNewSummary;
-            String newColor = mNewColor;
+            int newColor = mNewColor;
+            //get needed event from database
             ArrayList<String> arrayList = mDbHandler.readOneEventFromDB(startTime);
             String eventId = arrayList.get(1);
             String calendarId = arrayList.get(0);
@@ -631,11 +702,12 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
             if (isDeviceOnline()) {
                 event = mService.events().update(calendarId, event.getId(), event).execute();
                 System.out.printf("Event name/color update: %s\n", event.getHtmlLink());
-                mDbHandler.updateEventNameColor(startTime, newSummary, newColor, eventId);
+                mDbHandler.updateEventNameColor(startTime, newSummary, newColor, eventId, 1);
                 mDbHandler.closeDB();
             } else {
+                //if device offline, set eventId "not_synced" to update in future
                 eventId = "not_synced";
-                mDbHandler.updateEventNameColor(startTime, newSummary, newColor, eventId);
+                mDbHandler.updateEventNameColor(startTime, newSummary, newColor, eventId, 0);
                 mDbHandler.closeDB();
             }
             mIsCreateAvailable = true;
@@ -649,13 +721,18 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
             String eventNameDb;
             String endTimeDb;
             String tempEventId;
+            int deleted;
+            int synced;
+            //get events marked "not_synced" and "deleted" from local database to sync it with google calendar
             while (unsyncedEvents.moveToNext()) {
                 eventNameDb = unsyncedEvents.getString(unsyncedEvents.getColumnIndexOrThrow("eventName"));
                 startTimeDb = unsyncedEvents.getString(unsyncedEvents.getColumnIndexOrThrow("dateTimeStart"));
                 endTimeDb = unsyncedEvents.getString(unsyncedEvents.getColumnIndexOrThrow("dateTimeEnd"));
                 tempEventId = unsyncedEvents.getString(unsyncedEvents.getColumnIndexOrThrow("eventId"));
+                deleted = unsyncedEvents.getInt(unsyncedEvents.getColumnIndexOrThrow("deleted"));
                 String pageToken = null;
                 do {
+                    //check if calendar id is available
                     CalendarList calendarList = mService.calendarList().list().setPageToken(pageToken).execute();
                     List<CalendarListEntry> items = calendarList.getItems();
                     for (CalendarListEntry calendarListEntry : items) {
@@ -667,14 +744,17 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
                     }
                     pageToken = calendarList.getNextPageToken();
                 } while (pageToken != null);
+                //if calendar id wrong, set calendar id "primary"
                 if (!mIdFlag) {
                     mCalendarId = "primary";
                 }
-                if (tempEventId.equals("deleted")) {
-                    mService.events().delete(mCalendarId, startTimeDb).execute();
+                //delete events marked "deleted" from google calendar and local database
+                if (deleted == 1) {
+                    mService.events().delete(mCalendarId, tempEventId).execute();
                     mDbHandler.deleteEventFromDb(startTimeDb);
                     System.out.printf("Event deleted: %s\n", startTimeDb);
                 } else {
+                    //if event has another mark, push it to google calendar
                     Event event = new Event().setSummary(eventNameDb);
                     Date start = new Date(Long.parseLong(startTimeDb));
                     Date end = new Date(Long.parseLong(endTimeDb));
@@ -689,7 +769,7 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
                     String eventId = event.getId();
                     mDbHandler.deleteUnsyncedEventFromDb(startTimeDb);
                     System.out.printf("Event synced: %s\n", event.getHtmlLink());
-                    mDbHandler.writeOneEventToDB(eventNameDb, mCalendarId, eventId, startTimeDb, endTimeDb, mColor);
+                    mDbHandler.writeOneEventToDB(eventNameDb, mCalendarId, eventId, startTimeDb, endTimeDb, mColor, 0, 1);
                 }
 
             }
@@ -711,23 +791,20 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
 
     //Add to Google diary
     private void addGoogleDiary(ButtonActivity ba) {
-        //Toast.makeText(MainActivity.this,
-        //        "Add To Google Diary " + ba.name + " " + ba.date + "/" + ba.time + "/" + ba.ms, Toast.LENGTH_SHORT).show();
-        //Log.d(TAG, "Add to Google Diary");
+        //set event data to array and call calendarApi with needed action
         mCalendarData[0] = ba.name;
         mCalendarData[1] = String.valueOf(ms);
-        mCalendarData[2] = String.valueOf(ba.getColor(ba.name));
+        mColor = ba.getColor(ba.name);
         callCalendarApi(1);
     }
 
+    //Update google dairy
     private void updateGoogleDiary() {
-        //  Log.d(TAG, "Update from Google Diary");
         callCalendarApi(2);
     }
 
     //Delete From Google Diary
     private void removeGoogleDiary() {
-        //  Log.d(TAG, "Remove from Google Diary");
         callCalendarApi(0);
     }
 
@@ -736,7 +813,7 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
 
     //add widgets to GridLayoutSetting
     private void addToGridLayoutSettings() {
-        GridLayout GL = (GridLayout) this.findViewById(R.id.gridLayoutSettings);
+        GridLayout GL = this.findViewById(R.id.gridLayoutSettings);
         if (GL.getChildCount() > 0) {
             //  Toast.makeText(MainActivity.this, "Count listActivity=" + this.listActivity.size(),
             //          Toast.LENGTH_SHORT).show();
@@ -783,7 +860,7 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
             });
             btn.setText(ba.name);
             btn.setBackgroundColor(ba.getColor(ba.name));
-            btn.setTextColor(MainActivity.this.getContrastColor(ba.color));
+            btn.setTextColor(getContrastColor(ba.color));
 
             //Insert the Button in defined position
             GridLayout.Spec row = GridLayout.spec(rowIndex, 1);
@@ -863,35 +940,7 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
                         dialog.dismiss();
                     }
                 });
-                /*
-                .setNegativeButton("Delete", new DialogInterface.OnClickListener() {
-                    public void onClick(DialogInterface dialog, int id) {
-                        AlertDialog.Builder bldr = new AlertDialog.Builder(MainActivity.this);
-                        bldr.setMessage(res.getString(R.string.delete) + "?")
-                                .setCancelable(false)
-                                .setPositiveButton(R.string.yes,
-                                        new DialogInterface.OnClickListener() {
-                                            public void onClick(DialogInterface dlg,
-                                                                int id) {
-                                                //  MainActivity.this.listLogActivity.remove(ba);
-                                                MainActivity.this.createActivityLog();
-                                                dlg.cancel();
-                                            }
-                                        })
 
-                                .setNegativeButton(R.string.no,
-                                        new DialogInterface.OnClickListener() {
-                                            public void onClick(DialogInterface dlg,
-                                                                int id) {
-                                                dlg.cancel();
-                                            }
-                                        });
-
-                        bldr.create().show();
-                        dialog.dismiss();
-                    }
-                });
-                */
         AlertDialog dialog = builder.create();
         dialog.setCancelable(true);
         dialog.show();
@@ -907,12 +956,12 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
         final View view = inflater.inflate(R.layout.color_blender, null);
         builder.setView(view);
 
-        final SeekBar fSeekBar = (SeekBar) view.findViewById(R.id.fSeekBar);
-        final SeekBar sSeekBar = (SeekBar) view.findViewById(R.id.sSeekBar);
+        final SeekBar fSeekBar = view.findViewById(R.id.fSeekBar);
+        final SeekBar sSeekBar = view.findViewById(R.id.sSeekBar);
 
-        final ImageView sColor = (ImageView) view.findViewById(R.id.imageView4);
-        final ImageView fColor = (ImageView) view.findViewById(R.id.imageView3);
-        final ImageView rColor = (ImageView) view.findViewById(R.id.imageView5);
+        final ImageView sColor = view.findViewById(R.id.imageView4);
+        final ImageView fColor = view.findViewById(R.id.imageView3);
+        final ImageView rColor = view.findViewById(R.id.imageView5);
 
 
         SeekBar.OnSeekBarChangeListener listener = new SeekBar.OnSeekBarChangeListener() {
@@ -968,7 +1017,6 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
             @Override
             public void onClick(DialogInterface dialog, int which) {
 
-                // ba.color=
                 MainActivity.this.listActivity.add(ba);
                 MainActivity.this.addToGridLayoutSettings();
                 //Toast.makeText(MainActivity.this, "Click Save", Toast.LENGTH_SHORT).show();
@@ -1037,7 +1085,7 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
 
     //add  widgets To Layout for Current Activity
     private void addToGridViewButtonsActivity() {
-        GridView gv = (GridView) this.findViewById(R.id.gridView);
+        GridView gv = this.findViewById(R.id.gridView);
         ArrayAdapter<ButtonActivity> adapter =
                 new ArrayAdapter<ButtonActivity>(this, R.layout.gridview_item,
                         R.id.btnItem, this.listActivity) {
@@ -1047,10 +1095,10 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
                         View view = super.getView(
                                 position, convertView, parent);
                         final ButtonActivity ba = this.getItem(position);
-                        Button btn = (Button) view.findViewById(R.id.btnItem);
+                        Button btn = view.findViewById(R.id.btnItem);
                         btn.setBackgroundColor(ba.getColor(ba.name));
                         btn.setText(ba.name);
-                        btn.setTextColor(MainActivity.this.getContrastColor(ba.color));
+                        btn.setTextColor(getContrastColor(ba.color));
                         btn.setOnClickListener(new View.OnClickListener() {
                             @Override
                             public void onClick(View v) {
@@ -1066,11 +1114,14 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
                                 BA.ms = ms;
                                 BA.color = ba.color;
                                 MainActivity.this.listLogActivity.add(0, BA);
-                                createActivityLog();
+
+                                MainActivity.this.adapterListLogActivity.notifyDataSetChanged();
+                                MainActivity.this.lvActivity.setAdapter(MainActivity.this.adapterListLogActivity);
+
                                 getListViewSize(MainActivity.this.lvActivity);
                                 MainActivity.this.addGoogleDiary(ba);
-                                Toast.makeText(MainActivity.this,
-                                        ba.name, Toast.LENGTH_SHORT).show();
+                                //  Toast.makeText(MainActivity.this,
+                                //        ba.name, Toast.LENGTH_SHORT).show();
                             }
                         });
                         // Log.d(TAG,"getItem For GridView");
@@ -1094,16 +1145,15 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
         mSharedEditor = mShared.edit();
         setContentView(R.layout.activity_main);
         setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
-        this.res = this.getResources();
-        toolbar = (Toolbar) this.findViewById(R.id.toolBar_MainActivity);
+        res = this.getResources();
+        toolbar = this.findViewById(R.id.toolBar_MainActivity);
         this.setSupportActionBar(toolbar);
-
 
         //---Read from SharedPreferences ------------
         sPref = this.getPreferences(MODE_PRIVATE);
         // Name & Calendar User
-        this.myName = sPref.getString("myName", "");
-        this.nameCalendar = sPref.getString("myCalendar", "");
+        myName = sPref.getString("myName", "");
+        nameCalendar = sPref.getString("myCalendar", "");
 
 
         Log.d(TAG, "OnCREATE Initialzed list Activities");
@@ -1142,7 +1192,7 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
         ///-------------
 
 //Read From DataBase
-        addAcivitiesFromDB();
+        readAcivitiesFromDB();
         this.createActivityLog();
 /*
 For actual time, update every 1000 ms
@@ -1169,7 +1219,6 @@ For actual time, update every 1000 ms
 
                                     }
                                 });
-
                                 // Log.d(TAG,"Timer Tick");
                             }
                         },
@@ -1180,6 +1229,10 @@ For actual time, update every 1000 ms
 
     @Override
     public void onDestroy() {
+
+        /**
+         * Add in shareds allowable activities
+         */
         SharedPreferences.Editor ed = sPref.edit();
         int size = this.listActivity.size();
         Log.d(TAG, "DESTROY SIZE=" + size);
@@ -1193,9 +1246,11 @@ For actual time, update every 1000 ms
         super.onDestroy();
     }
 
+    //create Log Activity
     private void createActivityLog() {
         if (listActivity.size() == 0) return;
-        this.lvActivity = (ListView) this.findViewById(R.id.lvActivity);
+
+        this.lvActivity = this.findViewById(R.id.lvActivity);
 
         adapterListLogActivity = new ArrayAdapter<ButtonActivity>(this,
                 R.layout.list_item, R.id.tvForDate, listLogActivity) {
@@ -1212,10 +1267,10 @@ For actual time, update every 1000 ms
 
                 final ButtonActivity ba = this.getItem(position);
 
-                TextView tvDate = (TextView) view.
+                TextView tvDate = view.
                         findViewById(R.id.tvForDate);
 
-                TextView tvStartTime = (TextView) view.
+                TextView tvStartTime = view.
                         findViewById(R.id.tvForStartTime);
 
                 tvStartTime.setOnClickListener(new View.OnClickListener() {
@@ -1227,7 +1282,7 @@ For actual time, update every 1000 ms
                     }
                 });
 
-                LinearLayout llForBA = (LinearLayout) view.
+                LinearLayout llForBA = view.
                         findViewById(R.id.llForBA);
 
                 tvDate.setText(ba.date);
@@ -1237,7 +1292,7 @@ For actual time, update every 1000 ms
                 btnA.setWidth(120);
                 btnA.setText(ba.name);
                 btnA.setBackgroundColor(ba.getColor(ba.name));
-                btnA.setTextColor(MainActivity.this.getContrastColor(ba.color));
+                btnA.setTextColor(getContrastColor(ba.color));
                 btnA.setOnClickListener(new View.OnClickListener() {
                     @Override
                     public void onClick(View v) {
@@ -1251,6 +1306,7 @@ For actual time, update every 1000 ms
                 return view;
             }
         };
+
         this.adapterListLogActivity.setNotifyOnChange(true);
         this.lvActivity.setAdapter(adapterListLogActivity);
         Log.d(TAG, " start setListHeigth");
@@ -1289,7 +1345,6 @@ For actual time, update every 1000 ms
                     @Override
                     public void onClick(DialogInterface
                                                 dialog, int which) {
-
                         int endHour = endDate.getHours();
                         int endMinutes = endDate.getMinutes();
 
@@ -1299,8 +1354,9 @@ For actual time, update every 1000 ms
                         int startHour = startDate.getHours();
                         int startMinutes = startDate.getMinutes();
 
-
-                        Toast.makeText(MainActivity.this, "satrt " + startHour + ":" + startMinutes +
+                        Log.d(TAG, " start " + startHour + ":" + startMinutes +
+                                "  end " + endHour + ":" + endMinutes);
+                        Toast.makeText(MainActivity.this, "start " + startHour + ":" + startMinutes +
                                 "  end " + endHour + ":" + endMinutes, Toast.LENGTH_SHORT).show();
 
 
@@ -1326,7 +1382,10 @@ For actual time, update every 1000 ms
                             ba.ms = date.getTime();
                             mNewStartTime = String.valueOf(ba.ms);
                             updateGoogleDiary();
-                            createActivityLog();
+                            MainActivity.this.adapterListLogActivity.notifyDataSetChanged();
+                            MainActivity.this.lvActivity.setAdapter(MainActivity.this.adapterListLogActivity);
+
+                            //  createActivityLog();
                         }
                     }
                 });
@@ -1337,6 +1396,7 @@ For actual time, update every 1000 ms
                     @Override
                     public void onClick(DialogInterface
                                                 dialog, int which) {
+
 
                     }
                 });
@@ -1362,7 +1422,7 @@ For actual time, update every 1000 ms
         View view = inflater.inflate(R.layout.dialog_with_list, null);
         //  final TextView tvButtonAcivity=(TextView)view.findViewById(R.id.tvNameButtonAcivity);
         // tvButtonAcivity.setText(ba.name);
-        final Spinner spinner = (Spinner) view.findViewById(R.id.spinnerAcivityLog);
+        final Spinner spinner = view.findViewById(R.id.spinnerAcivityLog);
         ArrayAdapter<String> adapter =
                 new ArrayAdapter<String>(this, android.R.layout.
                         simple_spinner_item, itemsAcivities);
@@ -1374,7 +1434,6 @@ For actual time, update every 1000 ms
             int flag = 0;
             int color;
         }
-        ;
         final Swap s = new Swap();
 
         adapter.setDropDownViewResource(android.R.layout.
@@ -1419,11 +1478,11 @@ For actual time, update every 1000 ms
                         btn.setText(ba.name);
                         ba.color = s.color;
                         btn.setBackgroundColor(ba.color);
-                        mNewColor = String.valueOf(ba.color);
+                        mNewColor = ba.color;
                         mNewSummary = ba.name;
                         mUpdateTime = String.valueOf(ba.ms);
                         callCalendarApi(4);
-                        btn.setTextColor(MainActivity.this.getContrastColor(ba.color));
+                        btn.setTextColor(getContrastColor(ba.color));
 
                         createActivityLog();
                         Toast.makeText(MainActivity.this, "Change" + spinner.getItemAtPosition(0).toString() + "now Name=" + ba.name, Toast.LENGTH_SHORT).show();
@@ -1515,16 +1574,17 @@ For actual time, update every 1000 ms
 
     private void createScreenSettings() {
         this.setContentView(R.layout.screen_settings);
-        toolbar = (Toolbar) this.findViewById(R.id.toolBar_Setting);
+        toolbar = this.findViewById(R.id.toolBar_Setting);
         toolbar.setTitle(MainActivity.actualTime);
         this.setSupportActionBar(toolbar);
         this.addToGridLayoutSettings();
 
-        EditText editTextCalendar = (EditText) this.findViewById(R.id.editTextCalendar);
-        editTextCalendar.setText(sPref.getString("myCalendar", ""));
+        String name = sPref.getString("myCalendar", "");
+        EditText editTextCalendar = this.findViewById(R.id.editTextCalendar);
+        editTextCalendar.setText(MainActivity.nameCalendar);
 
-        EditText editTextName = (EditText) this.findViewById(R.id.editTextName);
-        editTextName.setText(sPref.getString("myName", ""));
+        EditText editTextName = this.findViewById(R.id.editTextName);
+        editTextName.setText(MainActivity.myName);
 
     }
 
@@ -1532,30 +1592,30 @@ For actual time, update every 1000 ms
     public void clickSaveSettings(View view) {
         sPref = this.getPreferences(MODE_PRIVATE);
 
-        EditText editTextName = (EditText) this.findViewById(R.id.editTextName);
-        EditText editTextCalendar = (EditText) this.findViewById(R.id.editTextCalendar);
+        EditText editTextName = this.findViewById(R.id.editTextName);
+        EditText editTextCalendar = this.findViewById(R.id.editTextCalendar);
         Toast.makeText(this, "Click Save:" + nameCalendar + " MYName" + myName, Toast.LENGTH_SHORT).show();
-        this.nameCalendar = editTextCalendar.getText().toString();
-        this.myName = editTextName.getText().toString();
+        nameCalendar = editTextCalendar.getText().toString();
+        myName = editTextName.getText().toString();
         if (nameCalendar.equals("") || myName.equals("")) {
             Toast.makeText(this, "Fill in all the fields ", Toast.LENGTH_SHORT).show();
             return;
         }
         if (nameCalendar.length() > 40) {
-            this.nameCalendar = "";
+            nameCalendar = "";
             Toast.makeText(this, "Maximum 40 characters", Toast.LENGTH_SHORT).show();
             return;
         }
 
         if (myName.length() > 20) {
-            this.myName = "";
+            myName = "";
             Toast.makeText(this, "Maximum 20 characters", Toast.LENGTH_SHORT).show();
             return;
         }
 
         SharedPreferences.Editor ed = sPref.edit();
-        ed.putString("myName", this.myName);
-        ed.putString("myCalendar", this.nameCalendar);
+        ed.putString("myName", myName);
+        ed.putString("myCalendar", nameCalendar);
         ed.commit();
         Toast.makeText(this, "Click Save:" + nameCalendar + " Name :" + myName, Toast.LENGTH_SHORT).show();
     }
@@ -1567,11 +1627,12 @@ For actual time, update every 1000 ms
             case R.id.action_home:
                 this.status = 0;
                 this.setContentView(R.layout.activity_main);
-                toolbar = (Toolbar) this.findViewById(R.id.toolBar_MainActivity);
+                toolbar = this.findViewById(R.id.toolBar_MainActivity);
 
                 toolbar.setTitle(MainActivity.actualTime);
                 this.setSupportActionBar(toolbar);
                 this.addToGridViewButtonsActivity();
+                MainActivity.this.lvActivity.setAdapter(MainActivity.this.adapterListLogActivity);
                 this.createActivityLog();
                 //   Toast.makeText(this, "Home", Toast.LENGTH_SHORT).show();
                 return true;
@@ -1589,7 +1650,7 @@ For actual time, update every 1000 ms
             case R.id.action_share:
                 this.status = 3;
                 this.setContentView(R.layout.screen_share);
-                toolbar = (Toolbar) this.findViewById(R.id.toolBar_MainActivity);
+                toolbar = this.findViewById(R.id.toolBar_MainActivity);
 
                 toolbar.setTitle(MainActivity.actualTime);
                 this.setSupportActionBar(toolbar);
@@ -1662,7 +1723,7 @@ For actual time, update every 1000 ms
     }
 
     //Add from DB Activities in AcivityLog
-    private void addAcivitiesFromDB() {
+    private void readAcivitiesFromDB() {
 
         DBHandler mDbHandler = new DBHandler(getApplicationContext());
 
@@ -1689,7 +1750,6 @@ For actual time, update every 1000 ms
             if (startTime == endTime) {
                 endTime = 0;
             }
-            //   String color=cursor.getString(6);
             int color;
             try {
                 color = Integer.parseInt(cursor.getString(cursor.getColumnIndex("color")));
@@ -1707,16 +1767,16 @@ For actual time, update every 1000 ms
         }
         cursor.close();
         mDbHandler.closeDB();
-
     }
 
     //Clear all from  DataBase
     private void clearLogActivityFromDB() {
-
         DBHandler mDbHandler = new DBHandler(getApplicationContext());
         mDbHandler.clearEventsTable();
         Log.d(TAG, "Clean DB");
-        // Toast.makeText(this, "Clean Log From DB", Toast.LENGTH_SHORT).show();
+        SharedPreferences.Editor editor = sharedPreferences.edit();
+        editor.putBoolean("temp", true);
+        editor.commit();
         mDbHandler.closeDB();
     }
 

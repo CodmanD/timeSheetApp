@@ -98,7 +98,8 @@ public class FragmentExport extends Fragment implements View.OnClickListener {
 
     public Toolbar getToolbar() {
         if (toolbar == null) {
-            toolbar = (Toolbar) thisView.findViewById(R.id.toolBar_screen_email);
+
+            toolbar = thisView.findViewById(R.id.toolBar_screen_email);
         }
         return toolbar;
     }
@@ -109,14 +110,14 @@ public class FragmentExport extends Fragment implements View.OnClickListener {
         // Create fragment and initialise him
         View view = inflater.inflate(R.layout.screen_email, container, false);
         fContext = view.getContext();
-        toolbar = (Toolbar) view.findViewById(R.id.toolBar_screen_email);
+        toolbar = view.findViewById(R.id.toolBar_screen_email);
 
         AppCompatActivity activity = (AppCompatActivity) getActivity();
 
         activity.setSupportActionBar(toolbar);
         this.mainActivity = (MainActivity) activity;
         mainActivity.toolbar = this.toolbar;
-        toolbar.setTitle(mainActivity.actualTime);
+        toolbar.setTitle(MainActivity.actualTime);
         res = view.getResources();
         thisView = view;
 
@@ -126,15 +127,15 @@ public class FragmentExport extends Fragment implements View.OnClickListener {
 
     // Setup and initialize all view elements
     private void setupUI(View container) {
-        emailEt = (EditText) container.findViewById(R.id.fe_email_et);
-        subjectEt = (EditText) container.findViewById(R.id.fe_subject_et);
-        messageEt = (EditText) container.findViewById(R.id.fe_message_et5);
-        startDataTv = (TextView) container.findViewById(R.id.fe_calendar_startd_tv);
-        endDataTv = (TextView) container.findViewById(R.id.fe_calendar_endd_tv);
-        startDCalendar = (ImageButton) container.findViewById(R.id.fe_calendar_startd_ib);
-        endDCalendar = (ImageButton) container.findViewById(R.id.fe_calendar_endd_ib);
-        sendEmail = (Button) container.findViewById(R.id.fe_send_email_bt);
-        includeLv = (ListView) container.findViewById(R.id.include_lv);
+        emailEt = container.findViewById(R.id.fe_email_et);
+        subjectEt = container.findViewById(R.id.fe_subject_et);
+        messageEt = container.findViewById(R.id.fe_message_et5);
+        startDataTv = container.findViewById(R.id.fe_calendar_startd_tv);
+        endDataTv = container.findViewById(R.id.fe_calendar_endd_tv);
+        startDCalendar = container.findViewById(R.id.fe_calendar_startd_ib);
+        endDCalendar = container.findViewById(R.id.fe_calendar_endd_ib);
+        sendEmail = container.findViewById(R.id.fe_send_email_bt);
+        includeLv = container.findViewById(R.id.include_lv);
 
         startDataTv.setOnClickListener(this);
         endDataTv.setOnClickListener(this);
@@ -364,22 +365,38 @@ public class FragmentExport extends Fragment implements View.OnClickListener {
 
         String fileName = username + "-timeSheetApp.csv";
         File exportDir = new File(Environment.getExternalStorageDirectory(), "csv_patch");
+        File file = new File(exportDir, fileName);
         if (!exportDir.exists()) {
             exportDir.mkdirs();
         }
-        File file = new File(exportDir, fileName);
+        if (filterEventUserList.size() != 0) {
 
-        try {
-            file.createNewFile();
-            CSVWriter writer = new CSVWriter(new FileWriter(file));
-            for (String[] temp : reformatedListToSend) {
-                writer.writeNext(temp);
+
+            try {
+                file.createNewFile();
+                CSVWriter writer = new CSVWriter(new FileWriter(file));
+                for (String[] temp : reformatedListToSend) {
+                    writer.writeNext(temp);
+                }
+                writer.flush();
+                writer.close();
+
+            } catch (IOException e) {
+                e.printStackTrace();
             }
-            writer.flush();
-            writer.close();
+        } else {
 
-        } catch (IOException e) {
-            e.printStackTrace();
+            try {
+                file.createNewFile();
+                CSVWriter writer = new CSVWriter(new FileWriter(file));
+                String[] temp = new String[]{"for the state period 0 activities"};
+                writer.writeNext(temp);
+                writer.flush();
+                writer.close();
+
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
         }
         return file;
     }
@@ -533,8 +550,8 @@ public class FragmentExport extends Fragment implements View.OnClickListener {
                 vi = LayoutInflater.from(getContext());
                 v = vi.inflate(R.layout.include_activity_item, null);
             }
-            TextView textView = (TextView) v.findViewById(R.id.ia_action_name);
-            CheckBox checkBox = (CheckBox) v.findViewById(R.id.ia_checkbox);
+            TextView textView = v.findViewById(R.id.ia_action_name);
+            CheckBox checkBox = v.findViewById(R.id.ia_checkbox);
 
             checkBox.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
                 @Override

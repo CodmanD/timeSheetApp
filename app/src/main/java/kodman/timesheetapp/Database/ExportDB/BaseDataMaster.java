@@ -77,7 +77,6 @@ public class BaseDataMaster {
             cursor.moveToNext();
             Log.d("BDM", "getEmailData");
         }
-        ;
         return list;
     }
 }
