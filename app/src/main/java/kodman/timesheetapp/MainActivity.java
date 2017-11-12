@@ -13,6 +13,7 @@ import android.content.pm.ActivityInfo;
 import android.content.res.Resources;
 import android.database.Cursor;
 import android.graphics.Color;
+import android.graphics.Point;
 import android.graphics.drawable.Drawable;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
@@ -812,14 +813,17 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
 
 
     //add widgets to GridLayoutSetting
-    private void addToGridLayoutSettings() {
+    private void createGridLayoutSettings() {
         GridLayout GL = this.findViewById(R.id.gridLayoutSettings);
         if (GL.getChildCount() > 0) {
             GL.removeViews(0, GL.getChildCount());
         }
-        Toast.makeText(MainActivity.this, "Count =" + GL.getChildCount(),
-                Toast.LENGTH_SHORT).show();
-        int rowIndex = 0, columnIndex = 0;
+
+            Point size=new Point();
+            getWindowManager().getDefaultDisplay().getSize(size);
+                 int w=size.x;
+
+                int rowIndex = 0, columnIndex = 0;
 
         //Add available  ButtonAcivity on the screen
         for (int i = 0; i < this.listActivity.size(); i++, rowIndex++) {
@@ -830,29 +834,15 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
             }
             final ButtonActivity ba = this.listActivity.get(i);
             final Button btn = new Button(this);
+            btn.setWidth(w/3-10);
+            btn.setLines(1);
             //assing listeners for Buttons
             btn.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
 
-                    AlertDialog.Builder builder = new AlertDialog.Builder(MainActivity.this);
-                    builder.setTitle(res.getString(R.string.deleteActivity))
-                            .setPositiveButton(R.string.yes, new DialogInterface.OnClickListener() {
-                                @Override
-                                public void onClick(DialogInterface dialog, int which) {
-                                    MainActivity.this.listActivity.remove(ba);
-                                    addToGridLayoutSettings();
-                                    dialog.cancel();
-                                }
-                            })
-                            .setNegativeButton(R.string.no, new DialogInterface.OnClickListener() {
-                                @Override
-                                public void onClick(DialogInterface dialog, int which) {
-                                    dialog.cancel();
-                                }
-                            }).setCancelable(true);
+                    changeButtonAcivity(ba,btn);
 
-                    builder.create().show();
                 }
             });
             btn.setText(ba.name);
@@ -886,50 +876,109 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
             rowIndex = 0;
         }
         btn.setText(R.string.newButton);
-
+        btn.setWidth(w/3-20);
 
         GridLayout.Spec row = GridLayout.spec(rowIndex, 1);
         GridLayout.Spec column = GridLayout.spec(columnIndex, 1);
         GridLayout.LayoutParams gridLayoutParam = new GridLayout.LayoutParams(row, column);
         GL.addView(btn, gridLayoutParam);
 
+
+    }
+
+    //For changer or remove Activity
+    private void changeButtonAcivity(final ButtonActivity ba,final Button btn)
+    {
+
+        AlertDialog.Builder builder = new AlertDialog.Builder(this,android.R.style.Theme_Holo_Light_Dialog);
+
+        LayoutInflater inflater = MainActivity.this.getLayoutInflater();
+        final View view = inflater.inflate(R.layout.dialog, null);
+        final EditText editText = view.findViewById(R.id.editTextDialog);
+        editText.setText(ba.name);
+
+        builder.setView(view)
+                .setPositiveButton("Change this acivity", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int id) {
+
+
+                        String nameButton = editText.getText().toString();
+                        //Checking max characters
+
+
+                        //checking the button for uniqueness
+                        if (!MainActivity.this.uniqueButtonActivity(nameButton,btn.getText().toString(),false))
+                               {
+                            Toast.makeText(MainActivity.this, "Activity with this name exists",
+                                    Toast.LENGTH_SHORT).show();
+                            dialog.dismiss();
+                            changeButtonAcivity( ba, btn);
+                        } else
+                            {
+                                if(nameButton.length()>25)
+                                    nameButton.substring(0,24);
+                            ba.name = nameButton;
+                            //add and set color for the button
+                            setColorFromDialog(ba,false);
+                            dialog.cancel();
+
+                        }
+                    }
+                })
+                .setNeutralButton("Cancel", new DialogInterface.OnClickListener() {
+                    public void onClick(DialogInterface dialog, int id) {
+                        dialog.cancel();
+                    }
+                })
+                .setNegativeButton(res.getText(R.string.delete),new DialogInterface.OnClickListener(){
+                            public void onClick(DialogInterface dialog, int id) {
+
+                                MainActivity.this.listActivity.remove(ba);
+                                createGridLayoutSettings();
+                                dialog.cancel();
+                            }
+        });
+
+        AlertDialog dialog = builder.create();
+        dialog.setCancelable(true);
+        dialog.show();
     }
 
 
     //------For click on button +New
     private void clickNewButton(final View v) {
 
-        Toast.makeText(MainActivity.this, "Click New Button",
-                Toast.LENGTH_SHORT).show();
+      //  Toast.makeText(MainActivity.this, "Click New Button",
+      //          Toast.LENGTH_SHORT).show();
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
         builder.setMessage(R.string.dialogNewButton);
         LayoutInflater inflater = MainActivity.this.getLayoutInflater();
         final View view = inflater.inflate(R.layout.dialog, null);
+        final EditText editText = view.findViewById(R.id.editTextDialog);
+        editText.setText(R.string.newActivity);
+
         builder.setView(view)
-                .setPositiveButton("Create new button", new DialogInterface.OnClickListener() {
+                .setPositiveButton("Create new activity", new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(DialogInterface dialog, int id) {
 
                         EditText editText = view.findViewById(R.id.editTextDialog);
                         String nameButton = editText.getText().toString();
-                       //Checking max characters
-                        if (nameButton.length() > 20) {
-                            Toast.makeText(MainActivity.this, "Maximum  characters in name is 20",
-                                    Toast.LENGTH_SHORT).show();
-                            dialog.dismiss();
-                            clickNewButton(v);
-                        }
+
                         //checking the button for uniqueness
-                        if (!MainActivity.this.uniqueButtonActivity(nameButton)) {
-                            Toast.makeText(MainActivity.this, "Maximum  characters in name is 20",
+                        if (!MainActivity.this.uniqueButtonActivity(nameButton,((Button)v).getText().toString(),true)) {
+                            Toast.makeText(MainActivity.this, "Activity with this name exists",
                                     Toast.LENGTH_SHORT).show();
                             dialog.dismiss();
                             clickNewButton(v);
                         } else {
                             final ButtonActivity ba = new ButtonActivity(nameButton);
+                            if(nameButton.length()>25)
+                                nameButton.substring(0,24);
                             ba.name = nameButton;
                             //add and set color for the button
-                            setColorFromDialog(ba);
+                            setColorFromDialog(ba,true);
 
                             dialog.dismiss();
                             Toast.makeText(MainActivity.this, "create",
@@ -950,7 +999,7 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
 
 
     //--------------------for color---------
-    private void setColorFromDialog(final ButtonActivity ba) {
+    private void setColorFromDialog(final ButtonActivity ba,final boolean add ) {
         //set default color
         ba.color = Color.RED;
 
@@ -1022,9 +1071,13 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
             @Override
             public void onClick(DialogInterface dialog, int which) {
 
-                MainActivity.this.listActivity.add(ba);
-                MainActivity.this.addToGridLayoutSettings();
-                //Toast.makeText(MainActivity.this, "Click Save", Toast.LENGTH_SHORT).show();
+                //if new Activity to add in list
+                //else only changing her
+                if(add)
+                    MainActivity.this.listActivity.add(ba);
+
+                MainActivity.this.createGridLayoutSettings();
+
                 dialog.dismiss();
             }
         });
@@ -1083,10 +1136,20 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
 
 
     // learn the uniqueness of the name
-    private boolean uniqueButtonActivity(String name) {
+    private boolean uniqueButtonActivity(String nameActivity,String nameButton,boolean newButton) {
+        int count=0;
         for (ButtonActivity ba : MainActivity.this.listActivity) {
-            if (ba.name.toUpperCase().equals(name.toUpperCase()))
-                return false;
+            if (ba.name.toUpperCase().equals(nameActivity.toUpperCase()))
+            {
+                if(count==1)
+                    return false;
+                if(newButton)
+                    return false;
+                else
+                if (nameActivity.toUpperCase().equals(nameActivity.toUpperCase()))
+                    count++;
+
+            }
         }
         return true;
     }
@@ -1308,7 +1371,7 @@ For actual time, update every 1000 ms
                     public void onClick(View v) {
                         Toast.makeText(MainActivity.this, "Click name= " + ba.name, Toast.LENGTH_SHORT).show();
                         //method for change activity
-                        createDialogForLogActivity(ba, btnA);
+                        changeNameFromLogActivity(ba, btnA);
                     }
                 });
                 if (llForBA.getChildCount() == 0)
@@ -1332,7 +1395,7 @@ For actual time, update every 1000 ms
 
         final Date endDate = (ba.endTime == 0) ? new Date(System.currentTimeMillis()) : new Date(ba.endTime);
         final Date startDate = new Date(ba.ms);
-        final TimePickerDialog TPD = new TimePickerDialog(this,
+        final TimePickerDialog TPD = new TimePickerDialog(this,android.R.style.Theme_Holo_Dialog,
                 null, startDate.getHours(), startDate.getMinutes(), true) {
             @Override
             public void onTimeChanged(TimePicker view,
@@ -1351,17 +1414,6 @@ For actual time, update every 1000 ms
                     @Override
                     public void onClick(DialogInterface
                                                 dialog, int which) {
-
-                    }
-                });
-
-        TPD.setButton(DialogInterface.BUTTON_NEGATIVE,
-                "Cancel", new DialogInterface.
-                        OnClickListener() {
-                    @Override
-                    public void onClick(DialogInterface
-                                                dialog, int which) {
-
                         int endHour = endDate.getHours();
                         int endMinutes = endDate.getMinutes();
 
@@ -1403,12 +1455,23 @@ For actual time, update every 1000 ms
                         }
                     }
                 });
+
+        TPD.setButton(DialogInterface.BUTTON_NEGATIVE,
+                "Cancel", new DialogInterface.
+                        OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface
+                                                dialog, int which) {
+
+
+                    }
+                });
         TPD.show();
 
     }
 
     //initialize dialog for Buttons from Activity Log
-    private void createDialogForLogActivity(final ButtonActivity ba, final Button btn) {
+    private void changeNameFromLogActivity(final ButtonActivity ba, final Button btn) {
 
 
         int size = MainActivity.this.listActivity.size();
@@ -1417,8 +1480,8 @@ For actual time, update every 1000 ms
             itemsAcivities[i] = MainActivity.this.listActivity.get(i).name;
         }
 
-        AlertDialog.Builder builder = new AlertDialog.Builder(this);
-        builder.setMessage(R.string.dialogLogActivityTitle);
+        AlertDialog.Builder builder = new AlertDialog.Builder(this,android.R.style.Theme_Holo_Light_Dialog);
+
         LayoutInflater inflater = MainActivity.this.getLayoutInflater();
 
 
@@ -1426,8 +1489,13 @@ For actual time, update every 1000 ms
 
         final Spinner spinner = view.findViewById(R.id.spinnerAcivityLog);
         ArrayAdapter<String> adapter =
-                new ArrayAdapter<String>(this, android.R.layout.
-                        simple_spinner_item, itemsAcivities);
+                new ArrayAdapter<String>(this, android.R.layout.simple_spinner_dropdown_item,
+                         itemsAcivities);
+      //  adapter.setDropDownViewTheme(android.R.);
+
+//        ArrayAdapter<String> adapter =
+//                new ArrayAdapter<String>(this, R.layout.spinner_activity,
+//                       itemsAcivities);
         spinner.setAdapter(adapter);
 
 
@@ -1583,7 +1651,7 @@ For actual time, update every 1000 ms
         toolbar = this.findViewById(R.id.toolBar_Setting);
         toolbar.setTitle(MainActivity.actualTime);
         this.setSupportActionBar(toolbar);
-        this.addToGridLayoutSettings();
+        this.createGridLayoutSettings();
 
         String name = sPref.getString("myCalendar", "");
         EditText editTextCalendar = this.findViewById(R.id.editTextCalendar);
@@ -1782,7 +1850,7 @@ For actual time, update every 1000 ms
         DBHandler mDbHandler = new DBHandler(getApplicationContext());
         mDbHandler.clearEventsTable();
         Log.d(TAG, "Clean DB");
-        SharedPreferences.Editor editor = sharedPreferences.edit();
+        SharedPreferences.Editor editor = sPref.edit();
         editor.putBoolean("temp", true);
         editor.commit();
         mDbHandler.closeDB();

@@ -8,17 +8,15 @@ import android.util.Log;
 
 import java.util.HashMap;
 
-/**
- * Created by samik on 11/3/2017.
- */
-
 public class BaseDataMaster {
+
     private static final String LOG_TAG = "BaseDataMaster";
     private SQLiteDatabase database;
     private BaseDataHelper dbCreator;
 
     private static BaseDataMaster dataMaster;
 
+    // Create & initialize dataBase variable
     private BaseDataMaster(Context context) {
         dbCreator = new BaseDataHelper(context);
         if (database == null || !database.isOpen()) {
@@ -33,6 +31,11 @@ public class BaseDataMaster {
         return dataMaster;
     }
 
+    /**
+     * Called when need save a new user data to Sqlite db
+     *
+     * @param emailData - Data for autocomplete fields for input.
+     */
     public long insertEmailData(HashMap<String, String> emailData) {
         deleteTable();
         ContentValues contentValues = new ContentValues();
@@ -44,16 +47,23 @@ public class BaseDataMaster {
         return database.insert(BaseDataHelper.User.TABLE_NAME, null, contentValues);
     }
 
+    // This method is remove table
     private void deleteTable() {
         database.delete(BaseDataHelper.User.TABLE_NAME, null, null);
     }
 
+    /**
+     * This method is called when the FragmentExport is opened to auto-complete fields for input
+     *
+     * @return data from it will be substituted in the input fields
+     */
     public HashMap<String, String> getEmailData() {
         String query = "SELECT " + BaseDataHelper.User.EMAIL + ", " +
                 BaseDataHelper.User.SUBJECT + ", " +
                 BaseDataHelper.User.MESSAGE + " " +
                 " FROM " + BaseDataHelper.User.TABLE_NAME;
 
+        // Read the data from the database and write them to the list
         Cursor cursor = database.rawQuery(query, null);
 
         HashMap<String, String> list = new HashMap<>();

@@ -98,8 +98,8 @@ public class FragmentExport extends Fragment implements View.OnClickListener {
 
     public Toolbar getToolbar() {
         if (toolbar == null) {
-            toolbar = thisView.findViewById(R.id.toolBar_screen_email);
 
+            toolbar = thisView.findViewById(R.id.toolBar_screen_email);
         }
         return toolbar;
     }
@@ -281,7 +281,7 @@ public class FragmentExport extends Fragment implements View.OnClickListener {
             e.printStackTrace();
         }
 
-
+        // We get the time of the start and end of the event and check them on our range
         for (String[] temp : allUserEventList) {
             long start = Long.parseLong(temp[2]);
             long end = Long.parseLong(temp[3]);
@@ -290,6 +290,9 @@ public class FragmentExport extends Fragment implements View.OnClickListener {
                 filterEventUserList.add(temp);
             }
         }
+
+
+        // This is necessary in order to avoid duplication of events when displaying them in listview
         if (notSendEventName != null) {
             for (int i = 0; filterEventUserList.size() > i; i++) {
                 String[] temp = filterEventUserList.get(i);
@@ -325,6 +328,13 @@ public class FragmentExport extends Fragment implements View.OnClickListener {
         fContext.startActivity(Intent.createChooser(emailIntent, "Send mail..."));
     }
 
+    /**
+     * This method is called when the user clicks the email button.
+     * It is necessary to prepare and write data to a *.cvs file
+     *
+     * @param listToSend a list with the data that we will send by email
+     * @return the file ready for upload
+     */
     public File createCSVFIle(ArrayList<String[]> listToSend) {
 
         final String USER_NAME_PREFERENCES = "user_name_sp";
@@ -346,13 +356,13 @@ public class FragmentExport extends Fragment implements View.OnClickListener {
 
         }
 
+        // get a username to add a prefix with its name to the file name
         SharedPreferences sharedPreferences = fContext.getSharedPreferences(USER_NAME_PREFERENCES, Context.MODE_PRIVATE);
         if (sharedPreferences.contains(USER_NAME)) {
             if (!sharedPreferences.getString(USER_NAME, "").isEmpty()) {
                 username = sharedPreferences.getString(USER_NAME, "");
             }
         }
-
 
         String fileName = username + "-timeSheetApp.csv";
         File exportDir = new File(Environment.getExternalStorageDirectory(), "csv_patch");
@@ -507,7 +517,7 @@ public class FragmentExport extends Fragment implements View.OnClickListener {
     }
 
     /**
-     * -----------------------------------------------------------------------------
+     * This is a modified adapter for displaying and processing the list of events in listview
      */
 
     public class CustomArrayAdapter extends ArrayAdapter<ArrayList<ButtonActivity>> {
