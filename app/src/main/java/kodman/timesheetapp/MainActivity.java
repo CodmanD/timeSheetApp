@@ -916,7 +916,7 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
                         } else
                             {
                                 if(nameButton.length()>25)
-                                    nameButton.substring(0,24);
+                                    nameButton= nameButton.substring(0,24);
                             ba.name = nameButton;
                             //add and set color for the button
                             setColorFromDialog(ba,false);
@@ -974,7 +974,9 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
                         } else {
                             final ButtonActivity ba = new ButtonActivity(nameButton);
                             if(nameButton.length()>25)
-                                nameButton.substring(0,24);
+                            {
+                                nameButton= nameButton.substring(0,24);
+                            }
                             ba.name = nameButton;
                             //add and set color for the button
                             setColorFromDialog(ba,true);
