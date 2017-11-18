@@ -26,8 +26,6 @@ import android.support.annotation.RequiresApi;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
-import android.text.format.DateFormat;
-import android.text.format.Time;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
@@ -1285,8 +1283,10 @@ For actual time, update every 1000 ms
                                         toolbar.setTitle(time);
                                         if (MainActivity.this.listLogActivity.size() > 0 && MainActivity.this.status == 0) {
                                             long timeDiff = System.currentTimeMillis() - MainActivity.this.listLogActivity.get(0).ms;
-                                            Date moment = new Date(timeDiff);
-                                            time = new SimpleDateFormat("mm:ss").format(moment) + " min:sec";
+                                           // Date moment = new Date(timeDiff);
+                                           // time = new SimpleDateFormat("mm:ss").format(moment) + " min:sec";
+                                          //Log.d(TAG,"cur"+System.currentTimeMillis()+" : "+MainActivity.this.listLogActivity.get(0).ms);
+                                            time=timeDiff / 60000+":" +(timeDiff % 60000) / 1000+ " mm:ss";
                                             ((TextView) MainActivity.this.findViewById(R.id.tvLastLap)).setText(time);
                                         }
 
