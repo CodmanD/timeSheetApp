@@ -1,6 +1,7 @@
 <resources>
     <string name="app_name">timeSheetApp</string>
     <string name="home">Home</string>
+    <string name="editPage">Edit page</string>
     <string name="settings">Settings</string>
     <string name="export">Export</string>
     <string name="share">Share</string>
@@ -24,7 +25,8 @@
     <string name="activityLog">Activity Log</string>
     <string name="date">Date</string>
     <string name="startTime">start time</string>
-    <string name="acrivity">Activity</string>
+    <string name="activity">Activity</string>
+    <string name="Subactivity">Subactivity</string>
     <string name="emailReportTo">Email report to:</string>
     <string name="subject">Subject:</string>
     <string name="message">Message:</string>
@@ -44,4 +46,5 @@
     <string name="deleteActivity">Confirm Delete button ?</string>
     <string name="newActivity">New Activity</string>
     <string name="MakeChoice">Make your choice</string>
+    <string name="notes">Notes</string>
 </resources>

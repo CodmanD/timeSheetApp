@@ -10,6 +10,13 @@
         android:icon="@drawable/ic_alarm_white_36dp"
         />
     <item
+        android:id="@+id/action_edit_page"
+        android:icon="@drawable/ic_border_color_white_36dp"
+        android:iconTint="@color/colorNoActiveIcon"
+        android:orderInCategory="100"
+        android:title="@string/editPage"
+        app:showAsAction="always" />
+    <item
         android:id="@+id/action_settings"
         android:title="@string/settings"
         android:orderInCategory="100"

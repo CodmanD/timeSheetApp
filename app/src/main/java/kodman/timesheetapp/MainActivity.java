@@ -1213,8 +1213,8 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
-        Log.d(TAG, "onCreate");
-        System.out.println(TAG + "onCreate");
+        //Log.d(TAG, "onCreate");
+
         super.onCreate(savedInstanceState);
         mShared = getApplicationContext().getSharedPreferences("prefs", MODE_PRIVATE);
         mSharedEditor = mShared.edit();
@@ -1231,7 +1231,7 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
         nameCalendar = sPref.getString("myCalendar", "");
 
 
-        Log.d(TAG, "OnCREATE Initialzed list Activities");
+        //Log.d(TAG, "OnCREATE Initialzed list Activities");
         //Initialzed list Activities
         if (sPref.contains("sizeListActivity") && this.listActivity.size() == 0) {
 
@@ -1283,10 +1283,7 @@ For actual time, update every 1000 ms
                                         toolbar.setTitle(time);
                                         if (MainActivity.this.listLogActivity.size() > 0 && MainActivity.this.status == 0) {
                                             long timeDiff = System.currentTimeMillis() - MainActivity.this.listLogActivity.get(0).ms;
-                                           // Date moment = new Date(timeDiff);
-                                           // time = new SimpleDateFormat("mm:ss").format(moment) + " min:sec";
-                                          //Log.d(TAG,"cur"+System.currentTimeMillis()+" : "+MainActivity.this.listLogActivity.get(0).ms);
-                                            time=timeDiff / 60000+":" +(timeDiff % 60000) / 1000+ " mm:ss";
+                                             time=timeDiff / 60000+":" +(timeDiff % 60000) / 1000+ " mm:ss";
                                             ((TextView) MainActivity.this.findViewById(R.id.tvLastLap)).setText(time);
                                         }
 
@@ -1308,7 +1305,7 @@ For actual time, update every 1000 ms
          */
         SharedPreferences.Editor ed = sPref.edit();
         int size = this.listActivity.size();
-        Log.d(TAG, "DESTROY SIZE=" + size);
+        //Log.d(TAG, "DESTROY SIZE=" + size);
         ed.putInt("sizeListActivity", size);
         for (int i = 0; i < size; i++) {
             ed.putString("buttonAcivityName" + i, this.listActivity.get(i).name);
@@ -1711,20 +1708,26 @@ For actual time, update every 1000 ms
                 this.createActivityLog();
 
                 return true;
-            case R.id.action_settings:
+            case R.id.action_edit_page:
                 this.status = 1;
+                this.setContentView(R.layout.activity_main_fragment);
+            FragmentTransaction fragmentTransaction = getFragmentManager().beginTransaction();
+            fragmentTransaction.add(R.id.fragmentContainer, new ScreenEditPage()).commit();
+            return true;
+            case R.id.action_settings:
+                this.status = 2;
                 createScreenSettings();
 
                 return true;
             case R.id.action_export:
-                this.status = 2;
+                this.status = 3;
                 //action for Screen Email
                 openFragmentExport();
                 return true;
 
 
             case R.id.action_share:
-                this.status = 3;
+                this.status = 4;
                 this.setContentView(R.layout.screen_share);
                 toolbar = this.findViewById(R.id.toolBar_MainActivity);
 
