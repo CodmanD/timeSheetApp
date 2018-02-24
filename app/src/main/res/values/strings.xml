@@ -19,7 +19,7 @@
     <string name="eating">Eating</string>
     <string name="washing">Washing</string>
     <string name="newButton">+ NEW</string>
-    <string name="cleanLog">Clean log</string>
+    <string name="clearLog">Clear log</string>
     <string name="undo">Undo</string>
     <string name="timeSinceLastTap">Time since last tap: </string>
     <string name="activityLog">Activity Log</string>
@@ -47,4 +47,6 @@
     <string name="newActivity">New Activity</string>
     <string name="MakeChoice">Make your choice</string>
     <string name="notes">Notes</string>
+    <string name="activities">Activities</string>
+    <string name="subactivities">Subactivities</string>
 </resources>
