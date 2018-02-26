@@ -86,6 +86,7 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
     static final int REQUEST_AUTHORIZATION = 1001;
     static final int REQUEST_GOOGLE_PLAY_SERVICES = 1002;
     static final int REQUEST_PERMISSION_GET_ACCOUNTS = 1003;
+
     private static final String PREF_ACCOUNT_NAME = "is.karpus@gmail.com";
     private static final String[] SCOPES = {CalendarScopes.CALENDAR};
     private static boolean mIsCreateAvailable = true;
@@ -135,15 +136,14 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
 
     //  for create default List Subactivities
     private void createListSubactivities() {
-        this.listSubactivity.add(new ButtonActivity(res.getString(R.string.nothing)));
-        this.listSubactivity.add(new ButtonActivity(res.getString(R.string.relaxing)));
-        this.listSubactivity.add(new ButtonActivity(res.getString(R.string.sleeping)));
-        this.listSubactivity.add(new ButtonActivity(res.getString(R.string.working)));
-        this.listSubactivity.add(new ButtonActivity(res.getString(R.string.exercising)));
-        this.listSubactivity.add(new ButtonActivity(res.getString(R.string.reading)));
-        this.listSubactivity.add(new ButtonActivity(res.getString(R.string.travelling)));
-        this.listSubactivity.add(new ButtonActivity(res.getString(R.string.eating)));
-        this.listSubactivity.add(new ButtonActivity(res.getString(R.string.washing)));
+
+        for(int i=1;i<10;i++)
+        {
+            this.listSubactivity.add(new ButtonActivity("Sub "+i,Color.BLUE));
+
+        }
+
+
     }
 
 
@@ -839,7 +839,7 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
       btnNew.setOnClickListener(new View.OnClickListener() {
           @Override
           public void onClick(View v) {
-              MainActivity.this.clickNewButton(v);
+              MainActivity.this.clickNewButton(v,true);
           }
       });
 
@@ -863,7 +863,7 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
               @Override
               public void onClick(View v) {
 
-                  changeButtonAcivity(ba,btn);
+                  changeButtonAcivity(ba,btn,true);
 
               }
           });
@@ -893,7 +893,7 @@ private void addSubactivities()
     btnNew.setOnClickListener(new View.OnClickListener() {
         @Override
         public void onClick(View v) {
-            MainActivity.this.clickNewButton(v);
+            MainActivity.this.clickNewButton(v,false);
         }
     });
 
@@ -909,7 +909,7 @@ private void addSubactivities()
     for (int i = 0; i < this.listSubactivity.size(); i++) {
 
 
-        final ButtonActivity ba = this.listActivity.get(i);
+        final ButtonActivity ba = this.listSubactivity.get(i);
         final Button btn = new Button(this);
 
         //assing listeners for Buttons
@@ -917,7 +917,7 @@ private void addSubactivities()
             @Override
             public void onClick(View v) {
 
-                changeButtonAcivity(ba,btn);
+                changeButtonAcivity(ba,btn,false);
 
             }
         });
@@ -931,7 +931,7 @@ private void addSubactivities()
 
         // GridLayout.LayoutParams gridLayoutParam = new GridLayout.LayoutParams(row, column);
         LLSubactivities.addView(btn);
-
+        Log.d(TAG,"ADD "+LLSubactivities.getChildCount());
         // GridLayout.LayoutParams lParams = (GridLayout.LayoutParams) btn.getLayoutParams();
         // lParams.setMargins(3, 0, 3, 10);
     }
@@ -1022,7 +1022,7 @@ private void addSubactivities()
     }
 */
     //For changer or remove Activity
-    private void changeButtonAcivity(final ButtonActivity ba,final Button btn)
+    private void changeButtonAcivity(final ButtonActivity ba,final Button btn,final boolean act)
     {
 
         AlertDialog.Builder builder = new AlertDialog.Builder(this,android.R.style.Theme_Holo_Light_Dialog);
@@ -1043,19 +1043,19 @@ private void addSubactivities()
 
 
                         //checking the button for uniqueness
-                        if (!MainActivity.this.uniqueButtonActivity(nameButton,btn.getText().toString(),false))
+                        if (!MainActivity.this.uniqueButtonActivity(nameButton,btn.getText().toString(),false,act))
                                {
                             Toast.makeText(MainActivity.this, "Activity with this name exists",
                                     Toast.LENGTH_SHORT).show();
                             dialog.dismiss();
-                            changeButtonAcivity( ba, btn);
+                            changeButtonAcivity( ba, btn,act);
                         } else
                             {
                                 if(nameButton.length()>25)
                                     nameButton= nameButton.substring(0,24);
                             ba.name = nameButton;
                             //add and set color for the button
-                            setColorFromDialog(ba,false);
+                            setColorFromDialog(ba,false,act);
                             dialog.cancel();
 
                         }
@@ -1069,7 +1069,10 @@ private void addSubactivities()
                 .setNegativeButton(res.getText(R.string.delete),new DialogInterface.OnClickListener(){
                             public void onClick(DialogInterface dialog, int id) {
 
+                                if(act)
                                 MainActivity.this.listActivity.remove(ba);
+                                else
+                                    MainActivity.this.listSubactivity.remove(ba);
                                // createGridLayoutSettings();
                                 dialog.cancel();
                             }
@@ -1082,7 +1085,7 @@ private void addSubactivities()
 
 
     //------For click on button +New
-    private void clickNewButton(final View v) {
+    private void clickNewButton(final View v,final boolean act) {
 
       //  Toast.makeText(MainActivity.this, "Click New Button",
       //          Toast.LENGTH_SHORT).show();
@@ -1091,7 +1094,10 @@ private void addSubactivities()
         LayoutInflater inflater = MainActivity.this.getLayoutInflater();
         final View view = inflater.inflate(R.layout.dialog, null);
         final EditText editText = view.findViewById(R.id.editTextDialog);
-        editText.setText(R.string.newActivity);
+        if(act)
+            editText.setText(R.string.newActivity);
+        else
+            editText.setText(R.string.newSubactivity);
 
         builder.setView(view)
                 .setPositiveButton("Create new activity", new DialogInterface.OnClickListener() {
@@ -1102,11 +1108,11 @@ private void addSubactivities()
                         String nameButton = editText.getText().toString();
 
                         //checking the button for uniqueness
-                        if (!MainActivity.this.uniqueButtonActivity(nameButton,((Button)v).getText().toString(),true)) {
+                        if (!MainActivity.this.uniqueButtonActivity(nameButton,((Button)v).getText().toString(),true,act)) {
                             Toast.makeText(MainActivity.this, "Activity with this name exists",
                                     Toast.LENGTH_SHORT).show();
                             dialog.dismiss();
-                            clickNewButton(v);
+                            clickNewButton(v,act);
                         } else {
                             final ButtonActivity ba = new ButtonActivity(nameButton);
                             if(nameButton.length()>25)
@@ -1115,11 +1121,11 @@ private void addSubactivities()
                             }
                             ba.name = nameButton;
                             //add and set color for the button
-                            setColorFromDialog(ba,true);
+                            setColorFromDialog(ba,true,act);
 
                             dialog.dismiss();
-                            Toast.makeText(MainActivity.this, "create",
-                                    Toast.LENGTH_SHORT).show();
+                           // Toast.makeText(MainActivity.this, "create",
+                           //         Toast.LENGTH_SHORT).show();
                         }
                     }
                 })
@@ -1136,7 +1142,7 @@ private void addSubactivities()
 
 
     //--------------------for color---------
-    private void setColorFromDialog(final ButtonActivity ba,final boolean add ) {
+    private void setColorFromDialog(final ButtonActivity ba,final boolean add,final boolean act ) {
         //set default color
         ba.color = Color.RED;
 
@@ -1211,9 +1217,19 @@ private void addSubactivities()
                 //if new Activity to add in list
                 //else only changing her
                 if(add)
-                {   MainActivity.this.listActivity.add(ba);
+                {
+                    if(act)
+                    {
+                        MainActivity.this.listActivity.add(ba);
 
-                MainActivity.this.addActivities();
+                        MainActivity.this.addActivities();
+                    }
+                    else
+                        {
+                            MainActivity.this.listSubactivity.add(ba);
+
+                            MainActivity.this.addSubactivities();
+                        }
                 }
 
                 dialog.dismiss();
@@ -1274,8 +1290,14 @@ private void addSubactivities()
 
 
     // learn the uniqueness of the name
-    private boolean uniqueButtonActivity(String nameActivity,String nameButton,boolean newButton) {
+    private boolean uniqueButtonActivity(String nameActivity,String nameButton,boolean newButton,boolean act) {
         int count=0;
+
+        if(act)
+        {
+
+        }
+
         for (ButtonActivity ba : MainActivity.this.listActivity) {
             if (ba.name.toUpperCase().equals(nameActivity.toUpperCase()))
             {
@@ -1390,11 +1412,19 @@ private void addSubactivities()
 
         } else {
             this.createList();
+
         }
         if (this.listActivity.size() == 0)
         {
             this.createList();
             Log.d(TAG,"============= DEFAULT listActivities");
+        }
+
+        if(this.listSubactivity==null||this.listSubactivity.size()==0)
+        {
+
+            this.createListSubactivities();
+            Log.d(TAG," createSubactivities "+this.listSubactivity.size());
         }
         //add  widgets with available ativities to Home Screen
         // and assing listeners for their
@@ -1797,6 +1827,7 @@ For actual time, update every 1000 ms
         //initialized layout  from available activities
        // this.createGridLayoutSettings();
         addActivities();
+        addSubactivities();
         String name = sPref.getString("myCalendar", "");
         EditText editTextCalendar = this.findViewById(R.id.editTextCalendar);
         editTextCalendar.setText(MainActivity.nameCalendar);
