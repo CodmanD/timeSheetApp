@@ -98,6 +98,8 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
     private SharedPreferences mShared;
     private SharedPreferences.Editor mSharedEditor;
     private ArrayList<ButtonActivity> listActivity = new ArrayList<>();//All buttons activity for current  time
+    private ArrayList<ButtonActivity> listSubactivity = new ArrayList<>();
+
     private ArrayList<ButtonActivity> listLogActivity = new ArrayList<>();
     private ArrayAdapter<ButtonActivity> adapterListLogActivity;
     private String mDeleteTime;
@@ -129,6 +131,19 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
         this.listActivity.add(new ButtonActivity(res.getString(R.string.travelling)));
         this.listActivity.add(new ButtonActivity(res.getString(R.string.eating)));
         this.listActivity.add(new ButtonActivity(res.getString(R.string.washing)));
+    }
+
+    //  for create default List Subactivities
+    private void createListSubactivities() {
+        this.listSubactivity.add(new ButtonActivity(res.getString(R.string.nothing)));
+        this.listSubactivity.add(new ButtonActivity(res.getString(R.string.relaxing)));
+        this.listSubactivity.add(new ButtonActivity(res.getString(R.string.sleeping)));
+        this.listSubactivity.add(new ButtonActivity(res.getString(R.string.working)));
+        this.listSubactivity.add(new ButtonActivity(res.getString(R.string.exercising)));
+        this.listSubactivity.add(new ButtonActivity(res.getString(R.string.reading)));
+        this.listSubactivity.add(new ButtonActivity(res.getString(R.string.travelling)));
+        this.listSubactivity.add(new ButtonActivity(res.getString(R.string.eating)));
+        this.listSubactivity.add(new ButtonActivity(res.getString(R.string.washing)));
     }
 
 
@@ -809,7 +824,130 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
     //----------------End Block For Google Service------------------------------------------------------------
 
 
+  private void addActivities()
+  {
+      LinearLayout LLActivities=this.findViewById(R.id.LLActivities);
+      if(LLActivities.getChildCount()>0)
+          LLActivities.removeAllViews();
+
+      LinearLayout LLSettings=this.findViewById(R.id.LLSettings);
+
+      LinearLayout.LayoutParams linLayoutParam = new LinearLayout.LayoutParams(LinearLayout.LayoutParams.WRAP_CONTENT, LinearLayout.LayoutParams.MATCH_PARENT);
+      final Button btnNew = new Button(this);
+
+      //assing listener for the Button
+      btnNew.setOnClickListener(new View.OnClickListener() {
+          @Override
+          public void onClick(View v) {
+              MainActivity.this.clickNewButton(v);
+          }
+      });
+
+      //add Last Button with title "+New"
+
+      btnNew.setText(R.string.newButton);
+      //btnNew.setWidth(100);
+      btnNew.setLayoutParams(linLayoutParam);
+      LLActivities.addView(btnNew);
+
+      linLayoutParam = new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.MATCH_PARENT);
+      linLayoutParam.setMargins(40,10,40,10);
+      for (int i = 0; i < this.listActivity.size(); i++) {
+
+
+          final ButtonActivity ba = this.listActivity.get(i);
+          final Button btn = new Button(this);
+
+          //assing listeners for Buttons
+          btn.setOnClickListener(new View.OnClickListener() {
+              @Override
+              public void onClick(View v) {
+
+                  changeButtonAcivity(ba,btn);
+
+              }
+          });
+          btn.setText(ba.name);
+          btn.setBackgroundColor(ba.getColor(ba.name));
+          btn.setTextColor(getContrastColor(ba.color));
+          btn.setLayoutParams(linLayoutParam);
+          LLActivities.addView(btn);
+
+
+      }
+LLSettings.invalidate();
+
+  }
+private void addSubactivities()
+{
+    LinearLayout LLSubactivities=this.findViewById(R.id.LLSubactivities);
+    if(LLSubactivities.getChildCount()>0)
+        LLSubactivities.removeAllViews();
+
+    LinearLayout LLSettings=this.findViewById(R.id.LLSettings);
+
+    LinearLayout.LayoutParams linLayoutParam = new LinearLayout.LayoutParams(LinearLayout.LayoutParams.WRAP_CONTENT, LinearLayout.LayoutParams.MATCH_PARENT);
+    final Button btnNew = new Button(this);
+
+    //assing listener for the Button
+    btnNew.setOnClickListener(new View.OnClickListener() {
+        @Override
+        public void onClick(View v) {
+            MainActivity.this.clickNewButton(v);
+        }
+    });
+
+    //add Last Button with title "+New"
+
+    btnNew.setText(R.string.newButton);
+    //btnNew.setWidth(100);
+    btnNew.setLayoutParams(linLayoutParam);
+    LLSubactivities.addView(btnNew);
+
+    linLayoutParam = new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.MATCH_PARENT);
+    linLayoutParam.setMargins(40,10,40,10);
+    for (int i = 0; i < this.listSubactivity.size(); i++) {
+
+
+        final ButtonActivity ba = this.listActivity.get(i);
+        final Button btn = new Button(this);
+
+        //assing listeners for Buttons
+        btn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+
+                changeButtonAcivity(ba,btn);
+
+            }
+        });
+        btn.setText(ba.name);
+        btn.setBackgroundColor(ba.getColor(ba.name));
+        btn.setTextColor(getContrastColor(ba.color));
+        btn.setLayoutParams(linLayoutParam);
+        //btn.requestLayout()
+        //btn.setWidth(100);
+        //Insert the Button in defined position
+
+        // GridLayout.LayoutParams gridLayoutParam = new GridLayout.LayoutParams(row, column);
+        LLSubactivities.addView(btn);
+
+        // GridLayout.LayoutParams lParams = (GridLayout.LayoutParams) btn.getLayoutParams();
+        // lParams.setMargins(3, 0, 3, 10);
+    }
+    LLSettings.invalidate();
+    // if (GL.getChildCount() >= 21) return;
+
+
+    // btn.setWidth(w/3-20);
+
+    // GridLayout.Spec row = GridLayout.spec(rowIndex, 1);
+    // GridLayout.Spec column = GridLayout.spec(columnIndex, 1);
+    //  GridLayout.LayoutParams gridLayoutParam = new GridLayout.LayoutParams(row, column);
+    // GL.addView(btn, gridLayoutParam);
+}
     //add widgets to GridLayoutSetting
+    /*
     private void createGridLayoutSettings() {
         GridLayout GL = this.findViewById(R.id.gridLayoutSettings);
         if (GL.getChildCount() > 0) {
@@ -882,7 +1020,7 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
 
 
     }
-
+*/
     //For changer or remove Activity
     private void changeButtonAcivity(final ButtonActivity ba,final Button btn)
     {
@@ -932,7 +1070,7 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
                             public void onClick(DialogInterface dialog, int id) {
 
                                 MainActivity.this.listActivity.remove(ba);
-                                createGridLayoutSettings();
+                               // createGridLayoutSettings();
                                 dialog.cancel();
                             }
         });
@@ -1073,9 +1211,10 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
                 //if new Activity to add in list
                 //else only changing her
                 if(add)
-                    MainActivity.this.listActivity.add(ba);
+                {   MainActivity.this.listActivity.add(ba);
 
-                MainActivity.this.createGridLayoutSettings();
+                MainActivity.this.addActivities();
+                }
 
                 dialog.dismiss();
             }
@@ -1244,6 +1383,8 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
                 this.listActivity.add(new ButtonActivity
                         (sPref.getString("buttonAcivityName" + i, ""),
                                 sPref.getInt("buttonAcivityColor" + i, res.getColor(R.color.colorText))));
+
+         Log.d(TAG,"========== Button in  = "+this.listActivity.get(i).name);
             }
 
 
@@ -1251,7 +1392,10 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
             this.createList();
         }
         if (this.listActivity.size() == 0)
+        {
             this.createList();
+            Log.d(TAG,"============= DEFAULT listActivities");
+        }
         //add  widgets with available ativities to Home Screen
         // and assing listeners for their
         this.addToGridViewButtonsActivity();
@@ -1299,17 +1443,18 @@ For actual time, update every 1000 ms
 
     @Override
     public void onDestroy() {
-
+        Log.d(TAG,"OnDestroy");
         /**
          * Add in shareds allowable activities
          */
         SharedPreferences.Editor ed = sPref.edit();
-        int size = this.listActivity.size();
+
         //Log.d(TAG, "DESTROY SIZE=" + size);
-        ed.putInt("sizeListActivity", size);
-        for (int i = 0; i < size; i++) {
+        ed.putInt("sizeListActivity", this.listActivity.size());
+        for (int i = 0; i < this.listActivity.size(); i++) {
             ed.putString("buttonAcivityName" + i, this.listActivity.get(i).name);
             ed.putInt("buttonAcivityColor" + i, this.listActivity.get(i).color);
+            Log.d(TAG,"SAVES "+listActivity.get(i).name);
         }
         ed.commit();
         this.listActivity.clear();
@@ -1650,8 +1795,8 @@ For actual time, update every 1000 ms
         this.setSupportActionBar(toolbar);
 
         //initialized layout  from available activities
-        this.createGridLayoutSettings();
-
+       // this.createGridLayoutSettings();
+        addActivities();
         String name = sPref.getString("myCalendar", "");
         EditText editTextCalendar = this.findViewById(R.id.editTextCalendar);
         editTextCalendar.setText(MainActivity.nameCalendar);
@@ -1660,6 +1805,8 @@ For actual time, update every 1000 ms
         editTextName.setText(MainActivity.myName);
 
     }
+
+
 
     // Saved Data From Field MyName & My Calendar
     public void clickSaveSettings(View view) {
@@ -1699,6 +1846,7 @@ For actual time, update every 1000 ms
             case R.id.action_home:
                 this.status = 0;
                 this.setContentView(R.layout.activity_main);
+                setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
                 toolbar = this.findViewById(R.id.toolBar_MainActivity);
 
                 toolbar.setTitle(MainActivity.actualTime);
@@ -1717,12 +1865,13 @@ For actual time, update every 1000 ms
             case R.id.action_settings:
                 this.status = 2;
                 createScreenSettings();
-
+                setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
                 return true;
             case R.id.action_export:
                 this.status = 3;
                 //action for Screen Email
                 openFragmentExport();
+                setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
                 return true;
 
 
@@ -1730,7 +1879,7 @@ For actual time, update every 1000 ms
                 this.status = 4;
                 this.setContentView(R.layout.screen_share);
                 toolbar = this.findViewById(R.id.toolBar_MainActivity);
-
+                setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
                 toolbar.setTitle(MainActivity.actualTime);
                 this.setSupportActionBar(toolbar);
                 String appPackageName = "kodman.timesheetapp";
