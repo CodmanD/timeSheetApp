@@ -16,4 +16,5 @@
     <color name="colorWashing">#d0fcc1</color>
     <color name="colorActiveIcon">#535353</color>
     <color name="colorNoActiveIcon">#ffffff</color>
+    <color name="colorTextSubactivity">#ffe5a7</color>
 </resources>

@@ -121,37 +121,10 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
     }
 
 
-    //  for create default List Activities
-    private void createList() {
-        this.listActivity.add(new ButtonActivity(res.getString(R.string.nothing)));
-        this.listActivity.add(new ButtonActivity(res.getString(R.string.relaxing)));
-        this.listActivity.add(new ButtonActivity(res.getString(R.string.sleeping)));
-        this.listActivity.add(new ButtonActivity(res.getString(R.string.working)));
-        this.listActivity.add(new ButtonActivity(res.getString(R.string.exercising)));
-        this.listActivity.add(new ButtonActivity(res.getString(R.string.reading)));
-        this.listActivity.add(new ButtonActivity(res.getString(R.string.travelling)));
-        this.listActivity.add(new ButtonActivity(res.getString(R.string.eating)));
-        this.listActivity.add(new ButtonActivity(res.getString(R.string.washing)));
-    }
-
-    //  for create default List Subactivities
-    private void createListSubactivities() {
-
-        for(int i=1;i<10;i++)
-        {
-            this.listSubactivity.add(new ButtonActivity("Sub "+i,Color.BLUE));
-
-        }
 
 
-    }
 
 
-    public static int getContrastColor(int color) {
-        // Counting the perceptive luminance - human eye favors green color...
-        double a = 1 - (0.299 * Color.red(color) + 0.587 * Color.green(color) + 0.114 * Color.blue(color)) / 255;
-        return a < 0.5 ? Color.BLACK : Color.WHITE;
-    }
 
 
     public void undoClick(View view) {
@@ -177,7 +150,1313 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
         }
     }
 
-    //------for work with Google Diary---------------------------------------------------------------
+
+
+
+  private void addActivities()
+  {
+      LinearLayout LLActivities=this.findViewById(R.id.LLActivities);
+      if(LLActivities.getChildCount()>0)
+          LLActivities.removeAllViews();
+
+      LinearLayout LLSettings=this.findViewById(R.id.LLSettings);
+
+      LinearLayout.LayoutParams linLayoutParam = new LinearLayout.LayoutParams(LinearLayout.LayoutParams.WRAP_CONTENT, LinearLayout.LayoutParams.MATCH_PARENT);
+      final Button btnNew = new Button(this);
+
+      //assing listener for the Button
+      btnNew.setOnClickListener(new View.OnClickListener() {
+          @Override
+          public void onClick(View v) {
+              MainActivity.this.clickNewButton(v,true);
+          }
+      });
+
+      //add Last Button with title "+New"
+
+      btnNew.setText(R.string.newButton);
+      //btnNew.setWidth(100);
+      btnNew.setLayoutParams(linLayoutParam);
+      LLActivities.addView(btnNew);
+
+      linLayoutParam = new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.MATCH_PARENT);
+      linLayoutParam.setMargins(40,10,40,10);
+      for (int i = 0; i < this.listActivity.size(); i++) {
+
+
+          final ButtonActivity ba = this.listActivity.get(i);
+          final Button btn = new Button(this);
+
+          //assing listeners for Buttons
+          btn.setOnClickListener(new View.OnClickListener() {
+              @Override
+              public void onClick(View v) {
+
+                  changeButtonAcivity(ba,btn,true);
+
+              }
+          });
+          btn.setText(ba.name);
+          btn.setBackgroundColor(ba.getColor(ba.name));
+          btn.setTextColor(getContrastColor(ba.color));
+          btn.setLayoutParams(linLayoutParam);
+          LLActivities.addView(btn);
+
+
+      }
+LLSettings.invalidate();
+
+  }
+private void addSubactivities()
+{
+    LinearLayout LLSubactivities=this.findViewById(R.id.LLSubactivities);
+    if(LLSubactivities.getChildCount()>0)
+        LLSubactivities.removeAllViews();
+
+    LinearLayout LLSettings=this.findViewById(R.id.LLSettings);
+
+    LinearLayout.LayoutParams linLayoutParam = new LinearLayout.LayoutParams(LinearLayout.LayoutParams.WRAP_CONTENT, LinearLayout.LayoutParams.MATCH_PARENT);
+    final Button btnNew = new Button(this);
+
+    //assing listener for the Button
+    btnNew.setOnClickListener(new View.OnClickListener() {
+        @Override
+        public void onClick(View v) {
+            MainActivity.this.clickNewButton(v,false);
+        }
+    });
+
+    //add Last Button with title "+New"
+
+    btnNew.setText(R.string.newButton);
+    //btnNew.setWidth(100);
+    btnNew.setLayoutParams(linLayoutParam);
+    LLSubactivities.addView(btnNew);
+
+    linLayoutParam = new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.MATCH_PARENT);
+    linLayoutParam.setMargins(40,10,40,10);
+    for (int i = 0; i < this.listSubactivity.size(); i++) {
+
+
+        final ButtonActivity ba = this.listSubactivity.get(i);
+        final Button btn = new Button(this);
+
+        //assing listeners for Buttons
+        btn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+
+                changeButtonAcivity(ba,btn,false);
+
+            }
+        });
+        btn.setText(ba.name);
+        btn.setBackgroundColor(ba.getColor(ba.name));
+        btn.setTextColor(getContrastColor(ba.color));
+        btn.setLayoutParams(linLayoutParam);
+        //btn.requestLayout()
+        //btn.setWidth(100);
+        //Insert the Button in defined position
+
+        // GridLayout.LayoutParams gridLayoutParam = new GridLayout.LayoutParams(row, column);
+        LLSubactivities.addView(btn);
+        Log.d(TAG,"ADD "+LLSubactivities.getChildCount());
+        // GridLayout.LayoutParams lParams = (GridLayout.LayoutParams) btn.getLayoutParams();
+        // lParams.setMargins(3, 0, 3, 10);
+    }
+    LLSettings.invalidate();
+
+}
+
+    //For changer or remove Activity
+    private void changeButtonAcivity(final ButtonActivity ba,final Button btn,final boolean act)
+    {
+
+        AlertDialog.Builder builder = new AlertDialog.Builder(this,android.R.style.Theme_Holo_Light_Dialog);
+
+        LayoutInflater inflater = MainActivity.this.getLayoutInflater();
+        final View view = inflater.inflate(R.layout.dialog, null);
+        final EditText editText = view.findViewById(R.id.editTextDialog);
+        editText.setText(ba.name);
+
+        builder.setView(view)
+                .setPositiveButton("Change this acivity", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int id) {
+
+
+                        String nameButton = editText.getText().toString();
+                        //Checking max characters
+
+
+                        //checking the button for uniqueness
+                        if (!MainActivity.this.uniqueButtonActivity(nameButton,btn.getText().toString(),false,act))
+                               {
+                            Toast.makeText(MainActivity.this, "Activity with this name exists",
+                                    Toast.LENGTH_SHORT).show();
+                            dialog.dismiss();
+                            changeButtonAcivity( ba, btn,act);
+                        } else
+                            {
+                                if(nameButton.length()>25)
+                                    nameButton= nameButton.substring(0,24);
+                            ba.name = nameButton;
+                            //add and set color for the button
+                            setColorFromDialog(ba,false,act);
+                            dialog.cancel();
+
+                        }
+                    }
+                })
+                .setNeutralButton("Cancel", new DialogInterface.OnClickListener() {
+                    public void onClick(DialogInterface dialog, int id) {
+                        dialog.cancel();
+                    }
+                })
+                .setNegativeButton(res.getText(R.string.delete),new DialogInterface.OnClickListener(){
+                            public void onClick(DialogInterface dialog, int id) {
+
+                                if(act)
+                                {
+                                    MainActivity.this.listActivity.remove(ba);
+                                    addActivities();
+                                }
+                                else
+                                {
+                                    MainActivity.this.listSubactivity.remove(ba);
+                                    addSubactivities();
+                                }
+
+                                dialog.cancel();
+                            }
+        });
+
+        AlertDialog dialog = builder.create();
+        dialog.setCancelable(true);
+        dialog.show();
+    }
+
+
+    //------For click on button +New
+    private void clickNewButton(final View v,final boolean act) {
+
+      //  Toast.makeText(MainActivity.this, "Click New Button",
+      //          Toast.LENGTH_SHORT).show();
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+
+        LayoutInflater inflater = MainActivity.this.getLayoutInflater();
+        final View view = inflater.inflate(R.layout.dialog, null);
+        final EditText editText = view.findViewById(R.id.editTextDialog);
+        if(act)
+        {
+            editText.setText(R.string.newActivity);
+            builder.setMessage(R.string.dialogNewButton);
+        }
+        else
+        {
+            editText.setText(R.string.newSubactivity);
+            builder.setMessage(R.string.dialogNewButtonForSubactivities);
+        }
+
+        builder.setView(view)
+                .setPositiveButton("Create new activity", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int id) {
+
+                        EditText editText = view.findViewById(R.id.editTextDialog);
+                        String nameButton = editText.getText().toString();
+
+                        //checking the button for uniqueness
+                        if (!MainActivity.this.uniqueButtonActivity(nameButton,((Button)v).getText().toString(),true,act)) {
+                            Toast.makeText(MainActivity.this, "Activity with this name exists",
+                                    Toast.LENGTH_SHORT).show();
+                            dialog.dismiss();
+                            clickNewButton(v,act);
+                        } else {
+                            final ButtonActivity ba = new ButtonActivity(nameButton);
+                            if(nameButton.length()>25)
+                            {
+                                nameButton= nameButton.substring(0,24);
+                            }
+                            ba.name = nameButton;
+                            //add and set color for the button
+                            setColorFromDialog(ba,true,act);
+
+                            dialog.dismiss();
+                           // Toast.makeText(MainActivity.this, "create",
+                           //         Toast.LENGTH_SHORT).show();
+                        }
+                    }
+                })
+                .setNeutralButton("Cancel", new DialogInterface.OnClickListener() {
+                    public void onClick(DialogInterface dialog, int id) {
+                        dialog.dismiss();
+                    }
+                });
+
+        AlertDialog dialog = builder.create();
+        dialog.setCancelable(true);
+        dialog.show();
+    }
+
+
+    //--------------------for color---------
+    private void setColorFromDialog(final ButtonActivity ba,final boolean add,final boolean act ) {
+        //set default color
+       // ba.color = Color.RED;
+
+        //create Alert for the set colour
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        builder.setMessage("Choise the color");
+        LayoutInflater inflater = MainActivity.this.getLayoutInflater();
+        final View view = inflater.inflate(R.layout.color_blender, null);
+        builder.setView(view);
+
+        final SeekBar fSeekBar = view.findViewById(R.id.fSeekBar);
+        final SeekBar sSeekBar = view.findViewById(R.id.sSeekBar);
+
+        final ImageView sColor = view.findViewById(R.id.imageView4);
+        final ImageView fColor = view.findViewById(R.id.imageView3);
+        final ImageView rColor = view.findViewById(R.id.imageView5);
+        final ButtonActivity btnTmp= new ButtonActivity("",Color.RED);
+
+        SeekBar.OnSeekBarChangeListener listener = new SeekBar.OnSeekBarChangeListener() {
+
+            @Override
+            public void onProgressChanged(@NonNull SeekBar seekBar, int progress, boolean fromUser) {
+                //set colors for  widgets
+                int color1[] = calcColor(fSeekBar.getProgress());
+                int color2[] = calcColor(sSeekBar.getProgress());
+                int colorR[] = calcColor(color1, color2);
+                switch (seekBar.getId()) {
+                    case R.id.fSeekBar: {
+                        fColor.setBackgroundColor(Color.rgb(color1[0], color1[1], color1[2]));
+                        break;
+                    }
+                    case R.id.sSeekBar: {
+                        sColor.setBackgroundColor(Color.rgb(color2[0], color2[1], color2[2]));
+                        break;
+                    }
+                }
+                fColor.invalidate();
+                rColor.setBackgroundColor(Color.rgb(colorR[0], colorR[1], colorR[2]));
+                rColor.invalidate();
+               // ba.color = Color.rgb(colorR[0], colorR[1], colorR[2]);
+                btnTmp.color = Color.rgb(colorR[0], colorR[1], colorR[2]);
+                Toast.makeText(MainActivity.this, "returnColor =", Toast.LENGTH_SHORT).show();
+
+            }
+
+            @Override
+            public void onStartTrackingTouch(SeekBar seekBar) {
+
+            }
+
+            @Override
+            public void onStopTrackingTouch(SeekBar seekBar) {
+
+            }
+
+        };
+
+        fSeekBar.setOnSeekBarChangeListener(listener);
+        sSeekBar.setOnSeekBarChangeListener(listener);
+
+        builder.setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+              //  ba.color = Color.WHITE;
+                dialog.dismiss();
+            }
+        });
+
+        builder.setPositiveButton("Save", new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+
+                //if new Activity to add in list
+                //else only changing her
+                ba.color=btnTmp.color;
+                if(add)
+                {
+                    if(act)
+                    {
+                        MainActivity.this.listActivity.add(ba);
+                    }
+                    else
+                        {
+                            MainActivity.this.listSubactivity.add(ba);
+                        }
+
+
+                }
+                if(act) addActivities();
+                else addSubactivities();
+
+                dialog.dismiss();
+            }
+        });
+
+        Dialog dialog = builder.create();
+        dialog.setCancelable(true);
+        dialog.show();
+    }
+
+
+    int Red, Green, Blue;
+
+
+    //calculate the color values
+    public int[] calcColor(int progress) {
+        if (progress == 0) {
+            Red = 255;
+            Green = 0;
+            Blue = 0;
+        }
+        if (progress > 0 & progress <= 42) {
+            Red = 255;
+            Green = progress * 6 - 1;
+            Blue = 0;
+        } else if (progress > 42 & progress <= 84) {
+            Red = 256 - (progress - 42) * 6 - 1;
+            Green = 255;
+            Blue = 0;
+        } else if (progress > 84 & progress <= 126) {
+            Red = 0;
+            Green = 255;
+            Blue = (progress - 84) * 6 - 1;
+        } else if (progress > 126 & progress <= 168) {
+            Red = 0;
+            Green = 256 - (progress - 126) * 6 - 1;
+            Blue = 255;
+        } else if (progress > 168 & progress <= 210) {
+            Red = (progress - 168) * 6 - 1;
+            Green = 0;
+            Blue = 255;
+        } else if (progress > 210 & progress <= 252) {
+            Red = 255;
+            Green = 0;
+            Blue = 256 - (progress - 210) * 6 - 1;
+        }
+        int[] color = {Red, Green, Blue};
+        return color;
+    }
+
+//mix colors
+    public int[] calcColor(int[] color1, int[] color2) {
+        int[] color = {(color1[0] + color2[0]) / 2, (color1[1] + color2[1]) / 2, (color1[2] + color2[2]) / 2};
+        return color;
+    }
+    /////------End color----------
+
+
+    // learn the uniqueness of the name
+    private boolean uniqueButtonActivity(String nameActivity,String nameButton,boolean newButton,boolean act) {
+        int count=0;
+
+        if(act)
+        {
+
+        }
+
+        for (ButtonActivity ba : MainActivity.this.listActivity) {
+            if (ba.name.toUpperCase().equals(nameActivity.toUpperCase()))
+            {
+                if(count==1)
+                    return false;
+                if(newButton)
+                    return false;
+                else
+                if (nameActivity.toUpperCase().equals(nameActivity.toUpperCase()))
+                    count++;
+
+            }
+        }
+        return true;
+    }
+
+    //add  widgets with available activities to Home Screen
+    // and assing listeners for their
+    private void addToGridViewButtonsActivity() {
+        GridView gv = this.findViewById(R.id.gridView);
+        ArrayAdapter<ButtonActivity> adapter =
+                new ArrayAdapter<ButtonActivity>(this, R.layout.gridview_item,
+                        R.id.btnItem, this.listActivity) {
+                    @Override
+                    public View getView(int position,
+                                        View convertView, ViewGroup parent) {
+                        View view = super.getView(
+                                position, convertView, parent);
+                        final ButtonActivity ba = this.getItem(position);
+                        Button btn = view.findViewById(R.id.btnItem);
+                        btn.setBackgroundColor(ba.getColor(ba.name));
+                        btn.setText(ba.name);
+                        btn.setLines(1);
+                        btn.setTextColor(getContrastColor(ba.color));
+                        btn.setOnClickListener(new View.OnClickListener() {
+                            @Override
+                            public void onClick(View v) {
+                                if (!mIsCreateAvailable) {
+                                    Toast.makeText(MainActivity.this, "Please wait.Previous operation is performed", Toast.LENGTH_SHORT).show();
+                                    return;
+                                }
+                                Date date = new Date();
+                                ButtonActivity BA = new ButtonActivity(ba.name);
+                                BA.date = new SimpleDateFormat("dd.MM.yyyy").format(date);
+                                BA.time = new SimpleDateFormat("HH:mm:ss").format(date);
+                                ms = System.currentTimeMillis();
+                                //Start Time for activity
+                                BA.ms = ms;
+                                BA.color = ba.color;
+
+                                createDialogSubactivity(BA);
+
+
+                                //add formed activity
+                               // MainActivity.this.listLogActivity.add(0, BA);
+
+                               //MainActivity.this.adapterListLogActivity.notifyDataSetChanged();
+                               // MainActivity.this.lvActivity.setAdapter(MainActivity.this.adapterListLogActivity);
+
+                                //getListViewSize(MainActivity.this.lvActivity);
+                               //AddtoGoogleDiary
+                                //MainActivity.this.addGoogleDiary(ba);
+
+                            }
+                        });
+
+                        return view;
+                    }
+                };
+        gv.setAdapter(adapter);
+    }
+
+    private void createDialogSubactivity(ButtonActivity ba)
+    {
+        Log.d(TAG,"Create dialog with subactivities ="+listSubactivity.size());
+        AlertDialog.Builder adb = new AlertDialog.Builder(this);
+        View view= getLayoutInflater().inflate(R.layout.dialog_subactivities,null);
+
+        GridView gVSub=view.findViewById(R.id.gVSub);
+        TextView tvAct= view.findViewById(R.id.tvCurAct2);
+
+        tvAct.setText(ba.name);
+
+
+
+
+        ArrayAdapter<ButtonActivity> adapter =
+                new ArrayAdapter<ButtonActivity>(this, R.layout.gridview_item,
+                        R.id.btnItem, this.listSubactivity) {
+                    @Override
+                    public View getView(int position,
+                                        View convertView, ViewGroup parent) {
+                        Log.d(TAG,"DialogSubact getView---------------");
+                        View view = super.getView(
+                                position, convertView, parent);
+                        final ButtonActivity ba = this.getItem(position);
+                        Button btn = view.findViewById(R.id.btnItem);
+                        btn.setBackgroundColor(ba.getColor(ba.name));
+                        btn.setText(ba.name);
+                        btn.setLines(1);
+                        btn.setTextColor(getContrastColor(ba.color));
+                        btn.setOnClickListener(new View.OnClickListener() {
+                            @Override
+                            public void onClick(View v) {
+//                                if (!mIsCreateAvailable) {
+//                                    Toast.makeText(MainActivity.this, "Please wait.Previous operation is performed", Toast.LENGTH_SHORT).show();
+//                                    return;
+//                                }
+//                                Date date = new Date();
+//                                ButtonActivity BA = new ButtonActivity(ba.name);
+//                                BA.date = new SimpleDateFormat("dd.MM.yyyy").format(date);
+//                                BA.time = new SimpleDateFormat("HH:mm:ss").format(date);
+//                                ms = System.currentTimeMillis();
+//                                //Start Time for activity
+//                                BA.ms = ms;
+//                                BA.color = ba.color;
+
+                               // createDialogSubactivity(BA);
+
+
+                                //add formed activity
+                                // MainActivity.this.listLogActivity.add(0, BA);
+
+                                //MainActivity.this.adapterListLogActivity.notifyDataSetChanged();
+                                // MainActivity.this.lvActivity.setAdapter(MainActivity.this.adapterListLogActivity);
+
+                                //getListViewSize(MainActivity.this.lvActivity);
+                                //AddtoGoogleDiary
+                                //MainActivity.this.addGoogleDiary(ba);
+
+                            }
+                        });
+
+                        return view;
+                    }
+                };
+
+        gVSub.setAdapter(adapter);
+        adb.setView(view);
+        adb.setCancelable(true);
+       final AlertDialog  dialog=adb.create();
+        dialog.show();
+
+        TextView btnCancel= view.findViewById(R.id.btnCancel);
+        btnCancel.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                dialog.dismiss();
+            }
+        });
+    }
+
+    //get list activities from Log
+    public ArrayList<ButtonActivity> getListLogActivity() {
+
+        return MainActivity.this.listLogActivity;
+    }
+
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        //Log.d(TAG, "onCreate");
+
+        super.onCreate(savedInstanceState);
+        mShared = getApplicationContext().getSharedPreferences("prefs", MODE_PRIVATE);
+        mSharedEditor = mShared.edit();
+        setContentView(R.layout.activity_main);
+        setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
+        res = this.getResources();
+        toolbar = this.findViewById(R.id.toolBar_MainActivity);
+        this.setSupportActionBar(toolbar);
+
+        //---Read from SharedPreferences ------------
+        sPref = this.getPreferences(MODE_PRIVATE);
+        // Name & Calendar User
+        myName = sPref.getString("myName", "");
+        nameCalendar = sPref.getString("myCalendar", "");
+
+
+        //Log.d(TAG, "OnCREATE Initialzed list Activities");
+        //Initialzed list Activities
+        if (sPref.contains("sizeListActivity") && this.listActivity.size() == 0) {
+
+
+            int size = sPref.getInt("sizeListActivity", 0);
+
+            Log.d(TAG, " Initialzed list Activities From shareds =" + size);
+            //   this.listActivity=new ArrayList<>();
+            for (int i = 0; i < size; i++) {
+                this.listActivity.add(new ButtonActivity
+                        (sPref.getString("buttonAcivityName" + i, ""),
+                                sPref.getInt("buttonAcivityColor" + i, res.getColor(R.color.colorText))));
+
+         Log.d(TAG,"========== Button in  = "+this.listActivity.get(i).name);
+            }
+
+
+        } else {
+            this.createList();
+
+        }
+        if (this.listActivity.size() == 0)
+        {
+            this.createList();
+            Log.d(TAG,"============= DEFAULT listActivities");
+        }
+
+
+        if(sPref.contains("sizeListSubactivity"))
+        {
+            int size = sPref.getInt("sizeListSubactivity", 0);
+            if(size==0)
+            {
+
+                this.createListSubactivities();
+                Log.d(TAG," createSubactivities "+this.listSubactivity.size());
+            }
+            else
+             for (int i = 0; i < size; i++) {
+                    this.listSubactivity.add(new ButtonActivity
+                            (sPref.getString("buttonSubacivityName" + i, ""),
+                                    sPref.getInt("buttonSubacivityColor" + i, res.getColor(R.color.colorText))));
+
+                    Log.d(TAG,"========== Subactivity in  = "+this.listSubactivity.get(i).name);
+                }
+
+        }
+
+        //add  widgets with available ativities to Home Screen
+        // and assing listeners for their
+        this.addToGridViewButtonsActivity();
+
+        // Initialize credentials and service object.
+        mCredential = GoogleAccountCredential.usingOAuth2(
+                getApplicationContext(), Arrays.asList(SCOPES))
+                .setBackOff(new ExponentialBackOff());
+        callCalendarApi(3);
+
+//Read From DataBase
+        readAcivitiesFromDB();
+        this.createActivityLog();
+/*
+For actual time, update every 1000 ms
+ */
+        new java.util.Timer().schedule
+                (
+                        new TimerTask() {
+                            public void run() {
+                                if (toolbar == null) return;
+                                toolbar.post(new Runnable() {
+                                    @Override
+                                    public void run() {
+
+                                        Date curDate = new Date();
+                                        String time = new SimpleDateFormat("HH:mm:ss").format(curDate);
+                                        MainActivity.actualTime = time;
+                                        toolbar.setTitle(time);
+                                        if (MainActivity.this.listLogActivity.size() > 0 && MainActivity.this.status == 0) {
+                                            long timeDiff = System.currentTimeMillis() - MainActivity.this.listLogActivity.get(0).ms;
+                                             time=timeDiff / 60000+":" +(timeDiff % 60000) / 1000+ " mm:ss";
+                                            ((TextView) MainActivity.this.findViewById(R.id.tvLastLap)).setText(time);
+                                        }
+
+                                    }
+                                });
+                                // Log.d(TAG,"Timer Tick");
+                            }
+                        },
+                        0, 1000);
+
+
+    }
+
+
+
+    //create Log Activity
+    //and assing listeners for widgets
+    private void createActivityLog() {
+        if (listActivity.size() == 0) return;
+
+        this.lvActivity = this.findViewById(R.id.lvActivity);
+
+        adapterListLogActivity = new ArrayAdapter<ButtonActivity>(this,
+                R.layout.list_item, R.id.tvForDate, listLogActivity) {
+            @Override
+            public View getView(int position,
+                                View convertView, ViewGroup parent) {
+
+                if (convertView == null) {
+                    convertView = getLayoutInflater().inflate(R.layout.list_item, parent, false);
+                }
+
+                View view = super.getView(position,
+                        convertView, parent);
+
+                final ButtonActivity ba = this.getItem(position);
+
+                TextView tvDate = view.
+                        findViewById(R.id.tvForDate);
+
+                TextView tvStartTime = view.
+                        findViewById(R.id.tvForStartTime);
+
+                tvStartTime.setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View v) {
+
+                       //Change start time for activity
+                        changeTimeActivity(ba);
+                    }
+                });
+
+
+                //fill in the data ListView
+                LinearLayout llForBA = view.
+                        findViewById(R.id.llForBA);
+
+                tvDate.setText(ba.date);
+                tvStartTime.setText(ba.time);
+                final String name = ba.name;
+                final Button btnA = new Button(MainActivity.this);
+                btnA.setLines(1);
+                btnA.setWidth(120);
+                btnA.setText(ba.name);
+                btnA.setBackgroundColor(ba.getColor(ba.name));
+                btnA.setTextColor(getContrastColor(ba.color));
+                btnA.setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View v) {
+                        Toast.makeText(MainActivity.this, "Click name= " + ba.name, Toast.LENGTH_SHORT).show();
+                        //method for change activity
+                        changeNameFromLogActivity(ba, btnA);
+                    }
+                });
+                if (llForBA.getChildCount() == 0)
+                    llForBA.addView(btnA);
+
+                return view;
+            }
+        };
+
+        this.adapterListLogActivity.setNotifyOnChange(true);
+        this.lvActivity.setAdapter(adapterListLogActivity);
+        Log.d(TAG, " start setListHeigth");
+        getListViewSize(lvActivity);
+
+    }
+
+    // changing the time for activity
+    private void changeTimeActivity(final ButtonActivity ba) {
+
+        final Date date = new Date();
+
+        final Date endDate = (ba.endTime == 0) ? new Date(System.currentTimeMillis()) : new Date(ba.endTime);
+        final Date startDate = new Date(ba.ms);
+        final TimePickerDialog TPD = new TimePickerDialog(this,android.R.style.Theme_Holo_Dialog,
+                null, startDate.getHours(), startDate.getMinutes(), true) {
+            @Override
+            public void onTimeChanged(TimePicker view,
+                                      int hour, int minute) {
+                long currentTime = System.currentTimeMillis();
+
+
+                date.setHours(hour);
+                date.setMinutes(minute);
+}
+        };
+
+        TPD.setButton(DialogInterface.BUTTON_POSITIVE,
+                "Save", new DialogInterface.
+                        OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface
+                                                dialog, int which) {
+                        int endHour = endDate.getHours();
+                        int endMinutes = endDate.getMinutes();
+
+                        int hour = date.getHours();
+                        int minute = date.getMinutes();
+
+                        int startHour = startDate.getHours();
+                        int startMinutes = startDate.getMinutes();
+
+                        Log.d(TAG, " start " + startHour + ":" + startMinutes +
+                                "  end " + endHour + ":" + endMinutes);
+                        //checking the time for correctness
+                        if (hour > endHour || (hour == endHour && minute > endMinutes) ||
+                                hour < startHour || (hour == startHour && minute < startMinutes)) {
+                            Toast.makeText(MainActivity.this, "The selected time is not valid for selection", Toast.LENGTH_SHORT).show();
+                            Toast.makeText(MainActivity.this, "start " + startHour + ":" + startMinutes +
+                                    "  end " + endHour + ":" + endMinutes, Toast.LENGTH_SHORT).show();
+
+                            dialog.dismiss();
+                            changeTimeActivity(ba);
+                        } else {
+                            date.setHours(hour);
+                            date.setMinutes(minute);
+                            Log.e("UPDATE!!", "sf");
+                            ba.time = new SimpleDateFormat("HH:mm:ss").format(date);
+                            ba.date = new SimpleDateFormat("dd.MM.yyyy").format(date);
+
+
+                            mUpdateTime = String.valueOf(ba.ms);
+                            ba.ms = date.getTime();
+                            mNewStartTime = String.valueOf(ba.ms);
+                            //Update Time in GoogleDiary
+                            updateGoogleDiary();
+                            //Change LogAcivity
+                            MainActivity.this.adapterListLogActivity.notifyDataSetChanged();
+                            MainActivity.this.lvActivity.setAdapter(MainActivity.this.adapterListLogActivity);
+
+                            //  createActivityLog();
+                        }
+                    }
+                });
+
+        TPD.setButton(DialogInterface.BUTTON_NEGATIVE,
+                "Cancel", new DialogInterface.
+                        OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface
+                                                dialog, int which) {
+
+
+                    }
+                });
+        TPD.show();
+
+    }
+
+    //initialize dialog for Buttons from Activity Log
+    private void changeNameFromLogActivity(final ButtonActivity ba, final Button btn) {
+
+
+        int size = MainActivity.this.listActivity.size();
+        final String[] itemsAcivities = new String[size];
+        for (int i = 0; i < size; i++) {
+            itemsAcivities[i] = MainActivity.this.listActivity.get(i).name;
+        }
+
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        builder.setTitle(R.string.MakeChoice);
+        LayoutInflater inflater = MainActivity.this.getLayoutInflater();
+
+
+        View view = inflater.inflate(R.layout.dialog_with_list, null);
+
+        final Spinner spinner = view.findViewById(R.id.spinnerAcivityLog);
+        ArrayAdapter<String> adapter =
+                new ArrayAdapter<String>(this, android.R.layout.simple_spinner_dropdown_item,
+                         itemsAcivities);
+
+        spinner.setAdapter(adapter);
+
+
+        //helper class for data transfer
+        class Swap {
+            int flag = 0;
+            int color;
+        }
+        final Swap s = new Swap();
+
+        adapter.setDropDownViewResource(android.R.layout.
+                simple_spinner_dropdown_item);
+
+//assign listeners
+        spinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+
+            @Override
+            public void onItemSelected(AdapterView<?> parent,
+                                       View view, int position, long id) {
+
+                if (s.flag == 0) {
+                    for (int i = 0; i < parent.getCount(); i++) {
+                        if (itemsAcivities[i].toUpperCase().equals(ba.name.toUpperCase())) {
+                            parent.setSelection(i);
+                            break;
+                        }
+
+                    }
+                    s.flag = 1;
+                } else {
+                    ba.name = itemsAcivities[position];
+                    s.color = listActivity.get(position).color;
+                }
+
+            }
+
+            @Override
+            public void onNothingSelected(AdapterView<?>
+                                                  parent) {
+
+            }
+        });
+
+
+        builder.setView(view)
+                .setPositiveButton("Change", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int id) {
+                        // ba.name=tvButtonAcivity.getText().toString();
+                        btn.setText(ba.name);
+                        ba.color = s.color;
+                        btn.setBackgroundColor(ba.color);
+                        mNewColor = ba.color;
+                        mNewSummary = ba.name;
+                        mUpdateTime = String.valueOf(ba.ms);
+                        callCalendarApi(4);
+                        btn.setTextColor(getContrastColor(ba.color));
+
+                        createActivityLog();
+                        Toast.makeText(MainActivity.this, "Change" + spinner.getItemAtPosition(0).toString() + "now Name=" + ba.name, Toast.LENGTH_SHORT).show();
+
+                    }
+                })
+                .setNeutralButton("Cancel", new DialogInterface.OnClickListener() {
+                    public void onClick(DialogInterface dialog, int id) {
+                        ba.name = btn.getText().toString();
+                        dialog.dismiss();
+                    }
+                })
+                .setNegativeButton("Delete", new DialogInterface.OnClickListener() {
+                    public void onClick(DialogInterface dialog, int id) {
+                        AlertDialog.Builder bldr = new AlertDialog.Builder(MainActivity.this);
+                        bldr.setMessage(res.getString(R.string.delete) + "?")
+                                .setCancelable(false)
+                                .setPositiveButton(R.string.yes,
+                                        new DialogInterface.OnClickListener() {
+                                            public void onClick(DialogInterface dlg,
+                                                                int id) {
+                                                mDeleteTime = String.valueOf(ba.ms);
+                                                callCalendarApi(0);
+                                                MainActivity.this.listLogActivity.remove(ba);
+                                                MainActivity.this.createActivityLog();
+                                                dlg.cancel();
+                                            }
+                                        })
+
+                                .setNegativeButton(R.string.no,
+                                        new DialogInterface.OnClickListener() {
+                                            public void onClick(DialogInterface dlg,
+                                                                int id) {
+                                                dlg.cancel();
+                                            }
+                                        });
+
+                        bldr.create().show();
+                        dialog.dismiss();
+                    }
+                });
+        AlertDialog dialog = builder.create();
+        dialog.setCancelable(true);
+        dialog.show();
+    }
+
+
+
+
+
+
+
+    //initialize widgets for Settings screen
+    private void createScreenSettings() {
+        this.setContentView(R.layout.screen_settings);
+        toolbar = this.findViewById(R.id.toolBar_Setting);
+        toolbar.setTitle(MainActivity.actualTime);
+        this.setSupportActionBar(toolbar);
+
+        //initialized layout  from available activities
+       // this.createGridLayoutSettings();
+        addActivities();
+        addSubactivities();
+        String name = sPref.getString("myCalendar", "");
+        EditText editTextCalendar = this.findViewById(R.id.editTextCalendar);
+        editTextCalendar.setText(MainActivity.nameCalendar);
+
+        EditText editTextName = this.findViewById(R.id.editTextName);
+        editTextName.setText(MainActivity.myName);
+
+    }
+
+
+
+    // Saved Data From Field MyName & My Calendar
+    public void clickSaveSettings(View view) {
+        sPref = this.getPreferences(MODE_PRIVATE);
+
+        EditText editTextName = this.findViewById(R.id.editTextName);
+        EditText editTextCalendar = this.findViewById(R.id.editTextCalendar);
+        Toast.makeText(this, "Click Save:" + nameCalendar + " MYName" + myName, Toast.LENGTH_SHORT).show();
+        nameCalendar = editTextCalendar.getText().toString();
+        myName = editTextName.getText().toString();
+        //validate fields
+        if (nameCalendar.equals("") || myName.equals("")) {
+            Toast.makeText(this, "Fill in all the fields ", Toast.LENGTH_SHORT).show();
+            return;
+        }
+        if (myName.length() > 40) {
+            nameCalendar = "";
+            Toast.makeText(this, "Maximum 40 characters", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+
+//Saved the data in SharedPreferences
+        SharedPreferences.Editor ed = sPref.edit();
+        ed.putString("myName", myName);
+        ed.putString("myCalendar", nameCalendar);
+        ed.commit();
+        Toast.makeText(this, "Click Save:" + nameCalendar + " Name :" + myName, Toast.LENGTH_SHORT).show();
+    }
+
+
+    //Create menu for the toolbar
+    @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        this.getMenuInflater().inflate(R.menu.menu_toolbar, menu);
+        this.menu = menu;
+
+        //Change colour for selected icon
+        if (Build.VERSION.SDK_INT >= 21) {
+            for (int i = 0; i < menu.size(); i++) {
+                MenuItem mItem = this.menu.getItem(i);
+                Drawable icon = mItem.getIcon();
+                if (this.status == i)
+                    icon.setTint(getResources().getColor(R.color.colorActiveIcon));
+                else
+                    icon.setTint(getResources().getColor(R.color.colorNoActiveIcon));
+            }
+        }
+        return true;
+    }
+
+
+    //Action for menu
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        int id = item.getItemId();
+        switch (id) {
+            case R.id.action_home:
+                this.status = 0;
+                this.setContentView(R.layout.activity_main);
+                setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
+                toolbar = this.findViewById(R.id.toolBar_MainActivity);
+
+                toolbar.setTitle(MainActivity.actualTime);
+                this.setSupportActionBar(toolbar);
+                this.addToGridViewButtonsActivity();
+                MainActivity.this.lvActivity.setAdapter(MainActivity.this.adapterListLogActivity);
+                this.createActivityLog();
+
+                return true;
+            case R.id.action_edit_page:
+                this.status = 1;
+                this.setContentView(R.layout.activity_main_fragment);
+            FragmentTransaction fragmentTransaction = getFragmentManager().beginTransaction();
+            fragmentTransaction.add(R.id.fragmentContainer, new ScreenEditPage()).commit();
+            return true;
+            case R.id.action_settings:
+                this.status = 2;
+                createScreenSettings();
+                setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
+                return true;
+            case R.id.action_export:
+                this.status = 3;
+                //action for Screen Email
+                openFragmentExport();
+                setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
+                return true;
+
+
+            case R.id.action_share:
+                this.status = 4;
+                this.setContentView(R.layout.screen_share);
+                toolbar = this.findViewById(R.id.toolBar_MainActivity);
+                setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
+                toolbar.setTitle(MainActivity.actualTime);
+                this.setSupportActionBar(toolbar);
+                String appPackageName = "kodman.timesheetapp";
+
+                //Action for Share
+                try {
+                    startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse("market://details?id=" + appPackageName)));
+                } catch (android.content.ActivityNotFoundException anfe) {
+                    startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse("https://play.google.com/store/apps/details?id=" + appPackageName)));
+                }
+                //   Toast.makeText(this, "Share", Toast.LENGTH_SHORT).show();
+                return true;
+        }
+        return super.onOptionsItemSelected(item);
+    }
+
+
+    //action for Screen Email
+    private void openFragmentExport() {
+        final String USER_NAME_PREFERENCES = "user_name_sp";
+        final String USER_NAME = "name";
+
+        // save user name, to set name from *.csv file
+        String userName = mCredential.getSelectedAccountName();
+        SharedPreferences sPrefUserName;
+
+        try {
+            sPrefUserName = getSharedPreferences(USER_NAME_PREFERENCES, Context.MODE_PRIVATE);
+            if (sPrefUserName.contains(USER_NAME)) {
+                if (!sPrefUserName.getString(USER_NAME, "").equals(userName)) {
+                    SharedPreferences.Editor editor = sPrefUserName.edit();
+                    editor.clear();
+                    editor.putString(USER_NAME, userName);
+                    editor.apply();
+                }
+            }
+        } catch (Resources.NotFoundException e) {
+            e.printStackTrace();
+        }
+
+        // open FragmentExport
+        this.setContentView(R.layout.activity_main_fragment);
+        FragmentTransaction fragmentTransaction = getFragmentManager().beginTransaction();
+        fragmentTransaction.add(R.id.fragmentContainer, new FragmentExport()).commit();
+
+    }
+
+
+    //------For event onClick button Clean Log --
+    public void clickCleanLog(View v) {
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        builder.setMessage(R.string.dialogCleanLog)
+                .setCancelable(false)
+                .setNegativeButton(R.string.no,
+                        new DialogInterface.OnClickListener() {
+                            public void onClick(DialogInterface dialog, int id) {
+                                dialog.cancel();
+                            }
+                        })
+                .setPositiveButton(R.string.yes, new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+
+                        MainActivity.this.listLogActivity.clear();
+                        clearLogActivityFromDB();
+                        dialog.cancel();
+                    }
+                });
+        AlertDialog dialog = builder.create();
+        dialog.show();
+    }
+
+    //Add from DB Activities in AcivityLog
+    private void readAcivitiesFromDB() {
+
+        DBHandler mDbHandler = new DBHandler(getApplicationContext());
+
+        Cursor cursor = mDbHandler.readAllEventsFromDB();
+        int count = cursor.getColumnCount();
+        String msg = "CalendarTable= ";
+        for (int i = 0; i < count; i++) {
+            msg += " | " + cursor.getColumnName(i);
+        }
+        Log.d(TAG, "Count = " + count + "   : " + msg);
+
+        while (cursor.moveToNext()) {
+
+            String id = cursor.getString(cursor.getColumnIndex("_id"));
+            String name = cursor.getString(cursor.getColumnIndex("eventName"));
+
+            long startTime = Long.parseLong(cursor.getString(cursor.getColumnIndex("dateTimeStart")));
+            long endTime;
+            try {
+                endTime = Long.parseLong(cursor.getString(cursor.getColumnIndex("dateTimeEnd")));
+            } catch (Exception ex) {
+                endTime = 0;
+            }
+            if (startTime == endTime) {
+                endTime = 0;
+            }
+            int color = Integer.parseInt(cursor.getString(cursor.getColumnIndex("color")));
+
+            //Log.d(TAG, "Id:" + id + "Name = " + name + "Color = " + color + "start = " + startTime + "end = " + endTime);
+
+            ButtonActivity ba = new ButtonActivity(name, color);
+            ba.ms = startTime;
+            ba.endTime = endTime;
+            ba.setDatetime();
+            this.listLogActivity.add(0, ba);
+        }
+        cursor.close();
+        mDbHandler.closeDB();
+    }
+
+    //Clear all from  DataBase
+    private void clearLogActivityFromDB() {
+        DBHandler mDbHandler = new DBHandler(getApplicationContext());
+        mDbHandler.clearEventsTable();
+        Log.d(TAG, "Clean DB");
+        SharedPreferences.Editor editor = sPref.edit();
+        editor.putBoolean("temp", true);
+        editor.commit();
+        mDbHandler.closeDB();
+    }
+
+
+    @Override
+    public void onResume() {
+        super.onResume();
+    }
+
+    @Override
+    public void onPause() {
+        super.onPause();
+        SharedPreferences.Editor ed = sPref.edit();
+
+        //Log.d(TAG, "DESTROY SIZE=" + size);
+        ed.putInt("sizeListActivity", this.listActivity.size());
+        for (int i = 0; i < this.listActivity.size(); i++) {
+            ed.putString("buttonAcivityName" + i, this.listActivity.get(i).name);
+            ed.putInt("buttonAcivityColor" + i, this.listActivity.get(i).color);
+          //  Log.d(TAG,"SAVES "+listActivity.get(i).name);
+        }
+
+        ed.putInt("sizeListSubactivity", this.listSubactivity.size());
+        for (int i = 0; i < this.listSubactivity.size(); i++) {
+            ed.putString("buttonSubacivityName" + i, this.listSubactivity.get(i).name);
+            ed.putInt("buttonSubacivityColor" + i, this.listSubactivity.get(i).color);
+           // Log.d(TAG,"SAVES "+listActivity.get(i).name);
+        }
+        ed.commit();
+        this.listActivity.clear();
+
+    }
+    @Override
+    public void onDestroy() {
+        Log.d(TAG,"OnDestroy");
+        /**
+         * Add in shareds allowable activities
+         */
+
+        super.onDestroy();
+    }
+//+++++++++++++++++++++++++++++++++++++UTIlits===========================================================
+    //###########################################################################################
+
+    //change  heigth  ListView
+    public static void getListViewSize(ListView myListView) {
+        ListAdapter myListAdapter = myListView.getAdapter();
+        if (myListAdapter == null) {
+            //do nothing return null
+            return;
+        }
+        //set listAdapter in loop for getting final size
+        int totalHeight = 0;
+        for (int size = 0; size < myListAdapter.getCount(); size++) {
+            View listItem = myListAdapter.getView(size, null, myListView);
+            listItem.measure(0, 0);
+            totalHeight += listItem.getMeasuredHeight();
+        }
+        //setting listview item in adapter
+        ViewGroup.LayoutParams params = myListView.getLayoutParams();
+        params.height = totalHeight + (myListView.getDividerHeight() * (myListAdapter.getCount() - 1));
+        myListView.setLayoutParams(params);
+        // print height of adapter on log
+        Log.i("height of listItem:", String.valueOf(totalHeight));
+    }
+
+    //  for create default List Activities
+    private void createList() {
+        this.listActivity.add(new ButtonActivity(res.getString(R.string.nothing)));
+        this.listActivity.add(new ButtonActivity(res.getString(R.string.relaxing)));
+        this.listActivity.add(new ButtonActivity(res.getString(R.string.sleeping)));
+        this.listActivity.add(new ButtonActivity(res.getString(R.string.working)));
+        this.listActivity.add(new ButtonActivity(res.getString(R.string.exercising)));
+        this.listActivity.add(new ButtonActivity(res.getString(R.string.reading)));
+        this.listActivity.add(new ButtonActivity(res.getString(R.string.travelling)));
+        this.listActivity.add(new ButtonActivity(res.getString(R.string.eating)));
+        this.listActivity.add(new ButtonActivity(res.getString(R.string.washing)));
+    }
+
+    //  for create default List Subactivities
+    private void createListSubactivities() {
+
+        for(int i=1;i<10;i++)
+        {
+            this.listSubactivity.add(new ButtonActivity("Sub "+i,Color.BLUE));
+
+        }
+
+
+    }
+
+    public static int getContrastColor(int color) {
+        // Counting the perceptive luminance - human eye favors green color...
+        double a = 1 - (0.299 * Color.red(color) + 0.587 * Color.green(color) + 0.114 * Color.blue(color)) / 255;
+        return a < 0.5 ? Color.BLACK : Color.WHITE;
+    }
+
+    //------for work with Google Diary--------------------------------------------------------------------------------
+    //-----------------------------------------------------------------------------------------------------------------
+    //#################################################################################################################
     GoogleAccountCredential mCredential;
     String mCalendarId;
     String mCalendarData[] = {null, null};
@@ -823,129 +2102,8 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
 
     //----------------End Block For Google Service------------------------------------------------------------
 
+    //++++++++++++++++++++++++++++++++       END ==========================================
 
-  private void addActivities()
-  {
-      LinearLayout LLActivities=this.findViewById(R.id.LLActivities);
-      if(LLActivities.getChildCount()>0)
-          LLActivities.removeAllViews();
-
-      LinearLayout LLSettings=this.findViewById(R.id.LLSettings);
-
-      LinearLayout.LayoutParams linLayoutParam = new LinearLayout.LayoutParams(LinearLayout.LayoutParams.WRAP_CONTENT, LinearLayout.LayoutParams.MATCH_PARENT);
-      final Button btnNew = new Button(this);
-
-      //assing listener for the Button
-      btnNew.setOnClickListener(new View.OnClickListener() {
-          @Override
-          public void onClick(View v) {
-              MainActivity.this.clickNewButton(v,true);
-          }
-      });
-
-      //add Last Button with title "+New"
-
-      btnNew.setText(R.string.newButton);
-      //btnNew.setWidth(100);
-      btnNew.setLayoutParams(linLayoutParam);
-      LLActivities.addView(btnNew);
-
-      linLayoutParam = new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.MATCH_PARENT);
-      linLayoutParam.setMargins(40,10,40,10);
-      for (int i = 0; i < this.listActivity.size(); i++) {
-
-
-          final ButtonActivity ba = this.listActivity.get(i);
-          final Button btn = new Button(this);
-
-          //assing listeners for Buttons
-          btn.setOnClickListener(new View.OnClickListener() {
-              @Override
-              public void onClick(View v) {
-
-                  changeButtonAcivity(ba,btn,true);
-
-              }
-          });
-          btn.setText(ba.name);
-          btn.setBackgroundColor(ba.getColor(ba.name));
-          btn.setTextColor(getContrastColor(ba.color));
-          btn.setLayoutParams(linLayoutParam);
-          LLActivities.addView(btn);
-
-
-      }
-LLSettings.invalidate();
-
-  }
-private void addSubactivities()
-{
-    LinearLayout LLSubactivities=this.findViewById(R.id.LLSubactivities);
-    if(LLSubactivities.getChildCount()>0)
-        LLSubactivities.removeAllViews();
-
-    LinearLayout LLSettings=this.findViewById(R.id.LLSettings);
-
-    LinearLayout.LayoutParams linLayoutParam = new LinearLayout.LayoutParams(LinearLayout.LayoutParams.WRAP_CONTENT, LinearLayout.LayoutParams.MATCH_PARENT);
-    final Button btnNew = new Button(this);
-
-    //assing listener for the Button
-    btnNew.setOnClickListener(new View.OnClickListener() {
-        @Override
-        public void onClick(View v) {
-            MainActivity.this.clickNewButton(v,false);
-        }
-    });
-
-    //add Last Button with title "+New"
-
-    btnNew.setText(R.string.newButton);
-    //btnNew.setWidth(100);
-    btnNew.setLayoutParams(linLayoutParam);
-    LLSubactivities.addView(btnNew);
-
-    linLayoutParam = new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.MATCH_PARENT);
-    linLayoutParam.setMargins(40,10,40,10);
-    for (int i = 0; i < this.listSubactivity.size(); i++) {
-
-
-        final ButtonActivity ba = this.listSubactivity.get(i);
-        final Button btn = new Button(this);
-
-        //assing listeners for Buttons
-        btn.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-
-                changeButtonAcivity(ba,btn,false);
-
-            }
-        });
-        btn.setText(ba.name);
-        btn.setBackgroundColor(ba.getColor(ba.name));
-        btn.setTextColor(getContrastColor(ba.color));
-        btn.setLayoutParams(linLayoutParam);
-        //btn.requestLayout()
-        //btn.setWidth(100);
-        //Insert the Button in defined position
-
-        // GridLayout.LayoutParams gridLayoutParam = new GridLayout.LayoutParams(row, column);
-        LLSubactivities.addView(btn);
-        Log.d(TAG,"ADD "+LLSubactivities.getChildCount());
-        // GridLayout.LayoutParams lParams = (GridLayout.LayoutParams) btn.getLayoutParams();
-        // lParams.setMargins(3, 0, 3, 10);
-    }
-    LLSettings.invalidate();
-    // if (GL.getChildCount() >= 21) return;
-
-
-    // btn.setWidth(w/3-20);
-
-    // GridLayout.Spec row = GridLayout.spec(rowIndex, 1);
-    // GridLayout.Spec column = GridLayout.spec(columnIndex, 1);
-    //  GridLayout.LayoutParams gridLayoutParam = new GridLayout.LayoutParams(row, column);
-    // GL.addView(btn, gridLayoutParam);
-}
     //add widgets to GridLayoutSetting
     /*
     private void createGridLayoutSettings() {
@@ -1021,1031 +2179,5 @@ private void addSubactivities()
 
     }
 */
-    //For changer or remove Activity
-    private void changeButtonAcivity(final ButtonActivity ba,final Button btn,final boolean act)
-    {
-
-        AlertDialog.Builder builder = new AlertDialog.Builder(this,android.R.style.Theme_Holo_Light_Dialog);
-
-        LayoutInflater inflater = MainActivity.this.getLayoutInflater();
-        final View view = inflater.inflate(R.layout.dialog, null);
-        final EditText editText = view.findViewById(R.id.editTextDialog);
-        editText.setText(ba.name);
-
-        builder.setView(view)
-                .setPositiveButton("Change this acivity", new DialogInterface.OnClickListener() {
-                    @Override
-                    public void onClick(DialogInterface dialog, int id) {
-
-
-                        String nameButton = editText.getText().toString();
-                        //Checking max characters
-
-
-                        //checking the button for uniqueness
-                        if (!MainActivity.this.uniqueButtonActivity(nameButton,btn.getText().toString(),false,act))
-                               {
-                            Toast.makeText(MainActivity.this, "Activity with this name exists",
-                                    Toast.LENGTH_SHORT).show();
-                            dialog.dismiss();
-                            changeButtonAcivity( ba, btn,act);
-                        } else
-                            {
-                                if(nameButton.length()>25)
-                                    nameButton= nameButton.substring(0,24);
-                            ba.name = nameButton;
-                            //add and set color for the button
-                            setColorFromDialog(ba,false,act);
-                            dialog.cancel();
-
-                        }
-                    }
-                })
-                .setNeutralButton("Cancel", new DialogInterface.OnClickListener() {
-                    public void onClick(DialogInterface dialog, int id) {
-                        dialog.cancel();
-                    }
-                })
-                .setNegativeButton(res.getText(R.string.delete),new DialogInterface.OnClickListener(){
-                            public void onClick(DialogInterface dialog, int id) {
-
-                                if(act)
-                                MainActivity.this.listActivity.remove(ba);
-                                else
-                                    MainActivity.this.listSubactivity.remove(ba);
-                               // createGridLayoutSettings();
-                                dialog.cancel();
-                            }
-        });
-
-        AlertDialog dialog = builder.create();
-        dialog.setCancelable(true);
-        dialog.show();
-    }
-
-
-    //------For click on button +New
-    private void clickNewButton(final View v,final boolean act) {
-
-      //  Toast.makeText(MainActivity.this, "Click New Button",
-      //          Toast.LENGTH_SHORT).show();
-        AlertDialog.Builder builder = new AlertDialog.Builder(this);
-        builder.setMessage(R.string.dialogNewButton);
-        LayoutInflater inflater = MainActivity.this.getLayoutInflater();
-        final View view = inflater.inflate(R.layout.dialog, null);
-        final EditText editText = view.findViewById(R.id.editTextDialog);
-        if(act)
-            editText.setText(R.string.newActivity);
-        else
-            editText.setText(R.string.newSubactivity);
-
-        builder.setView(view)
-                .setPositiveButton("Create new activity", new DialogInterface.OnClickListener() {
-                    @Override
-                    public void onClick(DialogInterface dialog, int id) {
-
-                        EditText editText = view.findViewById(R.id.editTextDialog);
-                        String nameButton = editText.getText().toString();
-
-                        //checking the button for uniqueness
-                        if (!MainActivity.this.uniqueButtonActivity(nameButton,((Button)v).getText().toString(),true,act)) {
-                            Toast.makeText(MainActivity.this, "Activity with this name exists",
-                                    Toast.LENGTH_SHORT).show();
-                            dialog.dismiss();
-                            clickNewButton(v,act);
-                        } else {
-                            final ButtonActivity ba = new ButtonActivity(nameButton);
-                            if(nameButton.length()>25)
-                            {
-                                nameButton= nameButton.substring(0,24);
-                            }
-                            ba.name = nameButton;
-                            //add and set color for the button
-                            setColorFromDialog(ba,true,act);
-
-                            dialog.dismiss();
-                           // Toast.makeText(MainActivity.this, "create",
-                           //         Toast.LENGTH_SHORT).show();
-                        }
-                    }
-                })
-                .setNeutralButton("Cancel", new DialogInterface.OnClickListener() {
-                    public void onClick(DialogInterface dialog, int id) {
-                        dialog.dismiss();
-                    }
-                });
-
-        AlertDialog dialog = builder.create();
-        dialog.setCancelable(true);
-        dialog.show();
-    }
-
-
-    //--------------------for color---------
-    private void setColorFromDialog(final ButtonActivity ba,final boolean add,final boolean act ) {
-        //set default color
-        ba.color = Color.RED;
-
-        //create Alert for the set colour
-        AlertDialog.Builder builder = new AlertDialog.Builder(this);
-        builder.setMessage("Choise the color");
-        LayoutInflater inflater = MainActivity.this.getLayoutInflater();
-        final View view = inflater.inflate(R.layout.color_blender, null);
-        builder.setView(view);
-
-        final SeekBar fSeekBar = view.findViewById(R.id.fSeekBar);
-        final SeekBar sSeekBar = view.findViewById(R.id.sSeekBar);
-
-        final ImageView sColor = view.findViewById(R.id.imageView4);
-        final ImageView fColor = view.findViewById(R.id.imageView3);
-        final ImageView rColor = view.findViewById(R.id.imageView5);
-
-
-        SeekBar.OnSeekBarChangeListener listener = new SeekBar.OnSeekBarChangeListener() {
-
-            @Override
-            public void onProgressChanged(@NonNull SeekBar seekBar, int progress, boolean fromUser) {
-                //set colors for  widgets
-                int color1[] = calcColor(fSeekBar.getProgress());
-                int color2[] = calcColor(sSeekBar.getProgress());
-                int colorR[] = calcColor(color1, color2);
-                switch (seekBar.getId()) {
-                    case R.id.fSeekBar: {
-                        fColor.setBackgroundColor(Color.rgb(color1[0], color1[1], color1[2]));
-                        break;
-                    }
-                    case R.id.sSeekBar: {
-                        sColor.setBackgroundColor(Color.rgb(color2[0], color2[1], color2[2]));
-                        break;
-                    }
-                }
-                fColor.invalidate();
-                rColor.setBackgroundColor(Color.rgb(colorR[0], colorR[1], colorR[2]));
-                rColor.invalidate();
-                ba.color = Color.rgb(colorR[0], colorR[1], colorR[2]);
-                Toast.makeText(MainActivity.this, "returnColor =", Toast.LENGTH_SHORT).show();
-
-            }
-
-            @Override
-            public void onStartTrackingTouch(SeekBar seekBar) {
-
-            }
-
-            @Override
-            public void onStopTrackingTouch(SeekBar seekBar) {
-
-            }
-
-        };
-
-        fSeekBar.setOnSeekBarChangeListener(listener);
-        sSeekBar.setOnSeekBarChangeListener(listener);
-
-        builder.setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
-            @Override
-            public void onClick(DialogInterface dialog, int which) {
-                ba.color = Color.WHITE;
-                dialog.dismiss();
-            }
-        });
-
-        builder.setPositiveButton("Save", new DialogInterface.OnClickListener() {
-            @Override
-            public void onClick(DialogInterface dialog, int which) {
-
-                //if new Activity to add in list
-                //else only changing her
-                if(add)
-                {
-                    if(act)
-                    {
-                        MainActivity.this.listActivity.add(ba);
-
-                        MainActivity.this.addActivities();
-                    }
-                    else
-                        {
-                            MainActivity.this.listSubactivity.add(ba);
-
-                            MainActivity.this.addSubactivities();
-                        }
-                }
-
-                dialog.dismiss();
-            }
-        });
-
-        Dialog dialog = builder.create();
-        dialog.setCancelable(true);
-        dialog.show();
-    }
-
-
-    int Red, Green, Blue;
-
-
-    //calculate the color values
-    public int[] calcColor(int progress) {
-        if (progress == 0) {
-            Red = 255;
-            Green = 0;
-            Blue = 0;
-        }
-        if (progress > 0 & progress <= 42) {
-            Red = 255;
-            Green = progress * 6 - 1;
-            Blue = 0;
-        } else if (progress > 42 & progress <= 84) {
-            Red = 256 - (progress - 42) * 6 - 1;
-            Green = 255;
-            Blue = 0;
-        } else if (progress > 84 & progress <= 126) {
-            Red = 0;
-            Green = 255;
-            Blue = (progress - 84) * 6 - 1;
-        } else if (progress > 126 & progress <= 168) {
-            Red = 0;
-            Green = 256 - (progress - 126) * 6 - 1;
-            Blue = 255;
-        } else if (progress > 168 & progress <= 210) {
-            Red = (progress - 168) * 6 - 1;
-            Green = 0;
-            Blue = 255;
-        } else if (progress > 210 & progress <= 252) {
-            Red = 255;
-            Green = 0;
-            Blue = 256 - (progress - 210) * 6 - 1;
-        }
-        int[] color = {Red, Green, Blue};
-        return color;
-    }
-
-//mix colors
-    public int[] calcColor(int[] color1, int[] color2) {
-        int[] color = {(color1[0] + color2[0]) / 2, (color1[1] + color2[1]) / 2, (color1[2] + color2[2]) / 2};
-        return color;
-    }
-    /////------End color----------
-
-
-    // learn the uniqueness of the name
-    private boolean uniqueButtonActivity(String nameActivity,String nameButton,boolean newButton,boolean act) {
-        int count=0;
-
-        if(act)
-        {
-
-        }
-
-        for (ButtonActivity ba : MainActivity.this.listActivity) {
-            if (ba.name.toUpperCase().equals(nameActivity.toUpperCase()))
-            {
-                if(count==1)
-                    return false;
-                if(newButton)
-                    return false;
-                else
-                if (nameActivity.toUpperCase().equals(nameActivity.toUpperCase()))
-                    count++;
-
-            }
-        }
-        return true;
-    }
-
-    //add  widgets with available ativities to Home Screen
-    // and assing listeners for their
-    private void addToGridViewButtonsActivity() {
-        GridView gv = this.findViewById(R.id.gridView);
-        ArrayAdapter<ButtonActivity> adapter =
-                new ArrayAdapter<ButtonActivity>(this, R.layout.gridview_item,
-                        R.id.btnItem, this.listActivity) {
-                    @Override
-                    public View getView(int position,
-                                        View convertView, ViewGroup parent) {
-                        View view = super.getView(
-                                position, convertView, parent);
-                        final ButtonActivity ba = this.getItem(position);
-                        Button btn = view.findViewById(R.id.btnItem);
-                        btn.setBackgroundColor(ba.getColor(ba.name));
-                        btn.setText(ba.name);
-                        btn.setLines(1);
-                        btn.setTextColor(getContrastColor(ba.color));
-                        btn.setOnClickListener(new View.OnClickListener() {
-                            @Override
-                            public void onClick(View v) {
-                                if (!mIsCreateAvailable) {
-                                    Toast.makeText(MainActivity.this, "Please wait.Previous operation is performed", Toast.LENGTH_SHORT).show();
-                                    return;
-                                }
-                                Date date = new Date();
-                                ButtonActivity BA = new ButtonActivity(ba.name);
-                                BA.date = new SimpleDateFormat("dd.MM.yyyy").format(date);
-                                BA.time = new SimpleDateFormat("HH:mm:ss").format(date);
-                                ms = System.currentTimeMillis();
-                                //Start Time for activity
-                                BA.ms = ms;
-                                BA.color = ba.color;
-
-                                //add formed activity
-                                MainActivity.this.listLogActivity.add(0, BA);
-
-                                MainActivity.this.adapterListLogActivity.notifyDataSetChanged();
-                                MainActivity.this.lvActivity.setAdapter(MainActivity.this.adapterListLogActivity);
-
-                                getListViewSize(MainActivity.this.lvActivity);
-                                MainActivity.this.addGoogleDiary(ba);
-
-                            }
-                        });
-
-                        return view;
-                    }
-                };
-        gv.setAdapter(adapter);
-    }
-
-    //get list activities from Log
-    public ArrayList<ButtonActivity> getListLogActivity() {
-
-        return MainActivity.this.listLogActivity;
-    }
-
-    @Override
-    protected void onCreate(Bundle savedInstanceState) {
-        //Log.d(TAG, "onCreate");
-
-        super.onCreate(savedInstanceState);
-        mShared = getApplicationContext().getSharedPreferences("prefs", MODE_PRIVATE);
-        mSharedEditor = mShared.edit();
-        setContentView(R.layout.activity_main);
-        setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
-        res = this.getResources();
-        toolbar = this.findViewById(R.id.toolBar_MainActivity);
-        this.setSupportActionBar(toolbar);
-
-        //---Read from SharedPreferences ------------
-        sPref = this.getPreferences(MODE_PRIVATE);
-        // Name & Calendar User
-        myName = sPref.getString("myName", "");
-        nameCalendar = sPref.getString("myCalendar", "");
-
-
-        //Log.d(TAG, "OnCREATE Initialzed list Activities");
-        //Initialzed list Activities
-        if (sPref.contains("sizeListActivity") && this.listActivity.size() == 0) {
-
-
-            int size = sPref.getInt("sizeListActivity", 0);
-
-            Log.d(TAG, " Initialzed list Activities From shareds =" + size);
-            //   this.listActivity=new ArrayList<>();
-            for (int i = 0; i < size; i++) {
-                this.listActivity.add(new ButtonActivity
-                        (sPref.getString("buttonAcivityName" + i, ""),
-                                sPref.getInt("buttonAcivityColor" + i, res.getColor(R.color.colorText))));
-
-         Log.d(TAG,"========== Button in  = "+this.listActivity.get(i).name);
-            }
-
-
-        } else {
-            this.createList();
-
-        }
-        if (this.listActivity.size() == 0)
-        {
-            this.createList();
-            Log.d(TAG,"============= DEFAULT listActivities");
-        }
-
-        if(this.listSubactivity==null||this.listSubactivity.size()==0)
-        {
-
-            this.createListSubactivities();
-            Log.d(TAG," createSubactivities "+this.listSubactivity.size());
-        }
-        //add  widgets with available ativities to Home Screen
-        // and assing listeners for their
-        this.addToGridViewButtonsActivity();
-
-        // Initialize credentials and service object.
-        mCredential = GoogleAccountCredential.usingOAuth2(
-                getApplicationContext(), Arrays.asList(SCOPES))
-                .setBackOff(new ExponentialBackOff());
-        callCalendarApi(3);
-
-//Read From DataBase
-        readAcivitiesFromDB();
-        this.createActivityLog();
-/*
-For actual time, update every 1000 ms
- */
-        new java.util.Timer().schedule
-                (
-                        new TimerTask() {
-                            public void run() {
-                                if (toolbar == null) return;
-                                toolbar.post(new Runnable() {
-                                    @Override
-                                    public void run() {
-
-                                        Date curDate = new Date();
-                                        String time = new SimpleDateFormat("HH:mm:ss").format(curDate);
-                                        MainActivity.actualTime = time;
-                                        toolbar.setTitle(time);
-                                        if (MainActivity.this.listLogActivity.size() > 0 && MainActivity.this.status == 0) {
-                                            long timeDiff = System.currentTimeMillis() - MainActivity.this.listLogActivity.get(0).ms;
-                                             time=timeDiff / 60000+":" +(timeDiff % 60000) / 1000+ " mm:ss";
-                                            ((TextView) MainActivity.this.findViewById(R.id.tvLastLap)).setText(time);
-                                        }
-
-                                    }
-                                });
-                                // Log.d(TAG,"Timer Tick");
-                            }
-                        },
-                        0, 1000);
-
-
-    }
-
-    @Override
-    public void onDestroy() {
-        Log.d(TAG,"OnDestroy");
-        /**
-         * Add in shareds allowable activities
-         */
-        SharedPreferences.Editor ed = sPref.edit();
-
-        //Log.d(TAG, "DESTROY SIZE=" + size);
-        ed.putInt("sizeListActivity", this.listActivity.size());
-        for (int i = 0; i < this.listActivity.size(); i++) {
-            ed.putString("buttonAcivityName" + i, this.listActivity.get(i).name);
-            ed.putInt("buttonAcivityColor" + i, this.listActivity.get(i).color);
-            Log.d(TAG,"SAVES "+listActivity.get(i).name);
-        }
-        ed.commit();
-        this.listActivity.clear();
-        super.onDestroy();
-    }
-
-    //create Log Activity
-    //and assing listeners for widgets
-    private void createActivityLog() {
-        if (listActivity.size() == 0) return;
-
-        this.lvActivity = this.findViewById(R.id.lvActivity);
-
-        adapterListLogActivity = new ArrayAdapter<ButtonActivity>(this,
-                R.layout.list_item, R.id.tvForDate, listLogActivity) {
-            @Override
-            public View getView(int position,
-                                View convertView, ViewGroup parent) {
-
-                if (convertView == null) {
-                    convertView = getLayoutInflater().inflate(R.layout.list_item, parent, false);
-                }
-
-                View view = super.getView(position,
-                        convertView, parent);
-
-                final ButtonActivity ba = this.getItem(position);
-
-                TextView tvDate = view.
-                        findViewById(R.id.tvForDate);
-
-                TextView tvStartTime = view.
-                        findViewById(R.id.tvForStartTime);
-
-                tvStartTime.setOnClickListener(new View.OnClickListener() {
-                    @Override
-                    public void onClick(View v) {
-
-                       //Change start time for activity
-                        changeTimeActivity(ba);
-                    }
-                });
-
-
-                //fill in the data ListView
-                LinearLayout llForBA = view.
-                        findViewById(R.id.llForBA);
-
-                tvDate.setText(ba.date);
-                tvStartTime.setText(ba.time);
-                final String name = ba.name;
-                final Button btnA = new Button(MainActivity.this);
-                btnA.setLines(1);
-                btnA.setWidth(120);
-                btnA.setText(ba.name);
-                btnA.setBackgroundColor(ba.getColor(ba.name));
-                btnA.setTextColor(getContrastColor(ba.color));
-                btnA.setOnClickListener(new View.OnClickListener() {
-                    @Override
-                    public void onClick(View v) {
-                        Toast.makeText(MainActivity.this, "Click name= " + ba.name, Toast.LENGTH_SHORT).show();
-                        //method for change activity
-                        changeNameFromLogActivity(ba, btnA);
-                    }
-                });
-                if (llForBA.getChildCount() == 0)
-                    llForBA.addView(btnA);
-
-                return view;
-            }
-        };
-
-        this.adapterListLogActivity.setNotifyOnChange(true);
-        this.lvActivity.setAdapter(adapterListLogActivity);
-        Log.d(TAG, " start setListHeigth");
-        getListViewSize(lvActivity);
-
-    }
-
-    // changing the time for activity
-    private void changeTimeActivity(final ButtonActivity ba) {
-
-        final Date date = new Date();
-
-        final Date endDate = (ba.endTime == 0) ? new Date(System.currentTimeMillis()) : new Date(ba.endTime);
-        final Date startDate = new Date(ba.ms);
-        final TimePickerDialog TPD = new TimePickerDialog(this,android.R.style.Theme_Holo_Dialog,
-                null, startDate.getHours(), startDate.getMinutes(), true) {
-            @Override
-            public void onTimeChanged(TimePicker view,
-                                      int hour, int minute) {
-                long currentTime = System.currentTimeMillis();
-
-
-                date.setHours(hour);
-                date.setMinutes(minute);
-}
-        };
-
-        TPD.setButton(DialogInterface.BUTTON_POSITIVE,
-                "Save", new DialogInterface.
-                        OnClickListener() {
-                    @Override
-                    public void onClick(DialogInterface
-                                                dialog, int which) {
-                        int endHour = endDate.getHours();
-                        int endMinutes = endDate.getMinutes();
-
-                        int hour = date.getHours();
-                        int minute = date.getMinutes();
-
-                        int startHour = startDate.getHours();
-                        int startMinutes = startDate.getMinutes();
-
-                        Log.d(TAG, " start " + startHour + ":" + startMinutes +
-                                "  end " + endHour + ":" + endMinutes);
-                        //checking the time for correctness
-                        if (hour > endHour || (hour == endHour && minute > endMinutes) ||
-                                hour < startHour || (hour == startHour && minute < startMinutes)) {
-                            Toast.makeText(MainActivity.this, "The selected time is not valid for selection", Toast.LENGTH_SHORT).show();
-                            Toast.makeText(MainActivity.this, "start " + startHour + ":" + startMinutes +
-                                    "  end " + endHour + ":" + endMinutes, Toast.LENGTH_SHORT).show();
-
-                            dialog.dismiss();
-                            changeTimeActivity(ba);
-                        } else {
-                            date.setHours(hour);
-                            date.setMinutes(minute);
-                            Log.e("UPDATE!!", "sf");
-                            ba.time = new SimpleDateFormat("HH:mm:ss").format(date);
-                            ba.date = new SimpleDateFormat("dd.MM.yyyy").format(date);
-
-
-                            mUpdateTime = String.valueOf(ba.ms);
-                            ba.ms = date.getTime();
-                            mNewStartTime = String.valueOf(ba.ms);
-                            //Update Time in GoogleDiary
-                            updateGoogleDiary();
-                            //Change LogAcivity
-                            MainActivity.this.adapterListLogActivity.notifyDataSetChanged();
-                            MainActivity.this.lvActivity.setAdapter(MainActivity.this.adapterListLogActivity);
-
-                            //  createActivityLog();
-                        }
-                    }
-                });
-
-        TPD.setButton(DialogInterface.BUTTON_NEGATIVE,
-                "Cancel", new DialogInterface.
-                        OnClickListener() {
-                    @Override
-                    public void onClick(DialogInterface
-                                                dialog, int which) {
-
-
-                    }
-                });
-        TPD.show();
-
-    }
-
-    //initialize dialog for Buttons from Activity Log
-    private void changeNameFromLogActivity(final ButtonActivity ba, final Button btn) {
-
-
-        int size = MainActivity.this.listActivity.size();
-        final String[] itemsAcivities = new String[size];
-        for (int i = 0; i < size; i++) {
-            itemsAcivities[i] = MainActivity.this.listActivity.get(i).name;
-        }
-
-        AlertDialog.Builder builder = new AlertDialog.Builder(this);
-        builder.setTitle(R.string.MakeChoice);
-        LayoutInflater inflater = MainActivity.this.getLayoutInflater();
-
-
-        View view = inflater.inflate(R.layout.dialog_with_list, null);
-
-        final Spinner spinner = view.findViewById(R.id.spinnerAcivityLog);
-        ArrayAdapter<String> adapter =
-                new ArrayAdapter<String>(this, android.R.layout.simple_spinner_dropdown_item,
-                         itemsAcivities);
-
-        spinner.setAdapter(adapter);
-
-
-        //helper class for data transfer
-        class Swap {
-            int flag = 0;
-            int color;
-        }
-        final Swap s = new Swap();
-
-        adapter.setDropDownViewResource(android.R.layout.
-                simple_spinner_dropdown_item);
-
-//assign listeners
-        spinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
-
-            @Override
-            public void onItemSelected(AdapterView<?> parent,
-                                       View view, int position, long id) {
-
-                if (s.flag == 0) {
-                    for (int i = 0; i < parent.getCount(); i++) {
-                        if (itemsAcivities[i].toUpperCase().equals(ba.name.toUpperCase())) {
-                            parent.setSelection(i);
-                            break;
-                        }
-
-                    }
-                    s.flag = 1;
-                } else {
-                    ba.name = itemsAcivities[position];
-                    s.color = listActivity.get(position).color;
-                }
-
-            }
-
-            @Override
-            public void onNothingSelected(AdapterView<?>
-                                                  parent) {
-
-            }
-        });
-
-
-        builder.setView(view)
-                .setPositiveButton("Change", new DialogInterface.OnClickListener() {
-                    @Override
-                    public void onClick(DialogInterface dialog, int id) {
-                        // ba.name=tvButtonAcivity.getText().toString();
-                        btn.setText(ba.name);
-                        ba.color = s.color;
-                        btn.setBackgroundColor(ba.color);
-                        mNewColor = ba.color;
-                        mNewSummary = ba.name;
-                        mUpdateTime = String.valueOf(ba.ms);
-                        callCalendarApi(4);
-                        btn.setTextColor(getContrastColor(ba.color));
-
-                        createActivityLog();
-                        Toast.makeText(MainActivity.this, "Change" + spinner.getItemAtPosition(0).toString() + "now Name=" + ba.name, Toast.LENGTH_SHORT).show();
-
-                    }
-                })
-                .setNeutralButton("Cancel", new DialogInterface.OnClickListener() {
-                    public void onClick(DialogInterface dialog, int id) {
-                        ba.name = btn.getText().toString();
-                        dialog.dismiss();
-                    }
-                })
-                .setNegativeButton("Delete", new DialogInterface.OnClickListener() {
-                    public void onClick(DialogInterface dialog, int id) {
-                        AlertDialog.Builder bldr = new AlertDialog.Builder(MainActivity.this);
-                        bldr.setMessage(res.getString(R.string.delete) + "?")
-                                .setCancelable(false)
-                                .setPositiveButton(R.string.yes,
-                                        new DialogInterface.OnClickListener() {
-                                            public void onClick(DialogInterface dlg,
-                                                                int id) {
-                                                mDeleteTime = String.valueOf(ba.ms);
-                                                callCalendarApi(0);
-                                                MainActivity.this.listLogActivity.remove(ba);
-                                                MainActivity.this.createActivityLog();
-                                                dlg.cancel();
-                                            }
-                                        })
-
-                                .setNegativeButton(R.string.no,
-                                        new DialogInterface.OnClickListener() {
-                                            public void onClick(DialogInterface dlg,
-                                                                int id) {
-                                                dlg.cancel();
-                                            }
-                                        });
-
-                        bldr.create().show();
-                        dialog.dismiss();
-                    }
-                });
-        AlertDialog dialog = builder.create();
-        dialog.setCancelable(true);
-        dialog.show();
-    }
-
-    //change  heigth  ListView
-    public static void getListViewSize(ListView myListView) {
-        ListAdapter myListAdapter = myListView.getAdapter();
-        if (myListAdapter == null) {
-            //do nothing return null
-            return;
-        }
-        //set listAdapter in loop for getting final size
-        int totalHeight = 0;
-        for (int size = 0; size < myListAdapter.getCount(); size++) {
-            View listItem = myListAdapter.getView(size, null, myListView);
-            listItem.measure(0, 0);
-            totalHeight += listItem.getMeasuredHeight();
-        }
-        //setting listview item in adapter
-        ViewGroup.LayoutParams params = myListView.getLayoutParams();
-        params.height = totalHeight + (myListView.getDividerHeight() * (myListAdapter.getCount() - 1));
-        myListView.setLayoutParams(params);
-        // print height of adapter on log
-        Log.i("height of listItem:", String.valueOf(totalHeight));
-    }
-
-
-
-    //Create menu for the toolbar
-    @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
-    @Override
-    public boolean onCreateOptionsMenu(Menu menu) {
-        this.getMenuInflater().inflate(R.menu.menu_toolbar, menu);
-        this.menu = menu;
-
-        //Change colour for selected icon
-        if (Build.VERSION.SDK_INT >= 21) {
-            for (int i = 0; i < menu.size(); i++) {
-                MenuItem mItem = this.menu.getItem(i);
-                Drawable icon = mItem.getIcon();
-                if (this.status == i)
-                    icon.setTint(getResources().getColor(R.color.colorActiveIcon));
-                else
-                    icon.setTint(getResources().getColor(R.color.colorNoActiveIcon));
-            }
-        }
-        return true;
-    }
-
-
-    //initialize widgets for Settings screen
-    private void createScreenSettings() {
-        this.setContentView(R.layout.screen_settings);
-        toolbar = this.findViewById(R.id.toolBar_Setting);
-        toolbar.setTitle(MainActivity.actualTime);
-        this.setSupportActionBar(toolbar);
-
-        //initialized layout  from available activities
-       // this.createGridLayoutSettings();
-        addActivities();
-        addSubactivities();
-        String name = sPref.getString("myCalendar", "");
-        EditText editTextCalendar = this.findViewById(R.id.editTextCalendar);
-        editTextCalendar.setText(MainActivity.nameCalendar);
-
-        EditText editTextName = this.findViewById(R.id.editTextName);
-        editTextName.setText(MainActivity.myName);
-
-    }
-
-
-
-    // Saved Data From Field MyName & My Calendar
-    public void clickSaveSettings(View view) {
-        sPref = this.getPreferences(MODE_PRIVATE);
-
-        EditText editTextName = this.findViewById(R.id.editTextName);
-        EditText editTextCalendar = this.findViewById(R.id.editTextCalendar);
-        Toast.makeText(this, "Click Save:" + nameCalendar + " MYName" + myName, Toast.LENGTH_SHORT).show();
-        nameCalendar = editTextCalendar.getText().toString();
-        myName = editTextName.getText().toString();
-        //validate fields
-        if (nameCalendar.equals("") || myName.equals("")) {
-            Toast.makeText(this, "Fill in all the fields ", Toast.LENGTH_SHORT).show();
-            return;
-        }
-        if (myName.length() > 40) {
-            nameCalendar = "";
-            Toast.makeText(this, "Maximum 40 characters", Toast.LENGTH_SHORT).show();
-            return;
-        }
-
-
-//Saved the data in SharedPreferences
-        SharedPreferences.Editor ed = sPref.edit();
-        ed.putString("myName", myName);
-        ed.putString("myCalendar", nameCalendar);
-        ed.commit();
-        Toast.makeText(this, "Click Save:" + nameCalendar + " Name :" + myName, Toast.LENGTH_SHORT).show();
-    }
-
-
-    //Action for menu
-    @Override
-    public boolean onOptionsItemSelected(MenuItem item) {
-        int id = item.getItemId();
-        switch (id) {
-            case R.id.action_home:
-                this.status = 0;
-                this.setContentView(R.layout.activity_main);
-                setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
-                toolbar = this.findViewById(R.id.toolBar_MainActivity);
-
-                toolbar.setTitle(MainActivity.actualTime);
-                this.setSupportActionBar(toolbar);
-                this.addToGridViewButtonsActivity();
-                MainActivity.this.lvActivity.setAdapter(MainActivity.this.adapterListLogActivity);
-                this.createActivityLog();
-
-                return true;
-            case R.id.action_edit_page:
-                this.status = 1;
-                this.setContentView(R.layout.activity_main_fragment);
-            FragmentTransaction fragmentTransaction = getFragmentManager().beginTransaction();
-            fragmentTransaction.add(R.id.fragmentContainer, new ScreenEditPage()).commit();
-            return true;
-            case R.id.action_settings:
-                this.status = 2;
-                createScreenSettings();
-                setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
-                return true;
-            case R.id.action_export:
-                this.status = 3;
-                //action for Screen Email
-                openFragmentExport();
-                setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
-                return true;
-
-
-            case R.id.action_share:
-                this.status = 4;
-                this.setContentView(R.layout.screen_share);
-                toolbar = this.findViewById(R.id.toolBar_MainActivity);
-                setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
-                toolbar.setTitle(MainActivity.actualTime);
-                this.setSupportActionBar(toolbar);
-                String appPackageName = "kodman.timesheetapp";
-
-                //Action for Share
-                try {
-                    startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse("market://details?id=" + appPackageName)));
-                } catch (android.content.ActivityNotFoundException anfe) {
-                    startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse("https://play.google.com/store/apps/details?id=" + appPackageName)));
-                }
-                //   Toast.makeText(this, "Share", Toast.LENGTH_SHORT).show();
-                return true;
-        }
-        return super.onOptionsItemSelected(item);
-    }
-
-
-    //action for Screen Email
-    private void openFragmentExport() {
-        final String USER_NAME_PREFERENCES = "user_name_sp";
-        final String USER_NAME = "name";
-
-        // save user name, to set name from *.csv file
-        String userName = mCredential.getSelectedAccountName();
-        SharedPreferences sPrefUserName;
-
-        try {
-            sPrefUserName = getSharedPreferences(USER_NAME_PREFERENCES, Context.MODE_PRIVATE);
-            if (sPrefUserName.contains(USER_NAME)) {
-                if (!sPrefUserName.getString(USER_NAME, "").equals(userName)) {
-                    SharedPreferences.Editor editor = sPrefUserName.edit();
-                    editor.clear();
-                    editor.putString(USER_NAME, userName);
-                    editor.apply();
-                }
-            }
-        } catch (Resources.NotFoundException e) {
-            e.printStackTrace();
-        }
-
-        // open FragmentExport
-        this.setContentView(R.layout.activity_main_fragment);
-        FragmentTransaction fragmentTransaction = getFragmentManager().beginTransaction();
-        fragmentTransaction.add(R.id.fragmentContainer, new FragmentExport()).commit();
-
-    }
-
-
-    //------For event onClick button Clean Log --
-    public void clickCleanLog(View v) {
-        AlertDialog.Builder builder = new AlertDialog.Builder(this);
-        builder.setMessage(R.string.dialogCleanLog)
-                .setCancelable(false)
-                .setNegativeButton(R.string.no,
-                        new DialogInterface.OnClickListener() {
-                            public void onClick(DialogInterface dialog, int id) {
-                                dialog.cancel();
-                            }
-                        })
-                .setPositiveButton(R.string.yes, new DialogInterface.OnClickListener() {
-                    @Override
-                    public void onClick(DialogInterface dialog, int which) {
-
-                        MainActivity.this.listLogActivity.clear();
-                        clearLogActivityFromDB();
-                        dialog.cancel();
-                    }
-                });
-        AlertDialog dialog = builder.create();
-        dialog.show();
-    }
-
-    //Add from DB Activities in AcivityLog
-    private void readAcivitiesFromDB() {
-
-        DBHandler mDbHandler = new DBHandler(getApplicationContext());
-
-        Cursor cursor = mDbHandler.readAllEventsFromDB();
-        int count = cursor.getColumnCount();
-        String msg = "CalendarTable= ";
-        for (int i = 0; i < count; i++) {
-            msg += " | " + cursor.getColumnName(i);
-        }
-        Log.d(TAG, "Count = " + count + "   : " + msg);
-
-        while (cursor.moveToNext()) {
-
-            String id = cursor.getString(cursor.getColumnIndex("_id"));
-            String name = cursor.getString(cursor.getColumnIndex("eventName"));
-
-            long startTime = Long.parseLong(cursor.getString(cursor.getColumnIndex("dateTimeStart")));
-            long endTime;
-            try {
-                endTime = Long.parseLong(cursor.getString(cursor.getColumnIndex("dateTimeEnd")));
-            } catch (Exception ex) {
-                endTime = 0;
-            }
-            if (startTime == endTime) {
-                endTime = 0;
-            }
-            int color = Integer.parseInt(cursor.getString(cursor.getColumnIndex("color")));
-
-            //Log.d(TAG, "Id:" + id + "Name = " + name + "Color = " + color + "start = " + startTime + "end = " + endTime);
-
-            ButtonActivity ba = new ButtonActivity(name, color);
-            ba.ms = startTime;
-            ba.endTime = endTime;
-            ba.setDatetime();
-            this.listLogActivity.add(0, ba);
-        }
-        cursor.close();
-        mDbHandler.closeDB();
-    }
-
-    //Clear all from  DataBase
-    private void clearLogActivityFromDB() {
-        DBHandler mDbHandler = new DBHandler(getApplicationContext());
-        mDbHandler.clearEventsTable();
-        Log.d(TAG, "Clean DB");
-        SharedPreferences.Editor editor = sPref.edit();
-        editor.putBoolean("temp", true);
-        editor.commit();
-        mDbHandler.closeDB();
-    }
-
-
-    @Override
-    public void onResume() {
-        super.onResume();
-    }
-
-    @Override
-    public void onPause() {
-        super.onPause();
-
-    }
 
 }
