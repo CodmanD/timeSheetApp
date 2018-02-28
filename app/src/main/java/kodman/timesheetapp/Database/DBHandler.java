@@ -16,7 +16,8 @@ public class DBHandler {
         mContext = context;
     }
     //write one event to local database
-    public void writeOneEventToDB(String eventName, String calendarId, String eventId, String endTime, String startTime, int color, int deleted, int synced) {
+    public void writeOneEventToDB(String eventName, String calendarId, String eventId,
+                                  String endTime, String startTime, int color, int deleted, int synced) {
         dbHelper = new DBHelper(mContext);
         db = dbHelper.getWritableDatabase();
         ContentValues cv = new ContentValues();
@@ -28,6 +29,29 @@ public class DBHandler {
         cv.put("color", color);
         cv.put("deleted", deleted);
         cv.put("synced", synced);
+        //cv.put("subName", subName);
+        //cv.put("subColor", subColor);
+        db.insert("calendarTable", null, cv);
+        dbHelper.close();
+    }
+    //write one event to local database
+    public void writeEventWithSubToDB(String eventName, String calendarId, String eventId,String endTime,
+                                      String startTime, int color, int deleted, int synced,String subName,
+                                      int subColor,String notes) {
+        dbHelper = new DBHelper(mContext);
+        db = dbHelper.getWritableDatabase();
+        ContentValues cv = new ContentValues();
+        cv.put("eventId", eventId);
+        cv.put("calendarId", calendarId);
+        cv.put("eventName", eventName);
+        cv.put("dateTimeStart", startTime);
+        cv.put("dateTimeEnd", endTime);
+        cv.put("color", color);
+        cv.put("deleted", deleted);
+        cv.put("synced", synced);
+        cv.put("subName", subName);
+        cv.put("subColor", subColor);
+        cv.put("notes", notes);
         db.insert("calendarTable", null, cv);
         dbHelper.close();
     }
@@ -124,6 +148,25 @@ public class DBHandler {
         db.execSQL("UPDATE calendarTable SET eventName = '" + newSummary + "' WHERE dateTimeStart = '" + dateTimeStart + "'");
         db.execSQL("UPDATE calendarTable SET color = '" + newColor + "' WHERE dateTimeStart = '" + dateTimeStart + "'");
         db.execSQL("UPDATE calendarTable SET eventId = '" + eventId + "' WHERE dateTimeStart = '" + dateTimeStart + "'");
+        db.close();
+        dbHelper.close();
+    }
+    //updating event name or color for SubActivity in local database
+    public void updateEventSubNameColor(String dateTimeStart, String newSubName, int newColor) {
+        dbHelper = new DBHelper(mContext);
+        db = dbHelper.getWritableDatabase();
+        db.execSQL("UPDATE calendarTable SET subName = '" + newSubName + "' WHERE dateTimeStart = '" + dateTimeStart + "'");
+        db.execSQL("UPDATE calendarTable SET subColor = '" + newColor + "' WHERE dateTimeStart = '" + dateTimeStart + "'");
+
+        db.close();
+        dbHelper.close();
+    }
+    //updating event name or color for SubActivity in local database
+    public void updateEventNotes(String dateTimeStart, String notes) {
+        dbHelper = new DBHelper(mContext);
+        db = dbHelper.getWritableDatabase();
+        db.execSQL("UPDATE calendarTable SET notes = '" + notes + "' WHERE dateTimeStart = '" + dateTimeStart + "'");
+
         db.close();
         dbHelper.close();
     }

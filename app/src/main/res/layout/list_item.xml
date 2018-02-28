@@ -7,7 +7,7 @@
     android:layout_width="0dp"
     android:layout_height="wrap_content"
     android:textSize="14sp"
-    android:id="@+id/tvForDate"
+    android:id="@+id/tvDate"
     android:textColor="@color/colorText"
     android:layout_weight="2"
     android:gravity="center"
@@ -16,28 +16,30 @@
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:textSize="14sp"
-        android:id="@+id/tvForStartTime"
+        android:id="@+id/tvStartTime"
         android:textColor="@color/colorText"
         android:layout_weight="2"
         android:gravity="center"
+
         />
-    <LinearLayout
+    <Button
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:id="@+id/llForBA"
-        android:orientation="horizontal"
+        android:id="@+id/btnBA"
+
         android:layout_weight="2"
         >
-    </LinearLayout>
-        <LinearLayout
+    </Button>
+        <Button
             android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:id="@+id/llForSA"
-            android:orientation="horizontal"
+            android:id="@+id/btnSA"
+
             android:layout_weight="2"
             >
-     </LinearLayout>
+     </Button>
     <ImageView
+        android:id="@+id/ivNotes"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:src="@drawable/ic_insert_drive_file_white_24dp"

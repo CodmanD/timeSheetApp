@@ -1,5 +1,6 @@
 package kodman.timesheetapp;
 import android.content.res.Resources;
+import android.graphics.Color;
 import android.util.Log;
 
 import java.text.SimpleDateFormat;
@@ -16,11 +17,23 @@ public class ButtonActivity {
    private String TAG="--------ButtonAcivity SAY: ";
     private Resources res=MainActivity.res;
     String name;
+    String subName="";
+    int subColor= Color.WHITE;
     int color;
     String time;
     String date;
     long endTime;
     long ms;
+    String notes="";
+
+    public String getNotes() {
+        return notes;
+    }
+
+    public void setNotes(String notes) {
+        this.notes = notes;
+    }
+
     public ButtonActivity(String name) {
         this.name = name;
         this.color = getColor(this.name);
@@ -48,6 +61,22 @@ public class ButtonActivity {
         Date startDate = new Date(this.ms);
         this.date = new SimpleDateFormat("dd.MM.yyyy").format(startDate);
         this.time = new SimpleDateFormat("HH:mm:ss").format(startDate);
+    }
+
+    public String getSubName() {
+        return subName;
+    }
+
+    public void setSubName(String subName) {
+        this.subName = subName;
+    }
+
+    public int getSubColor() {
+        return subColor;
+    }
+
+    public void setSubColor(int subColor) {
+        this.subColor = subColor;
     }
 
     public int getColor(String name) {
