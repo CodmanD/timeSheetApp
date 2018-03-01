@@ -43,7 +43,7 @@
         android:id="@+id/etNote"
         android:layout_width="match_parent"
         android:layout_height="200dp"
-        android:maxLength="5"
+        android:maxLength="255"
         android:background="@color/colorText"
         android:hint="@string/enterNote"
         android:layout_marginLeft="20dp"

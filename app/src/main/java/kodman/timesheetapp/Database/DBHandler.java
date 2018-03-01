@@ -4,6 +4,7 @@ import android.content.ContentValues;
 import android.content.Context;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
+import android.util.Log;
 
 import java.util.ArrayList;
 
@@ -112,6 +113,8 @@ public class DBHandler {
         db.close();
         dbHelper.close();
     }
+
+
     //change eventId to "deleted" for deleting from google calendar in future
     public void updateEventDelete(String dateTimeStart, int deleted) {
         dbHelper = new DBHelper(mContext);
@@ -165,11 +168,18 @@ public class DBHandler {
     public void updateEventNotes(String dateTimeStart, String notes) {
         dbHelper = new DBHelper(mContext);
         db = dbHelper.getWritableDatabase();
-        db.execSQL("UPDATE calendarTable SET notes = '" + notes + "' WHERE dateTimeStart = '" + dateTimeStart + "'");
+        ContentValues values = new ContentValues();
 
-        db.close();
+        values.put("notes", notes);
+
+       int res= db.update("calendarTable",values," dateTimeStart = '"+dateTimeStart+"'",null);
+        //db.execSQL("UPDATE calendarTable SET notes = '" + notes + "' WHERE dateTimeStart = '" + dateTimeStart + "'");
+        Log.d("TEG","DATABase = "+"---------------Update = "+res);
+         db.close();
         dbHelper.close();
     }
+
+
     //read all events from database to fill activity log
     public Cursor readAllEventsFromDB() {
         dbHelper = new DBHelper(mContext);
@@ -200,6 +210,15 @@ public class DBHandler {
         dbHelper = new DBHelper(mContext);
         db = dbHelper.getWritableDatabase();
         db.execSQL("DELETE FROM calendarTable WHERE dateTimeStart LIKE '" + startTime + "'");
+        db.close();
+        dbHelper.close();
+    }
+
+    public void showEvents()
+    {
+        dbHelper = new DBHelper(mContext);
+        db = dbHelper.getReadableDatabase();
+
         db.close();
         dbHelper.close();
     }

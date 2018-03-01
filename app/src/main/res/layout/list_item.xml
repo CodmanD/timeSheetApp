@@ -2,7 +2,7 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:orientation="horizontal"
     android:layout_width="match_parent"
-    android:layout_height="match_parent">
+    android:layout_height="40dp">
 <TextView
     android:layout_width="0dp"
     android:layout_height="wrap_content"
@@ -24,17 +24,19 @@
         />
     <Button
         android:layout_width="0dp"
-        android:layout_height="wrap_content"
+        android:layout_height="match_parent"
         android:id="@+id/btnBA"
-
+        android:lines="1"
+        android:layout_margin="1dp"
         android:layout_weight="2"
         >
     </Button>
         <Button
             android:layout_width="0dp"
-            android:layout_height="wrap_content"
+            android:layout_height="match_parent"
             android:id="@+id/btnSA"
-
+            android:lines="1"
+            android:layout_margin="1dp"
             android:layout_weight="2"
             >
      </Button>
@@ -42,6 +44,5 @@
         android:id="@+id/ivNotes"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:src="@drawable/ic_insert_drive_file_white_24dp"
         android:layout_weight="1"/>
 </LinearLayout>

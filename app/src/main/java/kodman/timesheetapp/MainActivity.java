@@ -634,7 +634,7 @@ private void addSubactivities()
 //                                    return;
 //                                }
                                 dialog.dismiss();
-                                createDialogNotes(ba,SA);
+                              //  createDialogNotes(ba,SA);
 
 
 //                                Date date = new Date();
@@ -642,31 +642,32 @@ private void addSubactivities()
 //                                ba.date = new SimpleDateFormat("dd.MM.yyyy").format(date);
 //                                ba.time = new SimpleDateFormat("HH:mm:ss").format(date);
 //                                //Start Time for activity
-//                                ba.ms = System.currentTimeMillis();;
-//                                ba.subName=SA.name;
-//                                ba.setSubColor(SA.color);
+                                ba.ms = System.currentTimeMillis();;
+                                ba.subName=SA.name;
+                                ba.setSubColor(SA.color);
 //
 //                                Log.d(TAG,"Add to listLog BA="+ba.name+" "+ba.subName);
 //
 //
 //
 //
-//                                //Add to DB
-//                                MainActivity.this.dbHandler.writeEventWithSubToDB(ba.name,"",""
-//                                        ,String.valueOf(ba.ms),String.valueOf(ba.ms),ba.color,
-//                                        0,0,ba.getSubName(),ba.getSubColor(),"");
+                               //Add to DB
+                                MainActivity.this.dbHandler.writeEventWithSubToDB(ba.name,"",""
+                                        ,String.valueOf(ba.ms),String.valueOf(ba.ms),ba.color,
+                                        0,0,ba.getSubName(),ba.getSubColor(),"");
 //
 //                                //add formed activity
-//                                 MainActivity.this.listLogActivity.add(0, ba);
+                                 MainActivity.this.listLogActivity.add(0, ba);
 //                               // MainActivity.this.listLogSubactivity.add(0, subA);
 //
-//                                MainActivity.this.adapterListLogActivity.notifyDataSetChanged();
-//                                MainActivity.this.lvActivity.setAdapter(MainActivity.this.adapterListLogActivity);
-//
-//                                getListViewSize(MainActivity.this.lvActivity);
+                                MainActivity.this.adapterListLogActivity.notifyDataSetChanged();
+                                MainActivity.this.lvActivity.setAdapter(MainActivity.this.adapterListLogActivity);
+
+                                getListViewSize(MainActivity.this.lvActivity);
+
                                 //AddtoGoogleDiary
                                 //MainActivity.this.addGoogleDiary(ba);
-                               // dialog.dismiss();
+                                dialog.dismiss();
                             }
                         });
 
@@ -687,7 +688,7 @@ private void addSubactivities()
         });
     }
 
-    private void createDialogNotes(final ButtonActivity ba,final ButtonActivity sa)
+    private void createDialogNotes(final ButtonActivity ba)
     {
        // Log.d(TAG,"Create dialog with subactivities ="+listSubactivity.size());
         AlertDialog.Builder adb = new AlertDialog.Builder(this);
@@ -695,39 +696,30 @@ private void addSubactivities()
         adb.setView(view);
         adb.setCancelable(true);
         final AlertDialog  dialog=adb.create();
-        dialog.show();
+
 
         TextView tvTitles= view.findViewById(R.id.tvTitles);
         TextView tvTimes= view.findViewById(R.id.tvTimes);
         Button btnSave= view.findViewById(R.id.btnSave);
         Button btnCancel= view.findViewById(R.id.btnCancel);
         final EditText etNote= view.findViewById(R.id.etNote);
+
+        etNote.setText(ba.getNotes());
         btnSave.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
                 Date date = new Date();
-                // ButtonActivity BA = new ButtonActivity(ba.name,ba.color);
-               // ba.date = new SimpleDateFormat("dd.MM.yyyy").format(date);
-               // ba.time = new SimpleDateFormat("HH:mm:ss").format(date);
+
                 //Start Time for activity
                 ba.ms = System.currentTimeMillis();;
-                ba.subName=sa.name;
-                ba.setSubColor(sa.color);
+               // ba.subName=nameSA;
+               // ba.setSubColor(colorSA);
                 ba.setNotes(etNote.getText().toString());
 
-                Log.d(TAG,"Add to listLog BA="+ba.name+" "+ba.subName);
-
-
-
+               // Log.d(TAG,"Add to listLog BA="+ba.name+" "+ba.subName);
 
                 //Add to DB
-                MainActivity.this.dbHandler.writeEventWithSubToDB(ba.name,"",""
-                        ,String.valueOf(ba.ms),String.valueOf(ba.ms),ba.color,
-                        0,0,ba.getSubName(),ba.getSubColor(),ba.getNotes());
-
-                //add formed activity
-                MainActivity.this.listLogActivity.add(0, ba);
-                // MainActivity.this.listLogSubactivity.add(0, subA);
+                MainActivity.this.dbHandler.updateEventNotes(String.valueOf(ba.ms),ba.getNotes());
 
                 MainActivity.this.adapterListLogActivity.notifyDataSetChanged();
                 MainActivity.this.lvActivity.setAdapter(MainActivity.this.adapterListLogActivity);
@@ -736,6 +728,7 @@ private void addSubactivities()
                 dialog.dismiss();
             }
         });
+
         btnCancel.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
@@ -743,9 +736,10 @@ private void addSubactivities()
             }
         });
 
-
         tvTimes.setText(ba.getStartTime()+"-"+ba.getEndTime());
-        tvTitles.setText(ba.name+"/"+sa.name);
+        tvTitles.setText(ba.name+"/"+ba.getSubName());
+
+        dialog.show();
  }
 
     //get list activities from Log
@@ -884,14 +878,26 @@ For actual time, update every 1000 ms
                     convertView = getLayoutInflater().inflate(R.layout.list_item, parent, false);
                 }
 
-                View view = super.getView(position,
-                        convertView, parent);
-
-                final ButtonActivity ba = this.getItem(position);
-                Log.d(TAG,"Create Log BA="+ba.name);
-
+                View view = super.getView(position,convertView, parent);
                 TextView tvDate = view. findViewById(R.id.tvDate);
                 TextView tvStartTime = view.findViewById(R.id.tvStartTime);
+                ImageView iv=view.findViewById(R.id.ivNotes);
+                final Button btnA = view. findViewById(R.id.btnBA);
+                final Button btnSA = view. findViewById(R.id.btnSA);;
+                final ButtonActivity ba = this.getItem(position);
+                tvDate.setText(ba.getStartDate());
+                tvStartTime.setText(ba.getStartTime());
+
+                btnA.setText(ba.name);
+                btnA.setBackgroundColor(ba.color);
+                btnA.setTextColor(getContrastColor(ba.color));
+
+                btnSA.setText(ba.getSubName());
+                btnSA.setBackgroundColor(ba.getSubColor());
+                btnSA.setTextColor(getContrastColor(ba.getSubColor()));
+
+                //Added Listeners for Views
+
                 tvStartTime.setOnClickListener(new View.OnClickListener() {
                     @Override
                     public void onClick(View v) {
@@ -900,56 +906,47 @@ For actual time, update every 1000 ms
                         changeTimeActivity(ba);
                     }
                 });
-                tvDate.setText(ba.getStartDate());
-                tvStartTime.setText(ba.getStartTime());
 
-                //fill in the data ListView
-               // LinearLayout llForBA = view.findViewById(R.id.llForBA);
-
-                final Button btnA = view. findViewById(R.id.btnBA);;
-                btnA.setLines(1);
-                btnA.setWidth(120);
-                btnA.setText(ba.name);
-                Log.d(TAG,"color= "+ba.getColor(ba.name));
-                //btnA.setBackgroundColor(ba.getColor(ba.name));
-                btnA.setBackgroundColor(ba.color);
-                btnA.setTextColor(getContrastColor(ba.color));
                 btnA.setOnClickListener(new View.OnClickListener() {
                     @Override
                     public void onClick(View v) {
-                        Toast.makeText(MainActivity.this, "Click name= " + ba.name, Toast.LENGTH_SHORT).show();
+
                         //method for change activity
-                        changeNameFromLogActivity(ba, btnA);
+                        changeNameActivity(ba, btnA);
                     }
                 });
-                final Button btnSA = view. findViewById(R.id.btnSA);
-                btnSA.setLines(1);
-                btnSA.setWidth(120);
-                btnSA.setText(ba.getSubName());
-                btnSA.setBackgroundColor(ba.getSubColor());
-                Log.d(TAG,"subColor= "+ba.getColor(ba.name));
-                btnSA.setTextColor(getContrastColor(ba.getSubColor()));
+
                 btnSA.setOnClickListener(new View.OnClickListener() {
                     @Override
                     public void onClick(View v) {
-                        Toast.makeText(MainActivity.this, "Click name= " + btnSA.getText(), Toast.LENGTH_SHORT).show();
+
                         //method for change activity
-                        //changeNameFromLogActivity(ba, btnSA);
+                        changeNameSubActivity(ba, btnSA);
                     }
                 });
 
-                ImageView iv=view.findViewById(R.id.ivNotes);
-                if(!ba.getNotes().equals(""))
-                {
-
-                    iv.setImageResource(R.drawable.ic_description_white_24dp);
-                }
                 iv.setOnClickListener(new View.OnClickListener() {
                     @Override
                     public void onClick(View view) {
-                        Toast.makeText(MainActivity.this,ba.getNotes(),Toast.LENGTH_SHORT).show();
+                        //Toast.makeText(MainActivity.this,ba.getNotes(),Toast.LENGTH_SHORT).show();
+                        showEventInBase();
+                        Log.d(TAG,"  ="+ba.ms);
+                        createDialogNotes(ba);
                     }
                 });
+
+
+                //Add Icon for ImageView
+                if(!ba.getNotes().equals(""))
+                {
+                    iv.setImageResource(R.drawable.ic_description_white_24dp);
+                }
+                else
+                {
+                    iv.setImageResource(R.drawable.ic_insert_drive_file_white_24dp);
+                }
+
+
                 return view;
             }
         };
@@ -1044,7 +1041,7 @@ For actual time, update every 1000 ms
     }
 
     //initialize dialog for Buttons from Activity Log
-    private void changeNameFromLogActivity(final ButtonActivity ba, final Button btn) {
+    private void changeNameActivity(final ButtonActivity ba, final Button btn) {
 
 
         int size = MainActivity.this.listActivity.size();
@@ -1120,7 +1117,9 @@ For actual time, update every 1000 ms
                         mNewColor = ba.color;
                         mNewSummary = ba.name;
                         mUpdateTime = String.valueOf(ba.ms);
-                        callCalendarApi(4);
+                       //callCalendarApi(4);
+
+                        dbHandler.updateEventNameColor(mUpdateTime,mNewSummary,mNewColor,"",0);
                         btn.setTextColor(getContrastColor(ba.color));
 
                         createLog();
@@ -1144,7 +1143,8 @@ For actual time, update every 1000 ms
                                             public void onClick(DialogInterface dlg,
                                                                 int id) {
                                                 mDeleteTime = String.valueOf(ba.ms);
-                                                callCalendarApi(0);
+                                               // callCalendarApi(0);
+                                                dbHandler.deleteEventFromDb(mDeleteTime);
                                                 MainActivity.this.listLogActivity.remove(ba);
                                                 MainActivity.this.createLog();
                                                 dlg.cancel();
@@ -1167,6 +1167,139 @@ For actual time, update every 1000 ms
         dialog.setCancelable(true);
         dialog.show();
     }
+
+
+    //initialize dialog for Buttons from Activity Log
+    private void changeNameSubActivity(final ButtonActivity ba, final Button btn) {
+
+
+        int size = MainActivity.this.listSubactivity.size();
+        final String[] itemsAcivities = new String[size];
+        for (int i = 0; i < size; i++) {
+            itemsAcivities[i] = MainActivity.this.listSubactivity.get(i).name;
+        }
+
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        builder.setTitle(R.string.MakeChoice);
+        LayoutInflater inflater = MainActivity.this.getLayoutInflater();
+
+
+        View view = inflater.inflate(R.layout.dialog_with_list, null);
+
+        final Spinner spinner = view.findViewById(R.id.spinnerAcivityLog);
+        ArrayAdapter<String> adapter =
+                new ArrayAdapter<String>(this, android.R.layout.simple_spinner_dropdown_item,
+                        itemsAcivities);
+
+        spinner.setAdapter(adapter);
+
+
+        //helper class for data transfer
+        class Swap {
+            int flag = 0;
+            int color;
+        }
+        final Swap s = new Swap();
+
+        adapter.setDropDownViewResource(android.R.layout.
+                simple_spinner_dropdown_item);
+
+//assign listeners
+        spinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+
+            @Override
+            public void onItemSelected(AdapterView<?> parent,
+                                       View view, int position, long id) {
+
+                if (s.flag == 0) {
+                    for (int i = 0; i < parent.getCount(); i++) {
+                        if (itemsAcivities[i].toUpperCase().equals(ba.name.toUpperCase())) {
+                            parent.setSelection(i);
+                            break;
+                        }
+
+                    }
+                    s.flag = 1;
+                } else {
+                    ba.name = itemsAcivities[position];
+                    s.color = listActivity.get(position).color;
+                }
+
+            }
+
+            @Override
+            public void onNothingSelected(AdapterView<?>
+                                                  parent) {
+
+            }
+        });
+
+
+        builder.setView(view)
+                .setPositiveButton("Change", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int id) {
+                        // ba.name=tvButtonAcivity.getText().toString();
+                        btn.setText(ba.name);
+                        ba.color = s.color;
+                        btn.setBackgroundColor(ba.color);
+                       /**
+                        * Fom update CalendarAPI
+                        *  mNewColor = ba.color;
+                        * mNewSummary = ba.name;
+                        *mUpdateTime = String.valueOf(ba.ms);
+                        *callCalendarApi(4);
+                        */
+
+                        dbHandler.updateEventSubNameColor(String.valueOf(ba.ms),ba.name,ba.color);
+                        btn.setTextColor(getContrastColor(ba.color));
+
+                        createLog();
+                        Toast.makeText(MainActivity.this, "Change" + spinner.getItemAtPosition(0).toString() + "now Name=" + ba.name, Toast.LENGTH_SHORT).show();
+
+                    }
+                })
+                .setNeutralButton("Cancel", new DialogInterface.OnClickListener() {
+                    public void onClick(DialogInterface dialog, int id) {
+                        ba.name = btn.getText().toString();
+                        dialog.dismiss();
+                    }
+                })
+                .setNegativeButton("Delete", new DialogInterface.OnClickListener() {
+                    public void onClick(DialogInterface dialog, int id) {
+                        AlertDialog.Builder bldr = new AlertDialog.Builder(MainActivity.this);
+                        bldr.setMessage(res.getString(R.string.delete) + "?")
+                                .setCancelable(false)
+                                .setPositiveButton(R.string.yes,
+                                        new DialogInterface.OnClickListener() {
+                                            public void onClick(DialogInterface dlg,
+                                                                int id) {
+                                                mDeleteTime = String.valueOf(ba.ms);
+                                                // callCalendarApi(0);
+                                                dbHandler.deleteEventFromDb(mDeleteTime);
+                                                MainActivity.this.listLogSubactivity.remove(ba);
+                                                MainActivity.this.createLog();
+                                                dlg.cancel();
+                                            }
+                                        })
+
+                                .setNegativeButton(R.string.no,
+                                        new DialogInterface.OnClickListener() {
+                                            public void onClick(DialogInterface dlg,
+                                                                int id) {
+                                                dlg.cancel();
+                                            }
+                                        });
+
+                        bldr.create().show();
+                        dialog.dismiss();
+                    }
+                });
+        AlertDialog dialog = builder.create();
+        dialog.setCancelable(true);
+        dialog.show();
+    }
+
 
  //initialize widgets for Settings screen
     private void createScreenSettings() {
@@ -1356,6 +1489,57 @@ For actual time, update every 1000 ms
         dialog.show();
     }
 
+
+    private void showEventInBase()
+    {
+
+
+        Cursor cursor =dbHandler.readAllEventsFromDB();
+       // int count = cursor.getColumnCount();
+
+        long startTime;
+        long endTime;
+        int color;
+        String id;
+        String name;
+        String subName;
+        String notes;
+        int subColor;
+
+        while (cursor.moveToNext()) {
+
+            id = cursor.getString(cursor.getColumnIndex("_id"));
+            name = cursor.getString(cursor.getColumnIndex("eventName"));
+            subName = cursor.getString(cursor.getColumnIndex("subName"));
+            notes= cursor.getString(cursor.getColumnIndex("notes"));
+
+            startTime = Long.parseLong(cursor.getString(cursor.getColumnIndex("dateTimeStart")));
+
+            try {
+                endTime = Long.parseLong(cursor.getString(cursor.getColumnIndex("dateTimeEnd")));
+            } catch (Exception ex) {
+                endTime = 0;
+            }
+            if (startTime == endTime) {
+                endTime = 0;
+            }
+            color = Integer.parseInt(cursor.getString(cursor.getColumnIndex("color")));
+            subColor = Integer.parseInt(cursor.getString(cursor.getColumnIndex("subColor")));
+
+            //Log.d(TAG, "Id:" + id + "Name = " + name + "Color = " + color + "start = " + startTime + "end = " + endTime);
+
+            ButtonActivity ba = new ButtonActivity(name, color);
+            ba.ms = startTime;
+            ba.endTime = endTime;
+            ba.setSubName(subName);
+            ba.setSubColor(subColor);
+            ba.setNotes(notes);
+
+           Log.d(TAG,"Base ----= "+ba.name+"/"+subName+"/"+startTime+"/"+notes);
+        }
+        cursor.close();
+
+    }
     //Add from DB Activities in AcivityLog
     private void readAcivitiesFromDB() {
 
@@ -1451,7 +1635,7 @@ For actual time, update every 1000 ms
             Log.d(TAG,"SAVES "+listActivity.get(i).name);
         }
         ed.commit();
-        this.listActivity.clear();
+
 
     }
     @Override
@@ -1462,6 +1646,7 @@ For actual time, update every 1000 ms
          */
 
         super.onDestroy();
+        this.listActivity.clear();
     }
 //+++++++++++++++++++++++++++++++++++++UTIlits===========================================================
     //###########################################################################################
