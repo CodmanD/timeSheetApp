@@ -4,14 +4,14 @@
     android:layout_height="match_parent"
     android:background="@color/colorPrimaryDark"
     >
-
-    <EditText
+<EditText
         android:textColor="@color/colorText"
         android:id="@+id/editTextDialog"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:ems="10"
         android:inputType="textPersonName"
+        android:maxLength="20"
         android:text="ButtonName" />
 
 </LinearLayout>

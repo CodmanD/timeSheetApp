@@ -25,6 +25,8 @@
     <string name="timeSinceLastTap">Time since last tap: </string>
     <string name="activityLog">Activity Log</string>
     <string name="date">Date</string>
+    <string name="note">Note:</string>
+    <string name="enterNote">Enter note (255 characters max)</string>
     <string name="startTime">start time</string>
     <string name="activity">Activity</string>
     <string name="Subactivity">Subactivity</string>

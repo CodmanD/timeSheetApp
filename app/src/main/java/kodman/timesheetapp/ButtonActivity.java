@@ -5,6 +5,7 @@ import android.util.Log;
 
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.logging.SimpleFormatter;
 
 import kodman.timesheetapp.R;
 
@@ -16,12 +17,15 @@ public class ButtonActivity {
 
    private String TAG="--------ButtonAcivity SAY: ";
     private Resources res=MainActivity.res;
+
+    private static SimpleDateFormat formatDate=new SimpleDateFormat("dd.MM.yyyy");
+    private static SimpleDateFormat formatTime = new SimpleDateFormat("HH:mm");
     String name;
     String subName="";
     int subColor= Color.WHITE;
     int color;
-    String time;
-    String date;
+ //   String time;
+  //  String date;
     long endTime;
     long ms;
     String notes="";
@@ -38,7 +42,7 @@ public class ButtonActivity {
         this.name = name;
         this.color = getColor(this.name);
         this.ms = System.currentTimeMillis();
-        setDatetime();
+       // setDatetime();
     }
 
     public ButtonActivity(String name, int color) {
@@ -46,22 +50,16 @@ public class ButtonActivity {
         this.color = color;
         this.ms = System.currentTimeMillis();
 
-        setDatetime();
+      //  setDatetime();
     }
     public ButtonActivity(String name, int color, long ms) {
         this.name = name;
         this.color = color;
         this.ms = ms;
-
-
-        setDatetime();
+       // setDatetime();
     }
 
-    public void setDatetime() {
-        Date startDate = new Date(this.ms);
-        this.date = new SimpleDateFormat("dd.MM.yyyy").format(startDate);
-        this.time = new SimpleDateFormat("HH:mm:ss").format(startDate);
-    }
+
 
     public String getSubName() {
         return subName;
@@ -78,6 +76,12 @@ public class ButtonActivity {
     public void setSubColor(int subColor) {
         this.subColor = subColor;
     }
+
+
+    public String getStartTime(){return  formatTime.format(this.ms); }
+    public String getStartDate(){return  formatDate.format(this.ms); }
+    public String getEndTime(){return  formatTime.format(this.endTime); }
+    public String getEndDate(){return  formatDate.format(this.endTime); }
 
     public int getColor(String name) {
        // Log.d(TAG,res.getString(R.string.nothing));

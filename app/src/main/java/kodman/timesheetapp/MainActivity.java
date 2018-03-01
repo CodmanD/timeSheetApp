@@ -116,6 +116,8 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
     static String actualTime;
     SharedPreferences sPref;
 
+    private DBHandler dbHandler;
+
     @Override
     public void onPointerCaptureChanged(boolean hasCapture) {
 
@@ -129,6 +131,7 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
         ButtonActivity ba = MainActivity.this.listLogActivity.get(0);
         try {
             mDeleteTime = String.valueOf(ba.ms);
+            dbHandler.deleteEventFromDb(String.valueOf(ba.ms));
           //  MainActivity.this.removeGoogleDiary();
         } catch (Exception ex) {
             ex.printStackTrace();
@@ -352,7 +355,7 @@ private void addSubactivities()
         }
 
         builder.setView(view)
-                .setPositiveButton("Create new activity", new DialogInterface.OnClickListener() {
+                .setPositiveButton("Create", new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(DialogInterface dialog, int id) {
 
@@ -360,24 +363,17 @@ private void addSubactivities()
                         String nameButton = editText.getText().toString();
 
                         //checking the button for uniqueness
-                        if (!MainActivity.this.uniqueButtonActivity(nameButton,((Button)v).getText().toString(),true,act)) {
+                        if (!MainActivity.this.uniqueButtonActivity(nameButton,((Button)v).getText().toString(),true,act))
+                        {
                             Toast.makeText(MainActivity.this, "Activity with this name exists",
                                     Toast.LENGTH_SHORT).show();
-                            dialog.dismiss();
-                            clickNewButton(v,act);
+                           clickNewButton(v,act);
                         } else {
                             final ButtonActivity ba = new ButtonActivity(nameButton);
-                            if(nameButton.length()>25)
-                            {
-                                nameButton= nameButton.substring(0,24);
-                            }
                             ba.name = nameButton;
                             //add and set color for the button
                             setColorFromDialog(ba,true,act);
-
                             dialog.dismiss();
-                           // Toast.makeText(MainActivity.this, "create",
-                           //         Toast.LENGTH_SHORT).show();
                         }
                     }
                 })
@@ -546,13 +542,7 @@ private void addSubactivities()
     // learn the uniqueness of the name
     private boolean uniqueButtonActivity(String nameActivity,String nameButton,boolean newButton,boolean act) {
         int count=0;
-
-        if(act)
-        {
-
-        }
-
-        for (ButtonActivity ba : MainActivity.this.listActivity) {
+        for (ButtonActivity ba : act?MainActivity.this.listActivity:MainActivity.this.listSubactivity) {
             if (ba.name.toUpperCase().equals(nameActivity.toUpperCase()))
             {
                 if(count==1)
@@ -570,7 +560,7 @@ private void addSubactivities()
 
     //add  widgets with available activities to Home Screen
     // and assing listeners for their
-    private void addToGridViewButtonsActivity() {
+    private void addButtonsActivityToHome() {
         GridView gv = this.findViewById(R.id.gridView);
         ArrayAdapter<ButtonActivity> adapter =
                 new ArrayAdapter<ButtonActivity>(this, R.layout.gridview_item,
@@ -617,6 +607,10 @@ private void addSubactivities()
 
         tvAct.setText(ba.name);
 
+        adb.setView(view);
+        adb.setCancelable(true);
+        final AlertDialog  dialog=adb.create();
+
        ArrayAdapter<ButtonActivity> adapter =
                 new ArrayAdapter<ButtonActivity>(this, R.layout.gridview_item,
                         R.id.btnItem, this.listSubactivity) {
@@ -639,28 +633,37 @@ private void addSubactivities()
 //                                    Toast.makeText(MainActivity.this, "Please wait.Previous operation is performed", Toast.LENGTH_SHORT).show();
 //                                    return;
 //                                }
+                                dialog.dismiss();
+                                createDialogNotes(ba,SA);
 
 
-                                Date date = new Date();
-                               // ButtonActivity BA = new ButtonActivity(ba.name,ba.color);
-                                ba.date = new SimpleDateFormat("dd.MM.yyyy").format(date);
-                                ba.time = new SimpleDateFormat("HH:mm:ss").format(date);
-                                //Start Time for activity
-                                ba.ms = System.currentTimeMillis();;
-                                ba.subName=SA.name;
-                                ba.setSubColor(SA.color);
-
-                                Log.d(TAG,"Add to listLog BA="+ba.name+" "+ba.subName);
-
-
-                                //add formed activity
-                                 MainActivity.this.listLogActivity.add(0, ba);
-                               // MainActivity.this.listLogSubactivity.add(0, subA);
-
-                                MainActivity.this.adapterListLogActivity.notifyDataSetChanged();
-                                MainActivity.this.lvActivity.setAdapter(MainActivity.this.adapterListLogActivity);
-
-                                getListViewSize(MainActivity.this.lvActivity);
+//                                Date date = new Date();
+//                               // ButtonActivity BA = new ButtonActivity(ba.name,ba.color);
+//                                ba.date = new SimpleDateFormat("dd.MM.yyyy").format(date);
+//                                ba.time = new SimpleDateFormat("HH:mm:ss").format(date);
+//                                //Start Time for activity
+//                                ba.ms = System.currentTimeMillis();;
+//                                ba.subName=SA.name;
+//                                ba.setSubColor(SA.color);
+//
+//                                Log.d(TAG,"Add to listLog BA="+ba.name+" "+ba.subName);
+//
+//
+//
+//
+//                                //Add to DB
+//                                MainActivity.this.dbHandler.writeEventWithSubToDB(ba.name,"",""
+//                                        ,String.valueOf(ba.ms),String.valueOf(ba.ms),ba.color,
+//                                        0,0,ba.getSubName(),ba.getSubColor(),"");
+//
+//                                //add formed activity
+//                                 MainActivity.this.listLogActivity.add(0, ba);
+//                               // MainActivity.this.listLogSubactivity.add(0, subA);
+//
+//                                MainActivity.this.adapterListLogActivity.notifyDataSetChanged();
+//                                MainActivity.this.lvActivity.setAdapter(MainActivity.this.adapterListLogActivity);
+//
+//                                getListViewSize(MainActivity.this.lvActivity);
                                 //AddtoGoogleDiary
                                 //MainActivity.this.addGoogleDiary(ba);
                                // dialog.dismiss();
@@ -672,9 +675,7 @@ private void addSubactivities()
                 };
 
         gVSub.setAdapter(adapter);
-        adb.setView(view);
-        adb.setCancelable(true);
-       final AlertDialog  dialog=adb.create();
+
         dialog.show();
 
         TextView btnCancel= view.findViewById(R.id.btnCancel);
@@ -685,6 +686,67 @@ private void addSubactivities()
             }
         });
     }
+
+    private void createDialogNotes(final ButtonActivity ba,final ButtonActivity sa)
+    {
+       // Log.d(TAG,"Create dialog with subactivities ="+listSubactivity.size());
+        AlertDialog.Builder adb = new AlertDialog.Builder(this);
+        View view= getLayoutInflater().inflate(R.layout.dialog_notes,null);
+        adb.setView(view);
+        adb.setCancelable(true);
+        final AlertDialog  dialog=adb.create();
+        dialog.show();
+
+        TextView tvTitles= view.findViewById(R.id.tvTitles);
+        TextView tvTimes= view.findViewById(R.id.tvTimes);
+        Button btnSave= view.findViewById(R.id.btnSave);
+        Button btnCancel= view.findViewById(R.id.btnCancel);
+        final EditText etNote= view.findViewById(R.id.etNote);
+        btnSave.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                Date date = new Date();
+                // ButtonActivity BA = new ButtonActivity(ba.name,ba.color);
+               // ba.date = new SimpleDateFormat("dd.MM.yyyy").format(date);
+               // ba.time = new SimpleDateFormat("HH:mm:ss").format(date);
+                //Start Time for activity
+                ba.ms = System.currentTimeMillis();;
+                ba.subName=sa.name;
+                ba.setSubColor(sa.color);
+                ba.setNotes(etNote.getText().toString());
+
+                Log.d(TAG,"Add to listLog BA="+ba.name+" "+ba.subName);
+
+
+
+
+                //Add to DB
+                MainActivity.this.dbHandler.writeEventWithSubToDB(ba.name,"",""
+                        ,String.valueOf(ba.ms),String.valueOf(ba.ms),ba.color,
+                        0,0,ba.getSubName(),ba.getSubColor(),ba.getNotes());
+
+                //add formed activity
+                MainActivity.this.listLogActivity.add(0, ba);
+                // MainActivity.this.listLogSubactivity.add(0, subA);
+
+                MainActivity.this.adapterListLogActivity.notifyDataSetChanged();
+                MainActivity.this.lvActivity.setAdapter(MainActivity.this.adapterListLogActivity);
+
+                getListViewSize(MainActivity.this.lvActivity);
+                dialog.dismiss();
+            }
+        });
+        btnCancel.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                dialog.dismiss();
+            }
+        });
+
+
+        tvTimes.setText(ba.getStartTime()+"-"+ba.getEndTime());
+        tvTitles.setText(ba.name+"/"+sa.name);
+ }
 
     //get list activities from Log
     public ArrayList<ButtonActivity> getListLogActivity() {
@@ -697,6 +759,8 @@ private void addSubactivities()
         //Log.d(TAG, "onCreate");
 
         super.onCreate(savedInstanceState);
+
+        dbHandler= new DBHandler(getApplicationContext());
         mShared = getApplicationContext().getSharedPreferences("prefs", MODE_PRIVATE);
         mSharedEditor = mShared.edit();
         setContentView(R.layout.activity_main);
@@ -763,7 +827,7 @@ private void addSubactivities()
 
         //add  widgets with available ativities to Home Screen
         // and assing listeners for their
-        this.addToGridViewButtonsActivity();
+        this.addButtonsActivityToHome();
 
         // Initialize credentials and service object.
         mCredential = GoogleAccountCredential.usingOAuth2(
@@ -785,15 +849,12 @@ For actual time, update every 1000 ms
                                 toolbar.post(new Runnable() {
                                     @Override
                                     public void run() {
-
-                                        Date curDate = new Date();
-                                        String time = new SimpleDateFormat("HH:mm:ss").format(curDate);
-                                        MainActivity.actualTime = time;
-                                        toolbar.setTitle(time);
+                                        MainActivity.actualTime = new SimpleDateFormat("HH:mm:ss").format(new Date());
+                                        toolbar.setTitle( MainActivity.actualTime);
                                         if (MainActivity.this.listLogActivity.size() > 0 && MainActivity.this.status == 0) {
                                             long timeDiff = System.currentTimeMillis() - MainActivity.this.listLogActivity.get(0).ms;
-                                             time=timeDiff / 60000+":" +(timeDiff % 60000) / 1000+ " mm:ss";
-                                            ((TextView) MainActivity.this.findViewById(R.id.tvLastLap)).setText(time);
+                                            MainActivity.actualTime=timeDiff / 60000+":" +(timeDiff % 60000) / 1000+ " mm:ss";
+                                            ((TextView) MainActivity.this.findViewById(R.id.tvLastLap)).setText( MainActivity.actualTime);
                                         }
 
                                     }
@@ -802,8 +863,6 @@ For actual time, update every 1000 ms
                             }
                         },
                         0, 1000);
-
-
     }
 
 
@@ -841,8 +900,8 @@ For actual time, update every 1000 ms
                         changeTimeActivity(ba);
                     }
                 });
-                tvDate.setText(ba.date);
-                tvStartTime.setText(ba.time);
+                tvDate.setText(ba.getStartDate());
+                tvStartTime.setText(ba.getStartTime());
 
                 //fill in the data ListView
                // LinearLayout llForBA = view.findViewById(R.id.llForBA);
@@ -879,14 +938,18 @@ For actual time, update every 1000 ms
                     }
                 });
 
-                if(ba.getNotes().equals(""))
+                ImageView iv=view.findViewById(R.id.ivNotes);
+                if(!ba.getNotes().equals(""))
                 {
-                    ImageView iv=view.findViewById(R.id.ivNotes);
+
                     iv.setImageResource(R.drawable.ic_description_white_24dp);
-
-
                 }
-
+                iv.setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View view) {
+                        Toast.makeText(MainActivity.this,ba.getNotes(),Toast.LENGTH_SHORT).show();
+                    }
+                });
                 return view;
             }
         };
@@ -948,8 +1011,8 @@ For actual time, update every 1000 ms
                             date.setHours(hour);
                             date.setMinutes(minute);
                             Log.e("UPDATE!!", "sf");
-                            ba.time = new SimpleDateFormat("HH:mm:ss").format(date);
-                            ba.date = new SimpleDateFormat("dd.MM.yyyy").format(date);
+                            //ba.time = new SimpleDateFormat("HH:mm:ss").format(date);
+                            //ba.date = new SimpleDateFormat("dd.MM.yyyy").format(date);
 
 
                             mUpdateTime = String.valueOf(ba.ms);
@@ -1105,13 +1168,7 @@ For actual time, update every 1000 ms
         dialog.show();
     }
 
-
-
-
-
-
-
-    //initialize widgets for Settings screen
+ //initialize widgets for Settings screen
     private void createScreenSettings() {
         this.setContentView(R.layout.screen_settings);
         toolbar = this.findViewById(R.id.toolBar_Setting);
@@ -1198,7 +1255,7 @@ For actual time, update every 1000 ms
 
                 toolbar.setTitle(MainActivity.actualTime);
                 this.setSupportActionBar(toolbar);
-                this.addToGridViewButtonsActivity();
+                this.addButtonsActivityToHome();
                 MainActivity.this.lvActivity.setAdapter(MainActivity.this.adapterListLogActivity);
                 this.createLog();
 
@@ -1349,7 +1406,7 @@ For actual time, update every 1000 ms
             ba.endTime = endTime;
             ba.setSubName(subName);
             ba.setSubColor(subColor);
-            ba.setDatetime();
+
             ba.setNotes(notes);
             this.listLogActivity.add(0, ba);
         }
@@ -1384,14 +1441,14 @@ For actual time, update every 1000 ms
         for (int i = 0; i < this.listActivity.size(); i++) {
             ed.putString("buttonAcivityName" + i, this.listActivity.get(i).name);
             ed.putInt("buttonAcivityColor" + i, this.listActivity.get(i).color);
-          //  Log.d(TAG,"SAVES "+listActivity.get(i).name);
+            Log.d(TAG,"SAVES "+listActivity.get(i).name);
         }
 
         ed.putInt("sizeListSubactivity", this.listSubactivity.size());
         for (int i = 0; i < this.listSubactivity.size(); i++) {
             ed.putString("buttonSubacivityName" + i, this.listSubactivity.get(i).name);
             ed.putInt("buttonSubacivityColor" + i, this.listSubactivity.get(i).color);
-           // Log.d(TAG,"SAVES "+listActivity.get(i).name);
+            Log.d(TAG,"SAVES "+listActivity.get(i).name);
         }
         ed.commit();
         this.listActivity.clear();
