@@ -73,6 +73,7 @@ import java.util.List;
 import java.util.TimeZone;
 import java.util.TimerTask;
 
+import butterknife.BindView;
 import kodman.timesheetapp.Database.DBHandler;
 import pub.devrel.easypermissions.AfterPermissionGranted;
 import pub.devrel.easypermissions.EasyPermissions;
@@ -645,6 +646,9 @@ private void addSubactivities()
                                 ba.ms = System.currentTimeMillis();;
                                 ba.subName=SA.name;
                                 ba.setSubColor(SA.color);
+
+                                if(listLogActivity.size()>0)
+                                dbHandler.updateLastEventEndTime(String.valueOf(ba.ms));
 //
 //                                Log.d(TAG,"Add to listLog BA="+ba.name+" "+ba.subName);
 //
@@ -688,15 +692,16 @@ private void addSubactivities()
         });
     }
 
+
+    //Create dialog for adding notes
     private void createDialogNotes(final ButtonActivity ba)
     {
-       // Log.d(TAG,"Create dialog with subactivities ="+listSubactivity.size());
+
         AlertDialog.Builder adb = new AlertDialog.Builder(this);
         View view= getLayoutInflater().inflate(R.layout.dialog_notes,null);
         adb.setView(view);
         adb.setCancelable(true);
         final AlertDialog  dialog=adb.create();
-
 
         TextView tvTitles= view.findViewById(R.id.tvTitles);
         TextView tvTimes= view.findViewById(R.id.tvTimes);
@@ -704,27 +709,22 @@ private void addSubactivities()
         Button btnCancel= view.findViewById(R.id.btnCancel);
         final EditText etNote= view.findViewById(R.id.etNote);
 
+
+        tvTimes.setText(ba.getStartTime()+"-"+ba.getEndTime());
+        tvTitles.setText(ba.name+"/"+ba.getSubName());
+
         etNote.setText(ba.getNotes());
         btnSave.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                Date date = new Date();
 
-                //Start Time for activity
-                ba.ms = System.currentTimeMillis();;
-               // ba.subName=nameSA;
-               // ba.setSubColor(colorSA);
                 ba.setNotes(etNote.getText().toString());
-
-               // Log.d(TAG,"Add to listLog BA="+ba.name+" "+ba.subName);
-
                 //Add to DB
                 MainActivity.this.dbHandler.updateEventNotes(String.valueOf(ba.ms),ba.getNotes());
-
+                //Update data for ListView
                 MainActivity.this.adapterListLogActivity.notifyDataSetChanged();
-                MainActivity.this.lvActivity.setAdapter(MainActivity.this.adapterListLogActivity);
-
-                getListViewSize(MainActivity.this.lvActivity);
+                //MainActivity.this.lvActivity.setAdapter(MainActivity.this.adapterListLogActivity);
+                //getListViewSize(MainActivity.this.lvActivity);
                 dialog.dismiss();
             }
         });
@@ -736,8 +736,6 @@ private void addSubactivities()
             }
         });
 
-        tvTimes.setText(ba.getStartTime()+"-"+ba.getEndTime());
-        tvTitles.setText(ba.name+"/"+ba.getSubName());
 
         dialog.show();
  }
@@ -784,7 +782,7 @@ private void addSubactivities()
                         (sPref.getString("buttonAcivityName" + i, ""),
                                 sPref.getInt("buttonAcivityColor" + i, res.getColor(R.color.colorText))));
 
-         Log.d(TAG,"========== Button in  = "+this.listActivity.get(i).name);
+        // Log.d(TAG,"========== Button in  = "+this.listActivity.get(i).name);
             }
 
 
@@ -795,7 +793,7 @@ private void addSubactivities()
         if (this.listActivity.size() == 0)
         {
             this.createList();
-            Log.d(TAG,"============= DEFAULT listActivities");
+          //  Log.d(TAG,"============= DEFAULT listActivities");
         }
 
 
@@ -806,7 +804,7 @@ private void addSubactivities()
             {
 
                 this.createListSubactivities();
-                Log.d(TAG," createSubactivities "+this.listSubactivity.size());
+              //  Log.d(TAG," createSubactivities "+this.listSubactivity.size());
             }
             else
              for (int i = 0; i < size; i++) {
@@ -970,9 +968,9 @@ For actual time, update every 1000 ms
             @Override
             public void onTimeChanged(TimePicker view,
                                       int hour, int minute) {
-                long currentTime = System.currentTimeMillis();
 
 
+                Log.d(TAG, " ChangeTime ");
                 date.setHours(hour);
                 date.setMinutes(minute);
 }
@@ -984,6 +982,8 @@ For actual time, update every 1000 ms
                     @Override
                     public void onClick(DialogInterface
                                                 dialog, int which) {
+
+                        Log.d(TAG,"===============Click Save   ");
                         int endHour = endDate.getHours();
                         int endMinutes = endDate.getMinutes();
 
@@ -1015,11 +1015,13 @@ For actual time, update every 1000 ms
                             mUpdateTime = String.valueOf(ba.ms);
                             ba.ms = date.getTime();
                             mNewStartTime = String.valueOf(ba.ms);
+                           // dbHandler.updateTimeEvents(String.valueOf(startDate.getTime()),String.valueOf(ba.ms));
+
                             //Update Time in GoogleDiary
-                            updateGoogleDiary();
+                           // updateGoogleDiary();
                             //Change LogAcivity
                             MainActivity.this.adapterListLogActivity.notifyDataSetChanged();
-                            MainActivity.this.lvActivity.setAdapter(MainActivity.this.adapterListLogActivity);
+                           // MainActivity.this.lvActivity.setAdapter(MainActivity.this.adapterListLogActivity);
 
                             //  createActivityLog();
                         }
@@ -1033,7 +1035,8 @@ For actual time, update every 1000 ms
                     public void onClick(DialogInterface
                                                 dialog, int which) {
 
-
+                        Log.d(TAG,"Click CANCEL");
+                        dialog.dismiss();
                     }
                 });
         TPD.show();
@@ -1575,6 +1578,7 @@ For actual time, update every 1000 ms
             try {
                 endTime = Long.parseLong(cursor.getString(cursor.getColumnIndex("dateTimeEnd")));
             } catch (Exception ex) {
+                Log.d(TAG,"Exception endTime= "+ex.getMessage());
                 endTime = 0;
             }
             if (startTime == endTime) {
@@ -1583,7 +1587,7 @@ For actual time, update every 1000 ms
             color = Integer.parseInt(cursor.getString(cursor.getColumnIndex("color")));
             subColor = Integer.parseInt(cursor.getString(cursor.getColumnIndex("subColor")));
 
-            //Log.d(TAG, "Id:" + id + "Name = " + name + "Color = " + color + "start = " + startTime + "end = " + endTime);
+           // Log.d(TAG, "Id:" + id + "Name = " + name + "Color = " + color + "start = " + startTime + "end = " + endTime);
 
             ButtonActivity ba = new ButtonActivity(name, color);
             ba.ms = startTime;

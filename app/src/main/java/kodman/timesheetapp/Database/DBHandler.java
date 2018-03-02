@@ -12,6 +12,7 @@ public class DBHandler {
     private Context mContext;
     private DBHelper dbHelper;
     private SQLiteDatabase db;
+    private final String TAG="Data Base";
 
     public DBHandler(Context context) {
         mContext = context;
@@ -114,6 +115,73 @@ public class DBHandler {
         dbHelper.close();
     }
 
+public void updateLastEventEndTime(String endTime)
+{
+    Log.d("TAG"," time="+endTime);
+    dbHelper = new DBHelper(mContext);
+    db = dbHelper.getWritableDatabase();
+    String query = "SELECT dateTimeStart  FROM calendarTable  ORDER BY dateTimeStart LIMIT 1";
+
+    // Log.d(TAG, query);
+
+    Cursor cursor = db.rawQuery(query, null);
+    if(cursor.moveToFirst() )
+    {
+        String startTime=cursor.getString(cursor.getColumnIndex("dateTimeStart"));
+        Log.d("DataBase = ","startTime = "+startTime);
+        ContentValues values = new ContentValues();
+        values.put("dateTimeEnd", endTime);
+
+        int res= db.update("calendarTable",values,
+                " dateTimeStart = '"+startTime+"'",null);
+        Log.d("TEG","DATABase = "+"---------------Update = "+res);
+    }
+    cursor.close();
+    db.close();
+    dbHelper.close();
+}
+
+
+    public boolean updateTimeEvents(String time,String newTime)
+    {
+        Log.d("TAG"," time=");
+        dbHelper = new DBHelper(mContext);
+        db = dbHelper.getWritableDatabase();
+        String query = "SELECT dateTimeStart  FROM calendarTable  WHERE dateTimeEnd ='"+time+"'";
+        Log.d(TAG,"Update time ="+time+" newTime = "+newTime);
+        // Log.d(TAG, query);
+
+        Cursor cursor = db.rawQuery(query, null);
+        if(cursor.moveToFirst() )
+        {
+            long startTime=Long.parseLong(cursor.getString(cursor.getColumnIndex("dateTimeStart")));
+           // long endTime=Long.parseLong(cursor.getString(cursor.getColumnIndex("dateTimeEnd")));
+
+            if(startTime< Long.parseLong(newTime))
+            {
+                cursor.close();
+                db.close();
+                dbHelper.close();
+                return false;
+            }
+            else
+            {
+                db.execSQL("UPDATE calendarTable SET dateTimeEnd = '" + newTime + "' WHERE dateTimeStart = '" + startTime + "'");
+                db.execSQL("UPDATE calendarTable SET dateTimeStart = '" + newTime + "' WHERE dateTimeStart = '" + time + "'");
+                db.close();
+                dbHelper.close();
+           Log.d(TAG,"Update all");
+                return true;
+            }
+
+        }
+        db.execSQL("UPDATE calendarTable SET dateTimeStart = '" + newTime + "' WHERE dateTimeStart = '" + time + "'");
+
+        db.close();
+        dbHelper.close();
+        return true;
+    }
+
 
     //change eventId to "deleted" for deleting from google calendar in future
     public void updateEventDelete(String dateTimeStart, int deleted) {
@@ -166,15 +234,17 @@ public class DBHandler {
     }
     //updating event name or color for SubActivity in local database
     public void updateEventNotes(String dateTimeStart, String notes) {
+
+        Log.d("TAG"," time="+dateTimeStart+" /Notes="+notes);
         dbHelper = new DBHelper(mContext);
         db = dbHelper.getWritableDatabase();
         ContentValues values = new ContentValues();
-
-        values.put("notes", notes);
+         values.put("notes", notes);
 
        int res= db.update("calendarTable",values," dateTimeStart = '"+dateTimeStart+"'",null);
         //db.execSQL("UPDATE calendarTable SET notes = '" + notes + "' WHERE dateTimeStart = '" + dateTimeStart + "'");
         Log.d("TEG","DATABase = "+"---------------Update = "+res);
+
          db.close();
         dbHelper.close();
     }

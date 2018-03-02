@@ -42,5 +42,8 @@ dependencies {
     compile 'com.google.http-client:google-http-client-gson:1.23.0' exclude module: 'httpclient'
     compile('com.google.apis:google-api-services-calendar:v3-rev263-1.23.0') {
         exclude group: 'org.apache.httpcomponents'
+
+        compile 'com.jakewharton:butterknife:8.8.1'
+        annotationProcessor 'com.jakewharton:butterknife-compiler:8.8.1'
     }
 }
