@@ -869,7 +869,7 @@ For actual time, update every 1000 ms
         adapterListLogActivity = new ArrayAdapter<ButtonActivity>(this,
                 R.layout.list_item, R.id.tvDate, listLogActivity) {
             @Override
-            public View getView(int position,
+            public View getView(final int position,
                                 View convertView, ViewGroup parent) {
 
                 if (convertView == null) {
@@ -883,6 +883,8 @@ For actual time, update every 1000 ms
                 final Button btnA = view. findViewById(R.id.btnBA);
                 final Button btnSA = view. findViewById(R.id.btnSA);;
                 final ButtonActivity ba = this.getItem(position);
+
+             //   final ButtonActivity prevBa = this.getItem(position-1);
                 tvDate.setText(ba.getStartDate());
                 tvStartTime.setText(ba.getStartTime());
 
@@ -900,8 +902,9 @@ For actual time, update every 1000 ms
                     @Override
                     public void onClick(View v) {
 
+
                        //Change start time for activity
-                        changeTimeActivity(ba);
+                        changeTimeActivity(adapterListLogActivity.getItem(position+1),ba);
                     }
                 });
 
@@ -957,89 +960,88 @@ For actual time, update every 1000 ms
     }
 
     // changing the time for activity
-    private void changeTimeActivity(final ButtonActivity ba) {
+    private void changeTimeActivity(final ButtonActivity prevBa,final ButtonActivity curBa) {
 
-        final Date date = new Date();
+        final Date date = new Date(curBa.ms);
 
-        final Date endDate = (ba.endTime == 0) ? new Date(System.currentTimeMillis()) : new Date(ba.endTime);
-        final Date startDate = new Date(ba.ms);
+       // final Date endDate = (ba.endTime == 0) ? new Date(System.currentTimeMillis()) : new Date(ba.endTime);
+       // final Date startDate = new Date(ba.ms);
+      //  final TimePickerDialog TPD = new TimePickerDialog(this,android.R.style.Theme_Holo_Dialog,
+       //         null, startDate.getHours(), startDate.getMinutes(), true) {
         final TimePickerDialog TPD = new TimePickerDialog(this,android.R.style.Theme_Holo_Dialog,
-                null, startDate.getHours(), startDate.getMinutes(), true) {
+                         null, date.getHours(), date.getMinutes(), true) {
             @Override
             public void onTimeChanged(TimePicker view,
                                       int hour, int minute) {
 
 
-                Log.d(TAG, " ChangeTime ");
+
+                //Log.d("ChangeTime","curTime = "+System.currentTimeMillis()+":"+ms);
+                //Log.d(TAG, " ChangeTime ");
                 date.setHours(hour);
                 date.setMinutes(minute);
 }
         };
-
-        TPD.setButton(DialogInterface.BUTTON_POSITIVE,
-                "Save", new DialogInterface.
-                        OnClickListener() {
-                    @Override
-                    public void onClick(DialogInterface
-                                                dialog, int which) {
-
-                        Log.d(TAG,"===============Click Save   ");
-                        int endHour = endDate.getHours();
-                        int endMinutes = endDate.getMinutes();
-
-                        int hour = date.getHours();
-                        int minute = date.getMinutes();
-
-                        int startHour = startDate.getHours();
-                        int startMinutes = startDate.getMinutes();
-
-                        Log.d(TAG, " start " + startHour + ":" + startMinutes +
-                                "  end " + endHour + ":" + endMinutes);
-                        //checking the time for correctness
-                        if (hour > endHour || (hour == endHour && minute > endMinutes) ||
-                                hour < startHour || (hour == startHour && minute < startMinutes)) {
-                            Toast.makeText(MainActivity.this, "The selected time is not valid for selection", Toast.LENGTH_SHORT).show();
-                            Toast.makeText(MainActivity.this, "start " + startHour + ":" + startMinutes +
-                                    "  end " + endHour + ":" + endMinutes, Toast.LENGTH_SHORT).show();
-
-                            dialog.dismiss();
-                            changeTimeActivity(ba);
-                        } else {
-                            date.setHours(hour);
-                            date.setMinutes(minute);
-                            Log.e("UPDATE!!", "sf");
-                            //ba.time = new SimpleDateFormat("HH:mm:ss").format(date);
-                            //ba.date = new SimpleDateFormat("dd.MM.yyyy").format(date);
-
-
-                            mUpdateTime = String.valueOf(ba.ms);
-                            ba.ms = date.getTime();
-                            mNewStartTime = String.valueOf(ba.ms);
-                           // dbHandler.updateTimeEvents(String.valueOf(startDate.getTime()),String.valueOf(ba.ms));
-
-                            //Update Time in GoogleDiary
-                           // updateGoogleDiary();
-                            //Change LogAcivity
-                            MainActivity.this.adapterListLogActivity.notifyDataSetChanged();
-                           // MainActivity.this.lvActivity.setAdapter(MainActivity.this.adapterListLogActivity);
-
-                            //  createActivityLog();
-                        }
-                    }
-                });
-
-        TPD.setButton(DialogInterface.BUTTON_NEGATIVE,
-                "Cancel", new DialogInterface.
-                        OnClickListener() {
-                    @Override
-                    public void onClick(DialogInterface
-                                                dialog, int which) {
-
-                        Log.d(TAG,"Click CANCEL");
-                        dialog.dismiss();
-                    }
-                });
         TPD.show();
+        TPD.getButton(DialogInterface.BUTTON_POSITIVE).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+               // Log.d(TAG,"===============Click Save   ");
+
+                Log.d(TAG,"newTime="+date.getTime()+"|"+prevBa.ms+"|"+ curBa.endTime);
+
+               if( date.getTime()<prevBa.ms||date.getTime()>curBa.endTime)
+                   Toast.makeText(MainActivity.this, "The selected time is not valid for selection", Toast.LENGTH_SHORT).show();
+               else
+                   {
+                       Toast.makeText(MainActivity.this, "Correct time", Toast.LENGTH_SHORT).show();
+                   }
+
+//                int endHour = endDate.getHours();
+//                int endMinutes = endDate.getMinutes();
+//
+//                int hour = date.getHours();
+//                int minute = date.getMinutes();
+//
+//                int startHour = startDate.getHours();
+//                int startMinutes = startDate.getMinutes();
+
+//                Log.d(TAG, " start " + startHour + ":" + startMinutes +
+//                        "  end " + endHour + ":" + endMinutes);
+                //checking the time for correctness
+//                if (hour > endHour || (hour == endHour && minute > endMinutes) ||
+//                        hour < startHour || (hour == startHour && minute < startMinutes)) {
+//                    Toast.makeText(MainActivity.this, "The selected time is not valid for selection", Toast.LENGTH_SHORT).show();
+//                    Toast.makeText(MainActivity.this, "start " + startHour + ":" + startMinutes +
+//                            "  end " + endHour + ":" + endMinutes, Toast.LENGTH_SHORT).show();
+//
+//                    TPD.dismiss();
+//                    changeTimeActivity(ba);
+//                } else {
+//                    date.setHours(hour);
+//                    date.setMinutes(minute);
+//                    Log.e("UPDATE!!", "sf");
+//                    //ba.time = new SimpleDateFormat("HH:mm:ss").format(date);
+//                    //ba.date = new SimpleDateFormat("dd.MM.yyyy").format(date);
+//
+//
+//                    mUpdateTime = String.valueOf(ba.ms);
+//                    ba.ms = date.getTime();
+//                    mNewStartTime = String.valueOf(ba.ms);
+//                    // dbHandler.updateTimeEvents(String.valueOf(startDate.getTime()),String.valueOf(ba.ms));
+//
+//                    //Update Time in GoogleDiary
+//                    // updateGoogleDiary();
+//                    //Change LogAcivity
+//                    MainActivity.this.adapterListLogActivity.notifyDataSetChanged();
+//                    // MainActivity.this.lvActivity.setAdapter(MainActivity.this.adapterListLogActivity);
+//
+//                    //  createActivityLog();
+//                }
+            }
+
+        });
+
 
     }
 
@@ -1398,9 +1400,11 @@ For actual time, update every 1000 ms
                 return true;
             case R.id.action_edit_page:
                 this.status = 1;
-                this.setContentView(R.layout.activity_main_fragment);
-            FragmentTransaction fragmentTransaction = getFragmentManager().beginTransaction();
-            fragmentTransaction.add(R.id.fragmentContainer, new ScreenEditPage()).commit();
+           //     this.setContentView(R.layout.activity_main_fragment);
+           // FragmentTransaction fragmentTransaction = getFragmentManager().beginTransaction();
+           // fragmentTransaction.add(R.id.fragmentContainer, new ScreenEditPage()).commit();
+                Intent  intent= new Intent(MainActivity.this,ActivityEditPage.class);
+                startActivity(intent);
             return true;
             case R.id.action_settings:
                 this.status = 2;
@@ -1581,13 +1585,14 @@ For actual time, update every 1000 ms
                 Log.d(TAG,"Exception endTime= "+ex.getMessage());
                 endTime = 0;
             }
-            if (startTime == endTime) {
+            if (startTime == endTime)
+            {
                 endTime = 0;
             }
             color = Integer.parseInt(cursor.getString(cursor.getColumnIndex("color")));
             subColor = Integer.parseInt(cursor.getString(cursor.getColumnIndex("subColor")));
 
-           // Log.d(TAG, "Id:" + id + "Name = " + name + "Color = " + color + "start = " + startTime + "end = " + endTime);
+            Log.d(TAG, "Id:" + id + "Name = " + name + "start = " + startTime + "end = " + endTime);
 
             ButtonActivity ba = new ButtonActivity(name, color);
             ba.ms = startTime;

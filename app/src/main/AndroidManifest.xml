@@ -27,6 +27,12 @@
             </intent-filter>
         </activity>
 
+
+        <activity android:name=".ActivityEditPage">
+
+        </activity>
+
+
         <provider
             android:name="android.support.v4.content.FileProvider"
             android:grantUriPermissions="true"
