@@ -103,7 +103,7 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
     private ArrayList<ButtonActivity> listSubactivity = new ArrayList<>();
 
     private ArrayList<ButtonActivity> listLogActivity = new ArrayList<>();
-    private ArrayList<ButtonActivity> listLogSubactivity = new ArrayList<>();
+   // private ArrayList<ButtonActivity> listLogSubactivity = new ArrayList<>();
     private ArrayAdapter<ButtonActivity> adapterListLogActivity;
     private String mDeleteTime;
     private String mUpdateTime;
@@ -137,8 +137,11 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
         } catch (Exception ex) {
             ex.printStackTrace();
         }
-        MainActivity.this.adapterListLogActivity.remove(ba);
-        createLog();
+
+       MainActivity.this.listLogActivity.remove(ba);
+       MainActivity.this.adapterListLogActivity.notifyDataSetChanged();
+        //MainActivity.this.adapterListLogActivity.remove(ba);
+        //createLog();
         if (listLogActivity.size() == 0) {
             sPref = getSharedPreferences("tempData", MODE_PRIVATE);
             SharedPreferences.Editor editor = sPref.edit();
@@ -172,7 +175,6 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
       //add Last Button with title "+New"
 
       btnNew.setText(R.string.newButton);
-      //btnNew.setWidth(100);
       btnNew.setLayoutParams(linLayoutParam);
       LLActivities.addView(btnNew);
 
@@ -635,20 +637,13 @@ private void addSubactivities()
 //                                    return;
 //                                }
                                 dialog.dismiss();
-                              //  createDialogNotes(ba,SA);
 
-
-//                                Date date = new Date();
-//                               // ButtonActivity BA = new ButtonActivity(ba.name,ba.color);
-//                                ba.date = new SimpleDateFormat("dd.MM.yyyy").format(date);
-//                                ba.time = new SimpleDateFormat("HH:mm:ss").format(date);
-//                                //Start Time for activity
                                 ba.ms = System.currentTimeMillis();;
                                 ba.subName=SA.name;
                                 ba.setSubColor(SA.color);
 
                                 if(listLogActivity.size()>0)
-                                dbHandler.updateLastEventEndTime(String.valueOf(ba.ms));
+                                    dbHandler.updateLastEventEndTime(String.valueOf(ba.ms));
 //
 //                                Log.d(TAG,"Add to listLog BA="+ba.name+" "+ba.subName);
 //
@@ -1282,7 +1277,7 @@ For actual time, update every 1000 ms
                                                 mDeleteTime = String.valueOf(ba.ms);
                                                 // callCalendarApi(0);
                                                 dbHandler.deleteEventFromDb(mDeleteTime);
-                                                MainActivity.this.listLogSubactivity.remove(ba);
+                                                //MainActivity.this.listLogSubactivity.remove(ba);
                                                 MainActivity.this.createLog();
                                                 dlg.cancel();
                                             }
