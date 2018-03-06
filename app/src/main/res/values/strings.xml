@@ -56,4 +56,15 @@
     <string name="subactivities">Subactivities</string>
     <string name="currentActivity">Current activity:</string>
     <string name="log_data">LOG DATA</string>
+    <string name="stopwatch_log">Stopwatch log</string>
+    <string name="google_calendar">Google calendar</string>
+    <string name="phone_log">Phone log</string>
+    <string name="gps_log">GPS log</string>
+    <string name="start_tine">Start Time</string>
+    <string name="finish_time">Finish Time</string>
+    <string name="event">Event</string>
+    <string name="contact">Contact</string>
+    <string name="Longitude">Longitude</string>
+    <string name="Latitude">Latitude</string>
+
 </resources>
