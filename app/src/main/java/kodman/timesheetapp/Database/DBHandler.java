@@ -120,7 +120,8 @@ public void updateLastEventEndTime(String endTime)
     Log.d("TAG"," time="+endTime);
     dbHelper = new DBHelper(mContext);
     db = dbHelper.getWritableDatabase();
-    String query = "SELECT dateTimeStart  FROM calendarTable  ORDER BY dateTimeStart LIMIT 1";
+    //String query = "SELECT dateTimeStart  FROM calendarTable  ORDER BY dateTimeStart  LIMIT 1";
+    String query = "SELECT *  FROM calendarTable  ORDER BY dateTimeStart DESC LIMIT 1";
 
     // Log.d(TAG, query);
 
@@ -128,13 +129,14 @@ public void updateLastEventEndTime(String endTime)
     if(cursor.moveToFirst() )
     {
         String startTime=cursor.getString(cursor.getColumnIndex("dateTimeStart"));
-        Log.d("DataBase = ","startTime = "+startTime);
+        String name=cursor.getString(cursor.getColumnIndex("eventName"));
+        Log.d("DataBase = ","Name = :"+name+" || startTime = "+startTime);
         ContentValues values = new ContentValues();
         values.put("dateTimeEnd", endTime);
 
         int res= db.update("calendarTable",values,
                 " dateTimeStart = '"+startTime+"'",null);
-        Log.d("TEG","DATABase = "+"---------------Update = "+res);
+        Log.d("TAG","DATABase = "+"---------------Update = "+res);
     }
     cursor.close();
     db.close();

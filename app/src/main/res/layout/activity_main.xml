@@ -37,14 +37,16 @@
 
     <GridView
         android:id="@+id/gridView"
-        android:layout_width="match_parent"
+        android:layout_width="0dp"
         android:layout_height="0dp"
+        android:layout_marginLeft="10dp"
+        android:layout_marginRight="10dp"
         android:layout_marginTop="8dp"
+        android:background="@color/colorGridView"
         android:horizontalSpacing="10dp"
         android:numColumns="3"
         android:stretchMode="columnWidth"
         android:verticalSpacing="10dp"
-        android:background="@color/colorGridView"
         app:layout_constraintBottom_toTopOf="@+id/guideline"
         app:layout_constraintLeft_toLeftOf="parent"
         app:layout_constraintRight_toRightOf="parent"

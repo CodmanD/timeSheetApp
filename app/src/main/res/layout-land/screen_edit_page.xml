@@ -2,10 +2,12 @@
 <android.support.constraint.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    xmlns:app="http://schemas.android.com/apk/res-auto">
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:background="#000000"
+    >
 
     <android.support.v7.widget.Toolbar
-        android:id="@+id/toolBar_MainActivity"
+        android:id="@+id/toolBarEditPage"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
 
@@ -19,10 +21,62 @@
         app:titleTextColor="@color/colorText" />
 
     <TextView
-        android:id="@+id/textView8"
+        android:id="@+id/tvLogData"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:background="@color/colorAccent"
-        android:text="TextView"
-        app:layout_constraintEnd_toStartOf="@+id/toolBar_MainActivity" />
+        android:textColor="@color/colorText"
+        android:text="@string/log_data"
+        android:textSize="20sp"
+        app:layout_constraintLeft_toLeftOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/toolBarEditPage" />
+
+    <LinearLayout
+        android:id="@+id/LLData"
+        android:layout_width="0dp"
+        android:layout_height="match_parent"
+        android:orientation="horizontal"
+        app:layout_constraintLeft_toRightOf="@+id/tvLogData"
+        app:layout_constraintRight_toRightOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/toolBarEditPage">
+
+        <ImageView
+            android:id="@+id/ivLeft"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+
+            android:src="@drawable/ic_chevron_left_white_36dp" />
+
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+
+            android:orientation="vertical">
+
+            <TextView
+                android:id="@+id/tvDay"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="TextView"
+                android:textColor="@color/colorText"
+                android:textSize="20sp"
+                />
+
+            <TextView
+                android:id="@+id/tvDate"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="TextView"
+                android:textColor="@color/colorText"
+                android:textSize="20sp"
+                />
+        </LinearLayout>
+
+        <ImageView
+            android:id="@+id/ivRight"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:src="@drawable/ic_chevron_right_white_36dp" />
+    </LinearLayout>
 </android.support.constraint.ConstraintLayout>

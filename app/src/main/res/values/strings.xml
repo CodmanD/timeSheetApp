@@ -55,4 +55,5 @@
     <string name="activities">Activities</string>
     <string name="subactivities">Subactivities</string>
     <string name="currentActivity">Current activity:</string>
+    <string name="log_data">LOG DATA</string>
 </resources>

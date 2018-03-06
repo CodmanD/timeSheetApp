@@ -161,7 +161,8 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
 
       LinearLayout LLSettings=this.findViewById(R.id.LLSettings);
 
-      LinearLayout.LayoutParams linLayoutParam = new LinearLayout.LayoutParams(LinearLayout.LayoutParams.WRAP_CONTENT, LinearLayout.LayoutParams.MATCH_PARENT);
+      LinearLayout.LayoutParams linLayoutParam = new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.MATCH_PARENT);
+      linLayoutParam.setMargins(40,10,40,10);
       final Button btnNew = new Button(this);
 
       //assing listener for the Button
@@ -171,15 +172,11 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
               MainActivity.this.clickNewButton(v,true);
           }
       });
-
       //add Last Button with title "+New"
-
       btnNew.setText(R.string.newButton);
       btnNew.setLayoutParams(linLayoutParam);
       LLActivities.addView(btnNew);
 
-      linLayoutParam = new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.MATCH_PARENT);
-      linLayoutParam.setMargins(40,10,40,10);
       for (int i = 0; i < this.listActivity.size(); i++) {
 
 
@@ -214,7 +211,10 @@ private void addSubactivities()
 
     LinearLayout LLSettings=this.findViewById(R.id.LLSettings);
 
-    LinearLayout.LayoutParams linLayoutParam = new LinearLayout.LayoutParams(LinearLayout.LayoutParams.WRAP_CONTENT, LinearLayout.LayoutParams.MATCH_PARENT);
+   // LinearLayout.LayoutParams linLayoutParam = new LinearLayout.LayoutParams(LinearLayout.LayoutParams.WRAP_CONTENT, LinearLayout.LayoutParams.MATCH_PARENT);
+
+    LinearLayout.LayoutParams linLayoutParam = new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.MATCH_PARENT);
+    linLayoutParam.setMargins(40,10,40,10);
     final Button btnNew = new Button(this);
 
     //assing listener for the Button
@@ -226,14 +226,11 @@ private void addSubactivities()
     });
 
     //add Last Button with title "+New"
-
     btnNew.setText(R.string.newButton);
-    //btnNew.setWidth(100);
     btnNew.setLayoutParams(linLayoutParam);
     LLSubactivities.addView(btnNew);
 
-    linLayoutParam = new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.MATCH_PARENT);
-    linLayoutParam.setMargins(40,10,40,10);
+
     for (int i = 0; i < this.listSubactivity.size(); i++) {
 
 
@@ -253,15 +250,10 @@ private void addSubactivities()
         btn.setBackgroundColor(ba.getColor(ba.name));
         btn.setTextColor(getContrastColor(ba.color));
         btn.setLayoutParams(linLayoutParam);
-        //btn.requestLayout()
-        //btn.setWidth(100);
-        //Insert the Button in defined position
 
-        // GridLayout.LayoutParams gridLayoutParam = new GridLayout.LayoutParams(row, column);
         LLSubactivities.addView(btn);
         Log.d(TAG,"ADD "+LLSubactivities.getChildCount());
-        // GridLayout.LayoutParams lParams = (GridLayout.LayoutParams) btn.getLayoutParams();
-        // lParams.setMargins(3, 0, 3, 10);
+
     }
     LLSettings.invalidate();
 
@@ -836,7 +828,7 @@ For actual time, update every 1000 ms
                                 toolbar.post(new Runnable() {
                                     @Override
                                     public void run() {
-                                        MainActivity.actualTime = new SimpleDateFormat("HH:mm:ss").format(new Date());
+                                        MainActivity.actualTime = new SimpleDateFormat("HH:mm").format(new Date());
                                         toolbar.setTitle( MainActivity.actualTime);
                                         if (MainActivity.this.listLogActivity.size() > 0 && MainActivity.this.status == 0) {
                                             long timeDiff = System.currentTimeMillis() - MainActivity.this.listLogActivity.get(0).ms;
@@ -899,7 +891,10 @@ For actual time, update every 1000 ms
 
 
                        //Change start time for activity
+                        if(position<adapterListLogActivity.getCount()-1)
                         changeTimeActivity(adapterListLogActivity.getItem(position+1),ba);
+                        else
+                            changeTimeActivity(null,ba);
                     }
                 });
 
@@ -969,10 +964,6 @@ For actual time, update every 1000 ms
             public void onTimeChanged(TimePicker view,
                                       int hour, int minute) {
 
-
-
-                //Log.d("ChangeTime","curTime = "+System.currentTimeMillis()+":"+ms);
-                //Log.d(TAG, " ChangeTime ");
                 date.setHours(hour);
                 date.setMinutes(minute);
 }
@@ -981,57 +972,42 @@ For actual time, update every 1000 ms
         TPD.getButton(DialogInterface.BUTTON_POSITIVE).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-               // Log.d(TAG,"===============Click Save   ");
 
+            if(prevBa!=null)
+            {
                 Log.d(TAG,"newTime="+date.getTime()+"|"+prevBa.ms+"|"+ curBa.endTime);
-
-               if( date.getTime()<prevBa.ms||date.getTime()>curBa.endTime)
-                   Toast.makeText(MainActivity.this, "The selected time is not valid for selection", Toast.LENGTH_SHORT).show();
-               else
+                if(date.getTime()>prevBa.ms&&(date.getTime()<curBa.endTime||curBa.endTime==0))
+                {
+                    //Toast.makeText(MainActivity.this, "Correct time", Toast.LENGTH_SHORT).show();
+                    dbHandler.updateEventEndTime(String.valueOf(prevBa.ms),String.valueOf(date.getTime()),"",0);
+                    dbHandler.updateTimeEvents(String.valueOf(curBa.ms),String.valueOf(date.getTime()));
+                    prevBa.endTime=date.getTime();
+                    curBa.ms=date.getTime();
+                }
+                else
+                    Toast.makeText(MainActivity.this, "The selected time is not valid for selection", Toast.LENGTH_SHORT).show();
+            }
+             else
+                 {
+                   if(date.getTime()<curBa.endTime||curBa.endTime==0)
                    {
-                       Toast.makeText(MainActivity.this, "Correct time", Toast.LENGTH_SHORT).show();
+                       //Toast.makeText(MainActivity.this, "Correct time", Toast.LENGTH_SHORT).show();
+                       dbHandler.updateTimeEvents(String.valueOf(curBa.ms),String.valueOf(date.getTime()));
+                       curBa.ms=date.getTime();
                    }
+                   else
+                       Toast.makeText(MainActivity.this, "The selected time is not valid for selection", Toast.LENGTH_SHORT).show();
 
-//                int endHour = endDate.getHours();
-//                int endMinutes = endDate.getMinutes();
-//
-//                int hour = date.getHours();
-//                int minute = date.getMinutes();
-//
-//                int startHour = startDate.getHours();
-//                int startMinutes = startDate.getMinutes();
+                 }
+                TPD.dismiss();
 
-//                Log.d(TAG, " start " + startHour + ":" + startMinutes +
-//                        "  end " + endHour + ":" + endMinutes);
-                //checking the time for correctness
-//                if (hour > endHour || (hour == endHour && minute > endMinutes) ||
-//                        hour < startHour || (hour == startHour && minute < startMinutes)) {
-//                    Toast.makeText(MainActivity.this, "The selected time is not valid for selection", Toast.LENGTH_SHORT).show();
-//                    Toast.makeText(MainActivity.this, "start " + startHour + ":" + startMinutes +
-//                            "  end " + endHour + ":" + endMinutes, Toast.LENGTH_SHORT).show();
-//
-//                    TPD.dismiss();
-//                    changeTimeActivity(ba);
-//                } else {
-//                    date.setHours(hour);
-//                    date.setMinutes(minute);
-//                    Log.e("UPDATE!!", "sf");
-//                    //ba.time = new SimpleDateFormat("HH:mm:ss").format(date);
-//                    //ba.date = new SimpleDateFormat("dd.MM.yyyy").format(date);
-//
-//
-//                    mUpdateTime = String.valueOf(ba.ms);
-//                    ba.ms = date.getTime();
-//                    mNewStartTime = String.valueOf(ba.ms);
-//                    // dbHandler.updateTimeEvents(String.valueOf(startDate.getTime()),String.valueOf(ba.ms));
-//
 //                    //Update Time in GoogleDiary
 //                    // updateGoogleDiary();
 //                    //Change LogAcivity
-//                    MainActivity.this.adapterListLogActivity.notifyDataSetChanged();
-//                    // MainActivity.this.lvActivity.setAdapter(MainActivity.this.adapterListLogActivity);
+                 MainActivity.this.adapterListLogActivity.notifyDataSetChanged();
+                  MainActivity.this.lvActivity.setAdapter(MainActivity.this.adapterListLogActivity);
 //
-//                    //  createActivityLog();
+                    createLog();
 //                }
             }
 
