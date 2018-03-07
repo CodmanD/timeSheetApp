@@ -2,12 +2,358 @@
 <android.support.constraint.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    xmlns:app="http://schemas.android.com/apk/res-auto">
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:background="#000000"
+    >
+
+    <android.support.v7.widget.Toolbar
+        android:id="@+id/toolBarEditPage"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+
+        android:background="?attr/colorAccent"
+        android:minHeight="?attr/actionBarSize"
+        android:theme="?attr/actionBarTheme"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:subtitleTextColor="@color/colorText"
+        app:titleTextColor="@color/colorText" />
+
     <TextView
-        android:id="@+id/textView8"
+        android:id="@+id/tvLogData"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:background="@color/colorAccent"
-        android:text="TextView"
-        app:layout_constraintEnd_toStartOf="@+id/toolBar_MainActivity" />
+        android:textColor="@color/colorText"
+        android:text="@string/log_data"
+        android:textSize="20sp"
+        app:layout_constraintLeft_toLeftOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/toolBarEditPage" />
+
+    <LinearLayout
+        android:id="@+id/LLData"
+        android:layout_width="wrap_content"
+        android:layout_height="0dp"
+        android:orientation="horizontal"
+        app:layout_constraintLeft_toLeftOf="parent"
+        app:layout_constraintRight_toRightOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/toolBarEditPage">
+
+        <ImageView
+            android:id="@+id/ivLeft"
+            android:layout_width="wrap_content"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+
+            android:src="@drawable/ic_chevron_left_white_36dp" />
+
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="vertical">
+
+            <TextView
+                android:id="@+id/tvDay"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="TextView"
+                android:textColor="@color/colorText"
+                android:textSize="20sp"
+                android:gravity="center"
+                />
+
+            <TextView
+                android:id="@+id/tvDate"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="TextView"
+                android:textColor="@color/colorText"
+                android:textSize="20sp"
+                android:gravity="center"
+                />
+        </LinearLayout>
+
+        <ImageView
+            android:id="@+id/ivRight"
+            android:layout_width="wrap_content"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:src="@drawable/ic_chevron_right_white_36dp" />
+
+
+    </LinearLayout>
+
+    <LinearLayout
+        android:id="@+id/LLists"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:orientation="horizontal"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintLeft_toLeftOf="parent"
+        app:layout_constraintRight_toRightOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/LLData">
+
+        <LinearLayout
+            android:id="@+id/LLStopwatch"
+            android:layout_width="0dp"
+            android:layout_weight="1"
+            android:layout_height="match_parent"
+            android:orientation="vertical">
+
+            <TextView
+                android:id="@+id/tvStopwatch"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="@string/stopwatch_log"
+                android:textSize="20sp"
+                android:textColor="@color/colorText"
+                />
+
+            <LinearLayout
+
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal">
+
+                <TextView
+                    android:id="@+id/tvStartTime"
+                    android:layout_width="0dp"
+                    android:layout_weight="1"
+                    android:textColor="@color/colorText"
+                    android:layout_height="wrap_content"
+                    android:text="@string/startTime"
+                    android:textSize="@dimen/textSizeTVEdit" />
+
+                <TextView
+                    android:id="@+id/tvEndTime"
+                    android:textColor="@color/colorText"
+                    android:layout_width="0dp"
+                    android:layout_weight="1"
+                    android:layout_height="wrap_content"
+                    android:text="@string/finish_time"
+                    android:textSize="@dimen/textSizeTVEdit" />
+
+                <TextView
+                    android:id="@+id/tvActivity"
+                    android:textColor="@color/colorText"
+                    android:layout_width="0dp"
+                    android:layout_weight="1"
+
+                    android:layout_height="wrap_content"
+                    android:text="@string/activity"
+                    android:textSize="@dimen/textSizeTVEdit" />
+
+                <TextView
+                    android:id="@+id/tvSubactivity"
+                    android:textColor="@color/colorText"
+                    android:layout_width="0dp"
+                    android:layout_weight="1"
+                    android:layout_height="wrap_content"
+                    android:text="@string/Subactivity"
+                    android:textSize="@dimen/textSizeTVEdit" />
+
+            </LinearLayout>
+
+            <ListView
+                android:id="@+id/LVStopwatch"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:background="@color/colorGridView"
+                ></ListView>
+        </LinearLayout>
+
+        <LinearLayout
+            android:id="@+id/LLGoogle"
+            android:layout_width="0dp"
+            android:layout_weight="1"
+            android:layout_height="match_parent"
+            android:orientation="vertical">
+
+            <TextView
+                android:id="@+id/tvGoogle"
+                android:textColor="@color/colorText"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="@string/google_calendar"
+                android:textSize="20sp" />
+
+            <LinearLayout
+
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal">
+
+                <TextView
+                    android:id="@+id/tvStartTimeGoogle"
+                    android:layout_width="0dp"
+                    android:layout_weight="1"
+                    android:textColor="@color/colorText"
+                    android:layout_height="wrap_content"
+                    android:text="@string/startTime"
+                    android:textSize="@dimen/textSizeTVEdit" />
+
+                <TextView
+                    android:id="@+id/tvFinishTimeGoogle"
+                    android:textColor="@color/colorText"
+                    android:layout_width="0dp"
+                    android:layout_weight="1"
+                    android:layout_height="wrap_content"
+                    android:text="@string/finish_time"
+                    android:textSize="@dimen/textSizeTVEdit"/>
+
+                <TextView
+                    android:id="@+id/tvEvent"
+                    android:textColor="@color/colorText"
+                    android:layout_width="0dp"
+                    android:layout_weight="1"
+
+                    android:layout_height="wrap_content"
+                    android:text="@string/event"
+                    android:textSize="@dimen/textSizeTVEdit"/>
+
+
+
+            </LinearLayout>
+
+            <ListView
+                android:id="@+id/LVGoogle"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:background="@color/colorRelaxing"
+                ></ListView>
+        </LinearLayout>
+
+        <LinearLayout
+            android:id="@+id/LLPhone"
+            android:layout_width="0dp"
+            android:layout_weight="1"
+            android:layout_height="match_parent"
+            android:orientation="vertical">
+
+            <TextView
+                android:id="@+id/tvPhone"
+                android:textColor="@color/colorText"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="@string/phone_log"
+                android:textSize="20sp" />
+
+            <LinearLayout
+
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal">
+
+                <TextView
+                    android:id="@+id/tvStartTimePhone"
+                    android:layout_width="0dp"
+                    android:layout_weight="1"
+                    android:textColor="@color/colorText"
+                    android:layout_height="wrap_content"
+                    android:text="@string/startTime"
+                    android:textSize="@dimen/textSizeTVEdit" />
+
+                <TextView
+                    android:id="@+id/tvFinishTimePhone"
+                    android:textColor="@color/colorText"
+                    android:layout_width="0dp"
+                    android:layout_weight="1"
+                    android:layout_height="wrap_content"
+                    android:text="@string/finish_time"
+                    android:textSize="@dimen/textSizeTVEdit" />
+
+                <TextView
+                    android:id="@+id/tvContact"
+                    android:textColor="@color/colorText"
+                    android:layout_width="0dp"
+                    android:layout_weight="1"
+
+                    android:layout_height="wrap_content"
+                    android:text="@string/contact"
+                    android:textSize="@dimen/textSizeTVEdit" />
+
+
+
+            </LinearLayout>
+
+
+            <ListView
+                android:id="@+id/LVPhone"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:background="@color/colorExercising"
+                ></ListView>
+        </LinearLayout>
+        <LinearLayout
+            android:id="@+id/LLGPS"
+            android:layout_width="0dp"
+            android:layout_weight="1"
+            android:layout_height="match_parent"
+            android:orientation="vertical">
+
+            <TextView
+                android:id="@+id/tvGPS"
+                android:textColor="@color/colorText"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="@string/gps_log"
+                android:textSize="20sp" />
+
+            <LinearLayout
+
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal">
+
+                <TextView
+                    android:id="@+id/tvStartTimeGPS"
+                    android:layout_width="0dp"
+                    android:layout_weight="1"
+                    android:textColor="@color/colorText"
+                    android:layout_height="wrap_content"
+                    android:text="@string/startTime"
+                    android:textSize="@dimen/textSizeTVEdit" />
+
+                <TextView
+                    android:id="@+id/tvFinishTimeGPS"
+                    android:textColor="@color/colorText"
+                    android:layout_width="0dp"
+                    android:layout_weight="1"
+                    android:layout_height="wrap_content"
+                    android:text="@string/finish_time"
+                    android:textSize="@dimen/textSizeTVEdit" />
+
+                <TextView
+                    android:id="@+id/tvLongitude"
+                    android:textColor="@color/colorText"
+                    android:layout_width="0dp"
+                    android:layout_weight="1"
+
+                    android:layout_height="wrap_content"
+                    android:text="@string/Longitude"
+                    android:textSize="@dimen/textSizeTVEdit" />
+
+                <TextView
+                    android:id="@+id/tvLatitude"
+                    android:textColor="@color/colorText"
+                    android:layout_width="0dp"
+                    android:layout_weight="1"
+
+                    android:layout_height="wrap_content"
+                    android:text="@string/Latitude"
+                    android:textSize="@dimen/textSizeTVEdit" />
+
+
+            </LinearLayout>
+
+            <ListView
+                android:id="@+id/LVGPS"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:background="@color/colorEating"
+                ></ListView>
+        </LinearLayout>
+
+
+    </LinearLayout>
 </android.support.constraint.ConstraintLayout>

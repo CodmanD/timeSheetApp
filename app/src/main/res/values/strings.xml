@@ -66,5 +66,13 @@
     <string name="contact">Contact</string>
     <string name="Longitude">Longitude</string>
     <string name="Latitude">Latitude</string>
-
+    <string-array name="days">
+        <item >Sunday</item>
+        <item >Monday</item>
+        <item >Tuesday</item>
+        <item >Wednesday</item>
+        <item >Thursday</item>
+        <item >Friday</item>
+        <item >Saturday</item>
+     </string-array>
 </resources>

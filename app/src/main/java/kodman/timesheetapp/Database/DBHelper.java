@@ -25,6 +25,8 @@ class DBHelper extends SQLiteOpenHelper {
                 + "dateTimeStart text,"
                 + "dateTimeEnd text,"
                 + "color integer,"
+                + "latitude real,"
+                + "longitude real,"
                 + "deleted integer,"
                 + "synced integer"
                 + ");");

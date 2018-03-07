@@ -10,11 +10,14 @@ import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.ActivityInfo;
+import android.content.pm.PackageManager;
 import android.content.res.Resources;
 import android.database.Cursor;
 import android.graphics.Color;
 import android.graphics.Point;
 import android.graphics.drawable.Drawable;
+import android.location.Location;
+import android.location.LocationManager;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.net.Uri;
@@ -23,6 +26,7 @@ import android.os.Build;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.annotation.RequiresApi;
+import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
@@ -81,15 +85,7 @@ import pub.devrel.easypermissions.EasyPermissions;
 
 public class MainActivity extends AppCompatActivity implements EasyPermissions.PermissionCallbacks {
 
-    private final String USER_NAME_PREFERENCES = "user_name_sp";
-    private final String USER_NAME = "name";
-    static final int REQUEST_ACCOUNT_PICKER = 1000;
-    static final int REQUEST_AUTHORIZATION = 1001;
-    static final int REQUEST_GOOGLE_PLAY_SERVICES = 1002;
-    static final int REQUEST_PERMISSION_GET_ACCOUNTS = 1003;
 
-    private static final String PREF_ACCOUNT_NAME = "is.karpus@gmail.com";
-    private static final String[] SCOPES = {CalendarScopes.CALENDAR};
     private static boolean mIsCreateAvailable = true;
     private static final String TAG = "------Activity Say";
     private String mNewSummary;
@@ -151,7 +147,28 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
     }
 
 
+private Double[] getCoordinates()
+{
+    Double[] coords=new Double[2];
 
+    if (ContextCompat.checkSelfPermission(this,
+            Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+        if (Build.VERSION.SDK_INT >= 23)
+            requestPermissions(new String[]{Manifest.permission.ACCESS_FINE_LOCATION},
+                    Cnst.REQUEST_PERMISSION_LOCATION);
+    } else {
+    LocationManager locationManager = (LocationManager) getSystemService(LOCATION_SERVICE);
+        Log.d(TAG,"Coors = "+locationManager);
+
+
+    Location location=  locationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER);
+
+    Log.d(TAG,"Coors = "+location);
+    coords[0]=location.getLatitude();
+        coords[1]=location.getLongitude();
+    }
+    return  coords;
+}
 
   private void addActivities()
   {
@@ -810,7 +827,7 @@ private void addSubactivities()
 
         // Initialize credentials and service object.
         mCredential = GoogleAccountCredential.usingOAuth2(
-                getApplicationContext(), Arrays.asList(SCOPES))
+                getApplicationContext(), Arrays.asList(Cnst.SCOPES))
                 .setBackOff(new ExponentialBackOff());
         callCalendarApi(3);
 
@@ -1371,11 +1388,10 @@ For actual time, update every 1000 ms
                 return true;
             case R.id.action_edit_page:
                 this.status = 1;
-           //     this.setContentView(R.layout.activity_main_fragment);
-           // FragmentTransaction fragmentTransaction = getFragmentManager().beginTransaction();
-           // fragmentTransaction.add(R.id.fragmentContainer, new ScreenEditPage()).commit();
-                Intent  intent= new Intent(MainActivity.this,ActivityEditPage.class);
-                startActivity(intent);
+            Double[] cc=getCoordinates();
+            Toast.makeText(this,"coors = "+cc[0]+":"+cc[1],Toast.LENGTH_SHORT).show();
+                //  Intent  intent= new Intent(MainActivity.this,ActivityEditPage.class);
+               // startActivity(intent);
             return true;
             case R.id.action_settings:
                 this.status = 2;
@@ -1724,27 +1740,27 @@ For actual time, update every 1000 ms
      * function will be rerun automatically whenever the GET_ACCOUNTS permission
      * is granted.
      */
-    @AfterPermissionGranted(REQUEST_PERMISSION_GET_ACCOUNTS)
+    @AfterPermissionGranted(Cnst.REQUEST_PERMISSION_GET_ACCOUNTS)
     private void chooseAccount() {
         if (EasyPermissions.hasPermissions(
                 this, Manifest.permission.GET_ACCOUNTS,
                 Manifest.permission.WRITE_EXTERNAL_STORAGE)) {
             String accountName = getPreferences(Context.MODE_PRIVATE)
-                    .getString(PREF_ACCOUNT_NAME, null);
+                    .getString(Cnst.PREF_ACCOUNT_NAME, null);
             if (accountName != null) {
                 mCredential.setSelectedAccountName(accountName);
             } else {
                 // Start a dialog from which the user can choose an account
                 startActivityForResult(
                         mCredential.newChooseAccountIntent(),
-                        REQUEST_ACCOUNT_PICKER);
+                        Cnst.REQUEST_ACCOUNT_PICKER);
             }
         } else {
             // Request the GET_ACCOUNTS permission via a user dialog
             EasyPermissions.requestPermissions(
                     this,
                     "This app needs to access your Google account (via Contacts).",
-                    REQUEST_PERMISSION_GET_ACCOUNTS,
+                    Cnst.REQUEST_PERMISSION_GET_ACCOUNTS,
                     Manifest.permission.GET_ACCOUNTS,
                     Manifest.permission.WRITE_EXTERNAL_STORAGE);
         }
@@ -1767,7 +1783,7 @@ For actual time, update every 1000 ms
         super.onActivityResult(requestCode, resultCode, data);
 
         switch (requestCode) {
-            case REQUEST_GOOGLE_PLAY_SERVICES:
+            case Cnst.REQUEST_GOOGLE_PLAY_SERVICES:
                 if (resultCode != RESULT_OK) {
                     Toast.makeText(getApplicationContext(), "This app requires Google Play Services. Please install " +
                             "Google Play Services on your device and relaunch this app.", Toast.LENGTH_SHORT).show();
@@ -1775,7 +1791,7 @@ For actual time, update every 1000 ms
                     callCalendarApi(3);
                 }
                 break;
-            case REQUEST_ACCOUNT_PICKER:
+            case Cnst.REQUEST_ACCOUNT_PICKER:
                 if (resultCode == RESULT_OK && data != null &&
                         data.getExtras() != null) {
                     String accountName =
@@ -1784,7 +1800,7 @@ For actual time, update every 1000 ms
                         SharedPreferences settings =
                                 getPreferences(Context.MODE_PRIVATE);
                         SharedPreferences.Editor editor = settings.edit();
-                        editor.putString(PREF_ACCOUNT_NAME, accountName);
+                        editor.putString(Cnst.PREF_ACCOUNT_NAME, accountName);
                         editor.apply();
                         mCredential.setSelectedAccountName(accountName);
                         callCalendarApi(3);
@@ -1793,7 +1809,7 @@ For actual time, update every 1000 ms
                     }
                 }
                 break;
-            case REQUEST_AUTHORIZATION:
+            case Cnst.REQUEST_AUTHORIZATION:
                 if (resultCode == RESULT_OK) {
                     callCalendarApi(1);
                 }
@@ -1803,9 +1819,9 @@ For actual time, update every 1000 ms
     }
 
     private void saveUserNameToSharedPref(String accountName) {
-        SharedPreferences userNameSp = getSharedPreferences(USER_NAME_PREFERENCES, Context.MODE_PRIVATE);
+        SharedPreferences userNameSp = getSharedPreferences(Cnst.USER_NAME_PREFERENCES, Context.MODE_PRIVATE);
         SharedPreferences.Editor editor = userNameSp.edit();
-        editor.putString(USER_NAME, accountName);
+        editor.putString(Cnst.USER_NAME, accountName);
         editor.apply();
     }
 
@@ -1907,7 +1923,7 @@ For actual time, update every 1000 ms
         Dialog dialog = apiAvailability.getErrorDialog(
                 MainActivity.this,
                 connectionStatusCode,
-                REQUEST_GOOGLE_PLAY_SERVICES);
+                Cnst.REQUEST_GOOGLE_PLAY_SERVICES);
         dialog.show();
     }
 
@@ -1973,7 +1989,7 @@ For actual time, update every 1000 ms
                 }
             } catch (UserRecoverableAuthIOException e) {
                 //request permissions to access google calendar
-                startActivityForResult(e.getIntent(), REQUEST_AUTHORIZATION);
+                startActivityForResult(e.getIntent(), Cnst.REQUEST_AUTHORIZATION);
                 mIsCreateAvailable = true;
             } catch (IOException e) {
                 e.printStackTrace();
