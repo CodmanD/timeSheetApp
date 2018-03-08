@@ -2,9 +2,12 @@ package kodman.timesheetapp;
 
 import android.Manifest;
 import android.accounts.AccountManager;
+import android.app.AlarmManager;
 import android.app.Dialog;
 import android.app.FragmentTransaction;
+import android.app.PendingIntent;
 import android.app.TimePickerDialog;
+import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
@@ -24,6 +27,7 @@ import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.SystemClock;
 import android.support.annotation.NonNull;
 import android.support.annotation.RequiresApi;
 import android.support.v4.content.ContextCompat;
@@ -119,6 +123,48 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
     public void onPointerCaptureChanged(boolean hasCapture) {
 
     }
+
+
+    private void restartGetGPS() {
+
+        if (ContextCompat.checkSelfPermission(this,
+                Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+            if (Build.VERSION.SDK_INT >= 23)
+                requestPermissions(new String[]{Manifest.permission.ACCESS_FINE_LOCATION},
+                        Cnst.REQUEST_PERMISSION_LOCATION);
+        } else {
+
+            Intent gpsIntent = new Intent(this, GPSReceiver.class);
+
+            AlarmManager alarmManager = (AlarmManager) this.getSystemService(Context.ALARM_SERVICE);
+            //AlarmUtil.setAlarm(this, alarmIntent, (int) ae.getId(), ringtone, ae.getTimeAlarm(), advance);
+            PendingIntent pendingIntent = PendingIntent.getBroadcast(this, 0, gpsIntent, PendingIntent.FLAG_UPDATE_CURRENT);
+             alarmManager.cancel(pendingIntent);
+           alarmManager.setRepeating(AlarmManager.RTC,System.currentTimeMillis()+4000,2000,pendingIntent);
+
+
+        Log.d(Cnst.TAG,"------------restart service gpsIntent = "+gpsIntent+" | "+pendingIntent+" | "+alarmManager);
+        }
+
+         /*
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                // alarmManager.setExactAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, calendar.getTimeInMillis(), pendingIntent);
+                alarmManager.setExactAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, ms-advance, pendingIntent);
+                // Log.d(TAG,"setALARM  -seExactAndAllowWhileIdle");
+            } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
+                //    alarmManager.setExact(AlarmManager.RTC_WAKEUP, calendar.getTimeInMillis(), pendingIntent);
+                alarmManager.setExact(AlarmManager.RTC_WAKEUP, ms-advance, pendingIntent);
+                //Log.d(TAG,"setALARM  -seExact");
+            } else {
+                // alarmManager.set(AlarmManager.RTC_WAKEUP, calendar.getTimeInMillis(), pendingIntent);
+                alarmManager.set(AlarmManager.RTC_WAKEUP, ms-advance, pendingIntent);
+                // Log.d(TAG,"setALARM  -set");
+            }
+
+*/
+
+    }
+
   public void undoClick(View view) {
         if (MainActivity.this.listLogActivity.size() == 0) return;
         if (!mIsCreateAvailable) {
@@ -147,28 +193,7 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
     }
 
 
-private Double[] getCoordinates()
-{
-    Double[] coords=new Double[2];
 
-    if (ContextCompat.checkSelfPermission(this,
-            Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
-        if (Build.VERSION.SDK_INT >= 23)
-            requestPermissions(new String[]{Manifest.permission.ACCESS_FINE_LOCATION},
-                    Cnst.REQUEST_PERMISSION_LOCATION);
-    } else {
-    LocationManager locationManager = (LocationManager) getSystemService(LOCATION_SERVICE);
-        Log.d(TAG,"Coors = "+locationManager);
-
-
-    Location location=  locationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER);
-
-    Log.d(TAG,"Coors = "+location);
-    coords[0]=location.getLatitude();
-        coords[1]=location.getLongitude();
-    }
-    return  coords;
-}
 
   private void addActivities()
   {
@@ -659,11 +684,14 @@ private void addSubactivities()
 //
 //
 //
+                                 //Get coordinates
+
+
                                //Add to DB
                                 MainActivity.this.dbHandler.writeEventWithSubToDB(ba.name,"",""
                                         ,String.valueOf(ba.ms),String.valueOf(ba.ms),ba.color,
                                         0,0,ba.getSubName(),ba.getSubColor(),"");
-//
+
 //                                //add formed activity
                                  MainActivity.this.listLogActivity.add(0, ba);
 //                               // MainActivity.this.listLogSubactivity.add(0, subA);
@@ -834,6 +862,8 @@ private void addSubactivities()
 //Read From DataBase
         readAcivitiesFromDB();
         this.createLog();
+        //Start service for get coordinates
+        restartGetGPS();
 /*
 For actual time, update every 1000 ms
  */
@@ -1025,6 +1055,7 @@ For actual time, update every 1000 ms
                   MainActivity.this.lvActivity.setAdapter(MainActivity.this.adapterListLogActivity);
 //
                     createLog();
+
 //                }
             }
 
@@ -1388,8 +1419,8 @@ For actual time, update every 1000 ms
                 return true;
             case R.id.action_edit_page:
                 this.status = 1;
-            Double[] cc=getCoordinates();
-            Toast.makeText(this,"coors = "+cc[0]+":"+cc[1],Toast.LENGTH_SHORT).show();
+           // Double[] cc=getCoordinates();
+          //  Toast.makeText(this,"coors = "+cc[0]+":"+cc[1],Toast.LENGTH_SHORT).show();
                 //  Intent  intent= new Intent(MainActivity.this,ActivityEditPage.class);
                // startActivity(intent);
             return true;

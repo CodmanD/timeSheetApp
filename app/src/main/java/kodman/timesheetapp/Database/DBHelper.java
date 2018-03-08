@@ -30,6 +30,15 @@ class DBHelper extends SQLiteOpenHelper {
                 + "deleted integer,"
                 + "synced integer"
                 + ");");
+
+
+        db.execSQL("create table coordinatesTable ("
+                + "_id integer primary key autoincrement,"
+                + "dateTimeStart text,"
+                + "dateTimeEnd text,"
+                + "latitude real,"
+                + "longitude real"
+                + ");");
     }
 
 

@@ -57,6 +57,32 @@ public class DBHandler {
         db.insert("calendarTable", null, cv);
         dbHelper.close();
     }
+////write one event to local database with coordinates
+    public void writeEventWithSubToDB(String eventName, String calendarId, String eventId,String endTime,
+                                      String startTime, int color, int deleted, int synced,String subName,
+                                      int subColor,String notes,double latitude,double longitude) {
+        dbHelper = new DBHelper(mContext);
+        db = dbHelper.getWritableDatabase();
+        ContentValues cv = new ContentValues();
+        cv.put("eventId", eventId);
+        cv.put("calendarId", calendarId);
+        cv.put("eventName", eventName);
+        cv.put("dateTimeStart", startTime);
+        cv.put("dateTimeEnd", endTime);
+        cv.put("color", color);
+        cv.put("deleted", deleted);
+        cv.put("synced", synced);
+        cv.put("subName", subName);
+        cv.put("subColor", subColor);
+        cv.put("notes", notes);
+        cv.put("latitude", latitude);
+        cv.put("longitude", longitude);
+        db.insert("calendarTable", null, cv);
+        dbHelper.close();
+    }
+
+
+
     //read all events where event id like not_synced or deleted to sync with google calendar
     public Cursor readUnsyncedEventFromDB() {
         dbHelper = new DBHelper(mContext);
