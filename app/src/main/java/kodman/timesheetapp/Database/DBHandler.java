@@ -8,6 +8,8 @@ import android.util.Log;
 
 import java.util.ArrayList;
 
+import kodman.timesheetapp.Cnst;
+
 public class DBHandler {
     private Context mContext;
     private DBHelper dbHelper;
@@ -31,8 +33,7 @@ public class DBHandler {
         cv.put("color", color);
         cv.put("deleted", deleted);
         cv.put("synced", synced);
-        //cv.put("subName", subName);
-        //cv.put("subColor", subColor);
+
         db.insert("calendarTable", null, cv);
         dbHelper.close();
     }
@@ -57,29 +58,7 @@ public class DBHandler {
         db.insert("calendarTable", null, cv);
         dbHelper.close();
     }
-////write one event to local database with coordinates
-    public void writeEventWithSubToDB(String eventName, String calendarId, String eventId,String endTime,
-                                      String startTime, int color, int deleted, int synced,String subName,
-                                      int subColor,String notes,double latitude,double longitude) {
-        dbHelper = new DBHelper(mContext);
-        db = dbHelper.getWritableDatabase();
-        ContentValues cv = new ContentValues();
-        cv.put("eventId", eventId);
-        cv.put("calendarId", calendarId);
-        cv.put("eventName", eventName);
-        cv.put("dateTimeStart", startTime);
-        cv.put("dateTimeEnd", endTime);
-        cv.put("color", color);
-        cv.put("deleted", deleted);
-        cv.put("synced", synced);
-        cv.put("subName", subName);
-        cv.put("subColor", subColor);
-        cv.put("notes", notes);
-        cv.put("latitude", latitude);
-        cv.put("longitude", longitude);
-        db.insert("calendarTable", null, cv);
-        dbHelper.close();
-    }
+
 
 
 
@@ -312,14 +291,50 @@ public void updateLastEventEndTime(String endTime)
         dbHelper.close();
     }
 
-    public void showEvents()
+    //getCursor for GPS List
+    public Cursor getGPSEvents(long startTime,long finishTime)
+    {
+
+        Log.d(Cnst.TAG,"Start = "+startTime+" endTime = "+finishTime);
+        dbHelper = new DBHelper(mContext);
+        db = dbHelper.getReadableDatabase();
+        Cursor cursor= db.rawQuery("SELECT * FROM coordinatesTable WHERE "+Cnst.DATE_TIME_START+
+                ">"+startTime+" AND "+Cnst.DATE_TIME_START+" < "+finishTime+
+                " ORDER BY dateTimeStart ASC ", null);
+
+       // db.close();
+       // dbHelper.close();
+        return cursor;
+    }
+
+    public long writeToGPS(long start,long finish,double latitude,double longitude)
+    {
+        dbHelper = new DBHelper(mContext);
+        db = dbHelper.getWritableDatabase();
+        ContentValues cv = new ContentValues();
+        cv.put(Cnst.DATE_TIME_START, start);
+        //cv.put(Cnst.DATE_TIME_END, finish);
+        cv.put(Cnst.LATITUDE, latitude);
+        cv.put(Cnst.LONGITUDE, longitude);
+        long res=db.insert(Cnst.GPS_TABLE, null, cv);
+        db.close();
+         return res;
+    }
+
+    public void showBase(String table)
     {
         dbHelper = new DBHelper(mContext);
         db = dbHelper.getReadableDatabase();
+        Cursor cursor=db.rawQuery("SELECT * FROM "+table, null);
+        Log.d(Cnst.TAG,"-------------------Cursor count = "+cursor.getCount());
+        if(cursor.moveToFirst())
+            do{
+            Log.d(Cnst.TAG,"-----------------Color DataBASE = "+cursor.getString(cursor.getColumnIndex("color")));
 
-        db.close();
-        dbHelper.close();
+
+            }while(cursor.moveToNext());
     }
+
     //close database
     public void closeDB() {
         db.close();

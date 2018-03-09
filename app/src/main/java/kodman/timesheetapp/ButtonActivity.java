@@ -22,7 +22,7 @@ public class ButtonActivity {
     private static SimpleDateFormat formatTime = new SimpleDateFormat("HH:mm");
     String name;
     String subName="";
-    int subColor= Color.WHITE;
+    int subColor= Color.BLACK;
     int color;
  //   String time;
   //  String date;

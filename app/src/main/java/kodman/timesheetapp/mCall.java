@@ -2,9 +2,7 @@ package kodman.timesheetapp;
 
 import java.text.SimpleDateFormat;
 
-/**
- * Created by DI1 on 07.03.2018.
- */
+
 
 public class mCall {
     String time;

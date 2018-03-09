@@ -7,7 +7,7 @@
     android:orientation="vertical"
     >
 
-    <android.support.v7.widget.Toolbar
+    <!--android.support.v7.widget.Toolbar
         android:id="@+id/toolBar_MainActivity"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
@@ -17,7 +17,7 @@
         android:theme="?attr/actionBarTheme"
 
         app:subtitleTextColor="@color/colorText"
-        app:titleTextColor="@color/colorText" />
+        app:titleTextColor="@color/colorText" /-->
 
     <FrameLayout
         android:id="@+id/fragmentContainer"

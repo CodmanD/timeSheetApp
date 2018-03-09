@@ -34,8 +34,8 @@ class DBHelper extends SQLiteOpenHelper {
 
         db.execSQL("create table coordinatesTable ("
                 + "_id integer primary key autoincrement,"
-                + "dateTimeStart text,"
-                + "dateTimeEnd text,"
+                + "dateTimeStart integer,"
+                + "dateTimeEnd integer,"
                 + "latitude real,"
                 + "longitude real"
                 + ");");

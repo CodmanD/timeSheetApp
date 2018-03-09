@@ -16,9 +16,23 @@ public final class Cnst {
     public static final int REQUEST_PERMISSION_GET_ACCOUNTS = 1003;
     public static final int REQUEST_PERMISSION_LOCATION = 1005;
 
-    public static final String LATITUDE = "latitude";
-    public static final String LONGITUDE = "longitude";
+    public static final String CALENDAR_ID="calendarId";
 
     public static final String PREF_ACCOUNT_NAME = "is.karpus@gmail.com";
     public static final String[] SCOPES = {CalendarScopes.CALENDAR};
+
+    //Collumns DataBase Table GPS
+    public static final String GPS_TABLE = "coordinatesTable";
+    public static final String DATE_TIME_START = "dateTimeStart";
+    public static final String DATE_TIME_END = "dateTimeEnd";
+    public static final String LATITUDE = "latitude";
+    public static final String LONGITUDE = "longitude";
+
+    //Collumns DataBase Table Activities
+    public static final String CALENDAR_TABLE = "calendarTable";
+   // public static final String DATE_TIME_START = "dateTimeStart";
+   // public static final String DATE_TIME_END = "dateTimeEnd";
+   // public static final String LATITUDE = "latitude";
+   // public static final String LONGITUDE = "longitude";
+
 }
