@@ -545,7 +545,7 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
                                             Toast.LENGTH_SHORT).show();
                                     return;
                                 }
-                                if (!ba.name.equals("Nothing"))
+                                if (!ba.name.toLowerCase().equals("nothing"))
                                     createDialogSubactivity(ba);
                                 else {
 
@@ -862,6 +862,7 @@ For actual time, update every 1000 ms
                     public void onClick(View v) {
 
                         //method for change activity
+                        if (!ba.name.toLowerCase().equals("nothing"))
                         changeNameSubActivity(ba, btnSA);
                     }
                 });
