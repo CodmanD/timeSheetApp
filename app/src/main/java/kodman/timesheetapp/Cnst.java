@@ -17,6 +17,14 @@ public final class Cnst {
     public static final int REQUEST_PERMISSION_LOCATION = 1005;
 
     public static final String CALENDAR_ID="calendarId";
+    public static final String NAME="myName";
+    public static final String NAME_CALENDAR="myCalendar";
+    public static final String SIZE_LIST_ACTIVITY="sizeListActivity";
+    public static final String NAME_ACTIVITY="buttonAcivityName";
+    public static final String COLOR_ACTIVITY="buttonAcivityColor";
+    public static final String SIZE_LIST_SUBACTIVITY="sizeListSubactivity";
+    public static final String NAME_SUBACTIVITY="buttonSubacivityName";
+    public static final String COLOR_SUBACTIVITY="buttonSubacivityColor";
 
     public static final String PREF_ACCOUNT_NAME = "is.karpus@gmail.com";
     public static final String[] SCOPES = {CalendarScopes.CALENDAR};

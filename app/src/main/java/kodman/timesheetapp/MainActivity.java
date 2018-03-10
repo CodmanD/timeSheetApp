@@ -138,32 +138,14 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
             Intent gpsIntent = new Intent(this, GPSReceiver.class);
 
             AlarmManager alarmManager = (AlarmManager) this.getSystemService(Context.ALARM_SERVICE);
-            //AlarmUtil.setAlarm(this, alarmIntent, (int) ae.getId(), ringtone, ae.getTimeAlarm(), advance);
+
             PendingIntent pendingIntent = PendingIntent.getBroadcast(this, 0, gpsIntent, PendingIntent.FLAG_UPDATE_CURRENT);
             alarmManager.cancel(pendingIntent);
-            alarmManager.setRepeating(AlarmManager.RTC, System.currentTimeMillis() + 4000, 2000, pendingIntent);
+            alarmManager.setRepeating(AlarmManager.RTC, System.currentTimeMillis() + 4000, 300000, pendingIntent);
 
 
-            Log.d(Cnst.TAG, "------------restart service gpsIntent = " + gpsIntent + " | " + pendingIntent + " | " + alarmManager);
+           // Log.d(Cnst.TAG, "------------restart service gpsIntent = " + gpsIntent + " | " + pendingIntent + " | " + alarmManager);
         }
-
-         /*
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-                // alarmManager.setExactAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, calendar.getTimeInMillis(), pendingIntent);
-                alarmManager.setExactAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, ms-advance, pendingIntent);
-                // Log.d(TAG,"setALARM  -seExactAndAllowWhileIdle");
-            } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
-                //    alarmManager.setExact(AlarmManager.RTC_WAKEUP, calendar.getTimeInMillis(), pendingIntent);
-                alarmManager.setExact(AlarmManager.RTC_WAKEUP, ms-advance, pendingIntent);
-                //Log.d(TAG,"setALARM  -seExact");
-            } else {
-                // alarmManager.set(AlarmManager.RTC_WAKEUP, calendar.getTimeInMillis(), pendingIntent);
-                alarmManager.set(AlarmManager.RTC_WAKEUP, ms-advance, pendingIntent);
-                // Log.d(TAG,"setALARM  -set");
-            }
-
-*/
-
     }
 
     public void undoClick(View view) {
@@ -599,13 +581,13 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
                             @Override
                             public void onClick(View v) {
                                 if (!mIsCreateAvailable) {
-                                    Toast.makeText(MainActivity.this, "Please wait.Previous operation is performed", Toast.LENGTH_SHORT).show();
+                                    Toast.makeText(MainActivity.this, "Please wait.Previous operation is performed",
+                                            Toast.LENGTH_SHORT).show();
                                     return;
                                 }
                                 if (!ba.name.equals("Nothing"))
                                     createDialogSubactivity(ba);
-                                else
-                                {
+                                else {
 
                                     MainActivity.this.dbHandler.writeEventWithSubToDB(ba.name, "", ""
                                             , String.valueOf(ba.ms), String.valueOf(ba.ms), ba.color,
@@ -613,15 +595,11 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
 
 //                                //add formed activity
                                     MainActivity.this.listLogActivity.add(0, ba);
-//                               // MainActivity.this.listLogSubactivity.add(0, subA);
-//
                                     MainActivity.this.adapterListLogActivity.notifyDataSetChanged();
-                                    MainActivity.this.lvActivity.setAdapter(MainActivity.this.adapterListLogActivity);
-
+                                    // MainActivity.this.lvActivity.setAdapter(MainActivity.this.adapterListLogActivity);
                                     getListViewSize(MainActivity.this.lvActivity);
 
                                 }
-                                   // Toast.makeText(MainActivity.this, "Nothing", Toast.LENGTH_SHORT).show();
                             }
                         });
 
@@ -631,6 +609,8 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
         gv.setAdapter(adapter);
     }
 
+
+    //Method for add Activity to Log
     private void createDialogSubactivity(final ButtonActivity ba) {
         Log.d(TAG, "Create dialog with subactivities =" + listSubactivity.size());
         AlertDialog.Builder adb = new AlertDialog.Builder(this);
@@ -668,31 +648,24 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
 //                                    return;
 //                                }
                                 dialog.dismiss();
-
                                 ba.ms = System.currentTimeMillis();
-                                ;
                                 ba.subName = SA.name;
                                 ba.setSubColor(SA.color);
 
+                                //Change endTime for previous activity in DataBase
                                 if (listLogActivity.size() > 0)
                                     dbHandler.updateLastEventEndTime(String.valueOf(ba.ms));
 
 
                                 //Add to DB
-
-                                Log.d(TAG, "----------Put to db Color = " + ba.color);
-
                                 MainActivity.this.dbHandler.writeEventWithSubToDB(ba.name, "", ""
                                         , String.valueOf(ba.ms), String.valueOf(ba.ms), ba.color,
                                         0, 0, ba.getSubName(), ba.getSubColor(), "");
 
 //                                //add formed activity
                                 MainActivity.this.listLogActivity.add(0, ba);
-//                               // MainActivity.this.listLogSubactivity.add(0, subA);
-//
-                               MainActivity.this.adapterListLogActivity.notifyDataSetChanged();
-                                MainActivity.this.lvActivity.setAdapter(MainActivity.this.adapterListLogActivity);
-
+                                MainActivity.this.adapterListLogActivity.notifyDataSetChanged();
+//                                MainActivity.this.lvActivity.setAdapter(MainActivity.this.adapterListLogActivity);
                                 getListViewSize(MainActivity.this.lvActivity);
 
                                 //AddtoGoogleDiary
@@ -713,7 +686,7 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
         btnCancel.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                Log.d(Cnst.TAG,"CANCEL");
+                Log.d(Cnst.TAG, "CANCEL");
                 dialog.dismiss();
             }
         });
@@ -749,8 +722,6 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
                 MainActivity.this.dbHandler.updateEventNotes(String.valueOf(ba.ms), ba.getNotes());
                 //Update data for ListView
                 MainActivity.this.adapterListLogActivity.notifyDataSetChanged();
-                //MainActivity.this.lvActivity.setAdapter(MainActivity.this.adapterListLogActivity);
-                //getListViewSize(MainActivity.this.lvActivity);
                 dialog.dismiss();
             }
         });
@@ -761,26 +732,21 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
                 dialog.dismiss();
             }
         });
-
-
         dialog.show();
     }
 
     //get list activities from Log
     public ArrayList<ButtonActivity> getListLogActivity() {
-
         return MainActivity.this.listLogActivity;
     }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
-        //Log.d(TAG, "onCreate");
-
         super.onCreate(savedInstanceState);
 
+        //For working with DataBase
         dbHandler = new DBHandler(getApplicationContext());
-        mShared = getApplicationContext().getSharedPreferences("prefs", MODE_PRIVATE);
-        mSharedEditor = mShared.edit();
+
         setContentView(R.layout.activity_main);
         setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
         res = this.getResources();
@@ -788,30 +754,25 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
         this.setSupportActionBar(toolbar);
 
         //---Read from SharedPreferences ------------
+        mShared = getApplicationContext().getSharedPreferences("prefs", MODE_PRIVATE);
+        mSharedEditor = mShared.edit();
         sPref = this.getPreferences(MODE_PRIVATE);
         // Name & Calendar User
-        myName = sPref.getString("myName", "");
-        nameCalendar = sPref.getString("myCalendar", "");
+        myName = sPref.getString(Cnst.NAME, "");
+        nameCalendar = sPref.getString(Cnst.NAME_CALENDAR, "");
 
 
         //Log.d(TAG, "OnCREATE Initialzed list Activities");
-        //Initialzed list Activities
-        if (sPref.contains("sizeListActivity") && this.listActivity.size() == 0) {
+        //Initialized list Activities
+        if (sPref.contains(Cnst.SIZE_LIST_ACTIVITY) && this.listActivity.size() == 0) {
+            int size = sPref.getInt(Cnst.SIZE_LIST_ACTIVITY, 0);
+            //Log.d(TAG, " Initialzed list Activities From shareds =" + size);
 
-
-            int size = sPref.getInt("sizeListActivity", 0);
-
-            Log.d(TAG, " Initialzed list Activities From shareds =" + size);
-            //   this.listActivity=new ArrayList<>();
             for (int i = 0; i < size; i++) {
                 this.listActivity.add(new ButtonActivity
-                        (sPref.getString("buttonAcivityName" + i, ""),
-                                sPref.getInt("buttonAcivityColor" + i, res.getColor(R.color.colorText))));
-
-                // Log.d(TAG,"========== Button in  = "+this.listActivity.get(i).name);
+                        (sPref.getString(Cnst.NAME_ACTIVITY + i, ""),
+                                sPref.getInt(Cnst.COLOR_ACTIVITY + i, res.getColor(R.color.colorText))));
             }
-
-
         } else {
             this.createList();
 
@@ -821,21 +782,14 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
             //  Log.d(TAG,"============= DEFAULT listActivities");
         }
 
-
-        if (sPref.contains("sizeListSubactivity")) {
-            int size = sPref.getInt("sizeListSubactivity", 0);
-            if (size == 0) {
-
-               // this.createListSubactivities();
-                 // Log.d(Cnst.TAG," createSubactivities "+this.listSubactivity.size());
-            } else
-                for (int i = 0; i < size; i++) {
+        //Initialized list Subactivities
+        if (sPref.contains(Cnst.SIZE_LIST_SUBACTIVITY)) {
+            int size = sPref.getInt(Cnst.SIZE_LIST_SUBACTIVITY, 0);
+            for (int i = 0; i < size; i++) {
                     this.listSubactivity.add(new ButtonActivity
-                            (sPref.getString("buttonSubacivityName" + i, ""),
-                                    sPref.getInt("buttonSubacivityColor" + i, res.getColor(R.color.colorText))));
-
-                   // Log.d(Cnst.TAG, "========== Subactivity in  = " + this.listSubactivity.get(i).name);
-                }
+                            (sPref.getString(Cnst.NAME_SUBACTIVITY + i, ""),
+                                    sPref.getInt(Cnst.COLOR_SUBACTIVITY + i, res.getColor(R.color.colorText))));
+            }
 
         }
 
@@ -850,7 +804,7 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
         callCalendarApi(3);
 
 //Read From DataBase
-       // dbHandler.showBase(Cnst.CALENDAR_TABLE);
+        // dbHandler.showBase(Cnst.CALENDAR_TABLE);
         readAcivitiesFromDB();
         this.createLog();
         //Start service for get coordinates
@@ -1178,8 +1132,8 @@ For actual time, update every 1000 ms
     //initialize dialog for Buttons from Activity Log
     private void changeNameSubActivity(final ButtonActivity ba, final Button btn) {
 
-        final ButtonActivity bTmp= new ButtonActivity("");
-        Log.d(Cnst.TAG,"btn Name ="+btn.getText());
+        final ButtonActivity bTmp = new ButtonActivity("");
+        Log.d(Cnst.TAG, "btn Name =" + btn.getText());
         int size = MainActivity.this.listSubactivity.size();
         final String[] itemsAcivities = new String[size];
         for (int i = 0; i < size; i++) {
@@ -1228,12 +1182,12 @@ For actual time, update every 1000 ms
                     }
                     s.flag = 1;
                 } else {
-                    Log.d(Cnst.TAG,"Spinner Else  ba="+ba.name);
-                   // ba.name = itemsAcivities[position];
-                    bTmp.name=itemsAcivities[position];
+                    Log.d(Cnst.TAG, "Spinner Else  ba=" + ba.name);
+                    // ba.name = itemsAcivities[position];
+                    bTmp.name = itemsAcivities[position];
                     s.color = listSubactivity.get(position).color;
                 }
-                Log.d(Cnst.TAG,"Spinner ba="+ba.name);
+                Log.d(Cnst.TAG, "Spinner ba=" + ba.name);
             }
 
             @Override
@@ -1406,9 +1360,9 @@ For actual time, update every 1000 ms
                 this.status = 1;
                 // Double[] cc=getCoordinates();
                 //  Toast.makeText(this,"coors = "+cc[0]+":"+cc[1],Toast.LENGTH_SHORT).show();
-                  Intent  intent= new Intent(MainActivity.this,ActivityEditPage.class);
-                  intent.putExtra(Cnst.CALENDAR_ID,  mCalendarId);
-                 startActivity(intent);
+                Intent intent = new Intent(MainActivity.this, ActivityEditPage.class);
+                intent.putExtra(Cnst.CALENDAR_ID, mCalendarId);
+                startActivity(intent);
                 return true;
             case R.id.action_settings:
                 this.status = 2;
@@ -1640,7 +1594,7 @@ For actual time, update every 1000 ms
         for (int i = 0; i < this.listActivity.size(); i++) {
             ed.putString("buttonAcivityName" + i, this.listActivity.get(i).name);
             ed.putInt("buttonAcivityColor" + i, this.listActivity.get(i).color);
-          //  Log.d(TAG, "SAVES " + listActivity.get(i).name);
+            //  Log.d(TAG, "SAVES " + listActivity.get(i).name);
         }
 
         ed.putInt("sizeListSubactivity", this.listSubactivity.size());

@@ -24,8 +24,6 @@ public class ButtonActivity {
     String subName="";
     int subColor= Color.BLACK;
     int color;
- //   String time;
-  //  String date;
     long endTime;
     long ms;
     double longitude;
