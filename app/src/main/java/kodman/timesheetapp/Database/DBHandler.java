@@ -302,8 +302,6 @@ public void updateLastEventEndTime(String endTime)
                 ">"+startTime+" AND "+Cnst.DATE_TIME_START+" < "+finishTime+
                 " ORDER BY dateTimeStart ASC ", null);
 
-       // db.close();
-       // dbHelper.close();
         return cursor;
     }
 
