@@ -50,7 +50,9 @@
         <LinearLayout
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-             android:orientation="vertical">
+             android:orientation="vertical"
+            android:gravity="center"
+            >
 
             <TextView
                 android:id="@+id/tvDay"
@@ -107,6 +109,7 @@
                 android:text="@string/stopwatch_log"
                 android:textSize="20sp"
                 android:textColor="@color/colorText"
+                android:gravity="center"
                 />
 
             <LinearLayout
@@ -175,7 +178,9 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:text="@string/google_calendar"
-                android:textSize="20sp" />
+                android:textSize="20sp"
+                android:gravity="center"
+                />
 
             <LinearLayout
 
@@ -236,7 +241,9 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:text="@string/phone_log"
-                android:textSize="20sp" />
+                android:textSize="20sp"
+                android:gravity="center"
+                />
 
             <LinearLayout
 
@@ -297,7 +304,9 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:text="@string/gps_log"
-                android:textSize="20sp" />
+                android:textSize="20sp"
+                android:gravity="center"
+                />
 
             <LinearLayout
 

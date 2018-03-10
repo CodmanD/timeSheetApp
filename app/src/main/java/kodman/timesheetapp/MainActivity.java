@@ -17,17 +17,13 @@ import android.content.pm.PackageManager;
 import android.content.res.Resources;
 import android.database.Cursor;
 import android.graphics.Color;
-import android.graphics.Point;
 import android.graphics.drawable.Drawable;
-import android.location.Location;
-import android.location.LocationManager;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
-import android.os.SystemClock;
 import android.support.annotation.NonNull;
 import android.support.annotation.RequiresApi;
 import android.support.v4.content.ContextCompat;
@@ -44,7 +40,6 @@ import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.EditText;
-import android.widget.GridLayout;
 import android.widget.GridView;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
@@ -66,14 +61,13 @@ import com.google.api.client.json.JsonFactory;
 import com.google.api.client.json.jackson2.JacksonFactory;
 import com.google.api.client.util.DateTime;
 import com.google.api.client.util.ExponentialBackOff;
-import com.google.api.services.calendar.CalendarScopes;
+
 import com.google.api.services.calendar.model.CalendarList;
 import com.google.api.services.calendar.model.CalendarListEntry;
 import com.google.api.services.calendar.model.Event;
 import com.google.api.services.calendar.model.EventDateTime;
 
 import java.io.IOException;
-import java.io.Serializable;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -104,7 +98,6 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
     private ArrayList<ButtonActivity> listSubactivity = new ArrayList<>();
 
     private ArrayList<ButtonActivity> listLogActivity = new ArrayList<>();
-    // private ArrayList<ButtonActivity> listLogSubactivity = new ArrayList<>();
     private ArrayAdapter<ButtonActivity> adapterListLogActivity;
     private String mDeleteTime;
     private String mUpdateTime;
@@ -126,6 +119,7 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
     }
 
 
+    //create service geting coordinates
     private void restartGetGPS() {
 
         if (ContextCompat.checkSelfPermission(this,
@@ -134,20 +128,15 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
                 requestPermissions(new String[]{Manifest.permission.ACCESS_FINE_LOCATION},
                         Cnst.REQUEST_PERMISSION_LOCATION);
         } else {
-
             Intent gpsIntent = new Intent(this, GPSReceiver.class);
-
             AlarmManager alarmManager = (AlarmManager) this.getSystemService(Context.ALARM_SERVICE);
-
             PendingIntent pendingIntent = PendingIntent.getBroadcast(this, 0, gpsIntent, PendingIntent.FLAG_UPDATE_CURRENT);
             alarmManager.cancel(pendingIntent);
             alarmManager.setRepeating(AlarmManager.RTC, System.currentTimeMillis() + 4000, 300000, pendingIntent);
-
-
-           // Log.d(Cnst.TAG, "------------restart service gpsIntent = " + gpsIntent + " | " + pendingIntent + " | " + alarmManager);
         }
     }
 
+    //method UNDO
     public void undoClick(View view) {
         if (MainActivity.this.listLogActivity.size() == 0) return;
         if (!mIsCreateAvailable) {
@@ -165,7 +154,7 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
 
         MainActivity.this.listLogActivity.remove(ba);
         MainActivity.this.adapterListLogActivity.notifyDataSetChanged();
-        //MainActivity.this.adapterListLogActivity.remove(ba);
+
         //createLog();
         if (listLogActivity.size() == 0) {
             sPref = getSharedPreferences("tempData", MODE_PRIVATE);
@@ -176,6 +165,7 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
     }
 
 
+    //create List Buttons Activities for Screen Settingns
     private void addActivities() {
         LinearLayout LLActivities = this.findViewById(R.id.LLActivities);
         if (LLActivities.getChildCount() > 0)
@@ -183,7 +173,8 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
 
         LinearLayout LLSettings = this.findViewById(R.id.LLSettings);
 
-        LinearLayout.LayoutParams linLayoutParam = new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.MATCH_PARENT);
+        LinearLayout.LayoutParams linLayoutParam = new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT,
+                LinearLayout.LayoutParams.MATCH_PARENT);
         linLayoutParam.setMargins(40, 10, 40, 10);
         final Button btnNew = new Button(this);
 
@@ -200,8 +191,6 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
         LLActivities.addView(btnNew);
 
         for (int i = 0; i < this.listActivity.size(); i++) {
-
-
             final ButtonActivity ba = this.listActivity.get(i);
             final Button btn = new Button(this);
 
@@ -219,23 +208,20 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
             btn.setTextColor(getContrastColor(ba.color));
             btn.setLayoutParams(linLayoutParam);
             LLActivities.addView(btn);
-
-
         }
         LLSettings.invalidate();
 
     }
 
+    //create List Buttons SubActivities for Screen Settingns
     private void addSubactivities() {
         LinearLayout LLSubactivities = this.findViewById(R.id.LLSubactivities);
         if (LLSubactivities.getChildCount() > 0)
             LLSubactivities.removeAllViews();
 
         LinearLayout LLSettings = this.findViewById(R.id.LLSettings);
-
-        // LinearLayout.LayoutParams linLayoutParam = new LinearLayout.LayoutParams(LinearLayout.LayoutParams.WRAP_CONTENT, LinearLayout.LayoutParams.MATCH_PARENT);
-
-        LinearLayout.LayoutParams linLayoutParam = new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.MATCH_PARENT);
+        LinearLayout.LayoutParams linLayoutParam = new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT,
+                LinearLayout.LayoutParams.MATCH_PARENT);
         linLayoutParam.setMargins(40, 10, 40, 10);
         final Button btnNew = new Button(this);
 
@@ -254,8 +240,6 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
 
 
         for (int i = 0; i < this.listSubactivity.size(); i++) {
-
-
             final ButtonActivity ba = this.listSubactivity.get(i);
             final Button btn = new Button(this);
 
@@ -263,7 +247,6 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
             btn.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
-
                     changeButtonAcivity(ba, btn, false);
 
                 }
@@ -272,10 +255,7 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
             btn.setBackgroundColor(ba.getColor(ba.name));
             btn.setTextColor(getContrastColor(ba.color));
             btn.setLayoutParams(linLayoutParam);
-
             LLSubactivities.addView(btn);
-            Log.d(TAG, "ADD " + LLSubactivities.getChildCount());
-
         }
         LLSettings.invalidate();
 
@@ -283,9 +263,7 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
 
     //For changer or remove Activity
     private void changeButtonAcivity(final ButtonActivity ba, final Button btn, final boolean act) {
-
         AlertDialog.Builder builder = new AlertDialog.Builder(this, android.R.style.Theme_Holo_Light_Dialog);
-
         LayoutInflater inflater = MainActivity.this.getLayoutInflater();
         final View view = inflater.inflate(R.layout.dialog, null);
         final EditText editText = view.findViewById(R.id.editTextDialog);
@@ -295,12 +273,8 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
                 .setPositiveButton("Change this acivity", new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(DialogInterface dialog, int id) {
-
-
                         String nameButton = editText.getText().toString();
                         //Checking max characters
-
-
                         //checking the button for uniqueness
                         if (!MainActivity.this.uniqueButtonActivity(nameButton, btn.getText().toString(), false, act)) {
                             Toast.makeText(MainActivity.this, "Activity with this name exists",
@@ -308,13 +282,10 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
                             dialog.dismiss();
                             changeButtonAcivity(ba, btn, act);
                         } else {
-                            if (nameButton.length() > 25)
-                                nameButton = nameButton.substring(0, 24);
                             ba.name = nameButton;
                             //add and set color for the button
                             setColorFromDialog(ba, false, act);
-                            dialog.cancel();
-
+                            dialog.dismiss();
                         }
                     }
                 })
@@ -346,11 +317,7 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
 
     //------For click on button +New
     private void clickNewButton(final View v, final boolean act) {
-
-        //  Toast.makeText(MainActivity.this, "Click New Button",
-        //          Toast.LENGTH_SHORT).show();
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
-
         LayoutInflater inflater = MainActivity.this.getLayoutInflater();
         final View view = inflater.inflate(R.layout.dialog, null);
         final EditText editText = view.findViewById(R.id.editTextDialog);
@@ -398,9 +365,6 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
 
     //--------------------for color---------
     private void setColorFromDialog(final ButtonActivity ba, final boolean add, final boolean act) {
-        //set default color
-        // ba.color = Color.RED;
-
         //create Alert for the set colour
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
         builder.setMessage("Choise the color");
@@ -439,18 +403,15 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
                 rColor.invalidate();
                 // ba.color = Color.rgb(colorR[0], colorR[1], colorR[2]);
                 btnTmp.color = Color.rgb(colorR[0], colorR[1], colorR[2]);
-                Toast.makeText(MainActivity.this, "returnColor =", Toast.LENGTH_SHORT).show();
-
+                //Toast.makeText(MainActivity.this, "returnColor =", Toast.LENGTH_SHORT).show();
             }
 
             @Override
             public void onStartTrackingTouch(SeekBar seekBar) {
-
             }
 
             @Override
             public void onStopTrackingTouch(SeekBar seekBar) {
-
             }
 
         };
@@ -461,7 +422,6 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
         builder.setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
             @Override
             public void onClick(DialogInterface dialog, int which) {
-                //  ba.color = Color.WHITE;
                 dialog.dismiss();
             }
         });
@@ -479,11 +439,11 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
                     } else {
                         MainActivity.this.listSubactivity.add(ba);
                     }
-
-
                 }
-                if (act) addActivities();
-                else addSubactivities();
+                if (act)
+                    addActivities();
+                else
+                    addSubactivities();
 
                 dialog.dismiss();
             }
@@ -615,13 +575,11 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
         Log.d(TAG, "Create dialog with subactivities =" + listSubactivity.size());
         AlertDialog.Builder adb = new AlertDialog.Builder(this);
         View view = getLayoutInflater().inflate(R.layout.dialog_subactivities, null);
-
+        adb.setView(view);
         GridView gVSub = view.findViewById(R.id.gVSub);
         TextView tvAct = view.findViewById(R.id.tvCurAct2);
-
         tvAct.setText(ba.name);
 
-        adb.setView(view);
         adb.setCancelable(true);
         final AlertDialog dialog = adb.create();
 
@@ -631,9 +589,8 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
                     @Override
                     public View getView(int position,
                                         View convertView, ViewGroup parent) {
-                        Log.d(TAG, "DialogSubact getView---------------");
-                        View view = super.getView(
-                                position, convertView, parent);
+
+                        View view = super.getView(position, convertView, parent);
                         final ButtonActivity SA = this.getItem(position);
                         Button btn = view.findViewById(R.id.btnItem);
                         btn.setBackgroundColor(SA.color);
@@ -786,9 +743,9 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
         if (sPref.contains(Cnst.SIZE_LIST_SUBACTIVITY)) {
             int size = sPref.getInt(Cnst.SIZE_LIST_SUBACTIVITY, 0);
             for (int i = 0; i < size; i++) {
-                    this.listSubactivity.add(new ButtonActivity
-                            (sPref.getString(Cnst.NAME_SUBACTIVITY + i, ""),
-                                    sPref.getInt(Cnst.COLOR_SUBACTIVITY + i, res.getColor(R.color.colorText))));
+                this.listSubactivity.add(new ButtonActivity
+                        (sPref.getString(Cnst.NAME_SUBACTIVITY + i, ""),
+                                sPref.getInt(Cnst.COLOR_SUBACTIVITY + i, res.getColor(R.color.colorText))));
             }
 
         }
@@ -944,10 +901,6 @@ For actual time, update every 1000 ms
 
         final Date date = new Date(curBa.ms);
 
-        // final Date endDate = (ba.endTime == 0) ? new Date(System.currentTimeMillis()) : new Date(ba.endTime);
-        // final Date startDate = new Date(ba.ms);
-        //  final TimePickerDialog TPD = new TimePickerDialog(this,android.R.style.Theme_Holo_Dialog,
-        //         null, startDate.getHours(), startDate.getMinutes(), true) {
         final TimePickerDialog TPD = new TimePickerDialog(this, android.R.style.Theme_Holo_Dialog,
                 null, date.getHours(), date.getMinutes(), true) {
             @Override
@@ -1133,7 +1086,7 @@ For actual time, update every 1000 ms
     private void changeNameSubActivity(final ButtonActivity ba, final Button btn) {
 
         final ButtonActivity bTmp = new ButtonActivity("");
-        Log.d(Cnst.TAG, "btn Name =" + btn.getText());
+        //Log.d(Cnst.TAG, "btn Name =" + btn.getText());
         int size = MainActivity.this.listSubactivity.size();
         final String[] itemsAcivities = new String[size];
         for (int i = 0; i < size; i++) {
@@ -1182,12 +1135,12 @@ For actual time, update every 1000 ms
                     }
                     s.flag = 1;
                 } else {
-                    Log.d(Cnst.TAG, "Spinner Else  ba=" + ba.name);
+                   // Log.d(Cnst.TAG, "Spinner Else  ba=" + ba.name);
                     // ba.name = itemsAcivities[position];
                     bTmp.name = itemsAcivities[position];
                     s.color = listSubactivity.get(position).color;
                 }
-                Log.d(Cnst.TAG, "Spinner ba=" + ba.name);
+              //  Log.d(Cnst.TAG, "Spinner ba=" + ba.name);
             }
 
             @Override
