@@ -1084,7 +1084,8 @@ For actual time, update every 1000 ms
 
 
     //initialize dialog for Buttons from Activity Log
-    private void changeNameSubActivity(final ButtonActivity ba, final Button btn) {
+    private void changeNameSubActivity(final ButtonActivity ba
+            , final Button btn) {
 
         final ButtonActivity bTmp = new ButtonActivity("");
         //Log.d(Cnst.TAG, "btn Name =" + btn.getText());
@@ -1128,18 +1129,23 @@ For actual time, update every 1000 ms
 
                 if (s.flag == 0) {
                     for (int i = 0; i < parent.getCount(); i++) {
-                        if (itemsAcivities[i].toUpperCase().equals(btn.getText().toString().toUpperCase())) {
+                       // if (itemsAcivities[i].toUpperCase().equals(btn.getText().toString().toUpperCase()))
+                        {
                             parent.setSelection(i);
+                            bTmp.name = itemsAcivities[position];
+                            s.color = listSubactivity.get(position).color;
+                           // Log.d(Cnst.TAG, "Spinner Else  Color =ba=" + s.color);
                             break;
                         }
 
                     }
                     s.flag = 1;
                 } else {
-                   // Log.d(Cnst.TAG, "Spinner Else  ba=" + ba.name);
+
                     // ba.name = itemsAcivities[position];
                     bTmp.name = itemsAcivities[position];
                     s.color = listSubactivity.get(position).color;
+                  //  Log.d(Cnst.TAG, "Spinner Else  Color =ba=" + s.color);
                 }
               //  Log.d(Cnst.TAG, "Spinner ba=" + ba.name);
             }
@@ -1169,11 +1175,12 @@ For actual time, update every 1000 ms
                          *callCalendarApi(4);
                          */
 
-                        dbHandler.updateEventSubNameColor(String.valueOf(ba.ms), bTmp.name, s.color);
+                        dbHandler.updateEventSubNameColor(String.valueOf(ba.ms),bTmp.name, s.color);
                         btn.setTextColor(getContrastColor(ba.color));
 
                         createLog();
-                        Toast.makeText(MainActivity.this, "Change" + spinner.getItemAtPosition(0).toString() + "now Name=" + ba.name, Toast.LENGTH_SHORT).show();
+                        Toast.makeText(MainActivity.this, "Change" + spinner.getItemAtPosition(0).toString() +
+                                " now Name=" + bTmp.name, Toast.LENGTH_SHORT).show();
 
                     }
                 })
