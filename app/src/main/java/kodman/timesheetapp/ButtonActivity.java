@@ -15,35 +15,50 @@ import kodman.timesheetapp.R;
 
 public class ButtonActivity {
 
-   private String TAG="--------ButtonAcivity SAY: ";
-    private Resources res=MainActivity.res;
+    private static Resources res=MainActivity.res;
 
     private static SimpleDateFormat formatDate=new SimpleDateFormat("dd.MM.yyyy");
     private static SimpleDateFormat formatTime = new SimpleDateFormat("HH:mm");
     String name;
+    int color;
+
     String subName="";
     int subColor= Color.BLACK;
-    int color;
-    long endTime;
-    long ms;
-    double longitude;
-    double latitude;
+
     String notes="";
 
-    public double getLongitude() {
-        return longitude;
-    }
+    long endTime;
+    long ms;
+    //double longitude;
+    //double latitude;
 
-    public void setLongitude(double longitude) {
-        this.longitude = longitude;
-    }
 
-    public double getLatitude() {
-        return latitude;
-    }
 
-    public void setLatitude(double latitude) {
-        this.latitude = latitude;
+   // public double getLongitude() {
+   //     return longitude;
+   // }
+
+   // public void setLongitude(double longitude) {
+
+    //this.longitude = longitude;
+    //}
+
+   // public double getLatitude() {
+   //     return latitude;
+   // }
+
+   // public void setLatitude(double latitude) {
+    //    this.latitude = latitude;
+   // }
+
+    public ButtonActivity(String name, int color, String subName, int subColor, String notes,long ms, long endTime ) {
+        this.name = name;
+        this.color = color;
+        this.subName = subName;
+        this.subColor = subColor;
+        this.notes = notes;
+        this.endTime = endTime;
+        this.ms = ms;
     }
 
     public String getNotes() {
@@ -56,7 +71,7 @@ public class ButtonActivity {
 
     public ButtonActivity(String name) {
         this.name = name;
-        this.color = getColor(this.name);
+        this.color = createColor(this.name);
         this.ms = System.currentTimeMillis();
        // setDatetime();
     }
@@ -99,7 +114,7 @@ public class ButtonActivity {
     public String getEndTime(){return  formatTime.format(this.endTime); }
     public String getEndDate(){return  formatDate.format(this.endTime); }
 
-    public int getColor(String name) {
+    public int createColor(String name) {
        // Log.d(TAG,res.getString(R.string.nothing));
         //Log.d(TAG,name);
         if (name.equals(res.getString(R.string.nothing)))
@@ -126,5 +141,7 @@ public class ButtonActivity {
 
         return this.color;
     }
+
+    public int getColor(String name){return this.color;}
 
 }

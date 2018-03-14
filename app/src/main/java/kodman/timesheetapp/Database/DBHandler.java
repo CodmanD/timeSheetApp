@@ -256,6 +256,40 @@ public void updateLastEventEndTime(String endTime)
         dbHelper.close();
     }
 
+    //updating event color  in local database
+    public void updateEventColor(int color, String name) {
+
+       // Log.d("TAG"," time="+dateTimeStart+" /Notes="+notes);
+        dbHelper = new DBHelper(mContext);
+        db = dbHelper.getWritableDatabase();
+        ContentValues values = new ContentValues();
+        values.put("color", color);
+
+        int res= db.update("calendarTable",values," eventName = '"+name+"'",null);
+        //db.execSQL("UPDATE calendarTable SET notes = '" + notes + "' WHERE dateTimeStart = '" + dateTimeStart + "'");
+        Log.d(Cnst.TAG,"DATABase = "+"---------------Update = "+res);
+
+        db.close();
+        dbHelper.close();
+    }
+    //updating Subactivity color  in local database
+    public void updateSubactivityColor(int color, String name) {
+
+        // Log.d("TAG"," time="+dateTimeStart+" /Notes="+notes);
+        dbHelper = new DBHelper(mContext);
+        db = dbHelper.getWritableDatabase();
+        ContentValues values = new ContentValues();
+        values.put("subColor", color);
+
+        int res= db.update("calendarTable",values," subName = '"+name+"'",null);
+        //db.execSQL("UPDATE calendarTable SET notes = '" + notes + "' WHERE dateTimeStart = '" + dateTimeStart + "'");
+        Log.d(Cnst.TAG,"DATABase = "+"---------------Update = "+res);
+
+        db.close();
+        dbHelper.close();
+    }
+
+
 
     //read all events from database to fill activity log
     public Cursor readAllEventsFromDB() {

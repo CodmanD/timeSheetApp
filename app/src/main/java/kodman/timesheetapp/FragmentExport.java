@@ -274,7 +274,7 @@ public class FragmentExport extends Fragment implements View.OnClickListener {
             Date start = dateFormat.parse(startData);
             startDataFilter = start.getTime();
             Date end = dateFormat.parse(endData);
-            endDatafilter = end.getTime();
+            endDatafilter = end.getTime()+86400000;
 
         } catch (ParseException e) {
             e.printStackTrace();
@@ -285,9 +285,14 @@ public class FragmentExport extends Fragment implements View.OnClickListener {
             long start = Long.parseLong(temp[2]);
             long end = Long.parseLong(temp[3]);
 
+            //Calendar Calendar.getInstance()
+            Log.d(Cnst.TAG,"Start = "+start+"|"+end+"   =   "+startDataFilter+"|"+endDatafilter);
+
             if (start > startDataFilter && end < endDatafilter) {
                 filterEventUserList.add(temp);
+                Log.d(Cnst.TAG,"Add to UserList =  ");
             }
+            Log.d(Cnst.TAG,"UserList =  "+filterEventUserList.size());
         }
 
 
@@ -485,12 +490,15 @@ public class FragmentExport extends Fragment implements View.OnClickListener {
         }
     }
 
+    ArrayList<ButtonActivity> filterActivityList = new ArrayList<>();
     // We show the list of user activities
     private void showIncludeItems() {
-
+       if( filterActivityList.size()>0)
+           filterActivityList.clear();
         // listActivity = new ArrayList<>();
         this.listActivity = mainActivity.getListLogActivity();
-        ArrayList<ButtonActivity> filterActivityList = new ArrayList<>();
+       // Log.d(Cnst.TAG,"Activities count = "+listActivity.size());
+
         if (this.listActivity.size() <= 0) {
 
             DBHandler dbHandler = new DBHandler(fContext);
@@ -513,19 +521,24 @@ public class FragmentExport extends Fragment implements View.OnClickListener {
             }
             cursor.close();
         }
+
         // Check if there is already a name in the listActivity
         for (ButtonActivity activity : listActivity) {
+
             int doubleNameCounter = 0;
             for (ButtonActivity activityS : filterActivityList) {
-                if (activityS.name.equals(activity.name)) {
+                if (activityS.name.toLowerCase().equals(activity.name.toLowerCase())) {
+
                     doubleNameCounter++;
+                    Log.d(Cnst.TAG,"ListContains");
                 }
             }
             if (doubleNameCounter == 0) {
+                Log.d(Cnst.TAG,"Add to List  "+activity.name);
                 filterActivityList.add(new ButtonActivity(activity.name, activity.color));
             }
         }
-
+        Log.d(Cnst.TAG,"Filter List =  "+filterActivityList.size());
         CustomArrayAdapter arrayListArrayAdapter = new CustomArrayAdapter(fContext, filterActivityList);
 
         includeLv.setAdapter(arrayListArrayAdapter);
@@ -561,6 +574,9 @@ public class FragmentExport extends Fragment implements View.OnClickListener {
                     }
                     // If the user unchecked, we delete the activity from the list to send
 
+
+
+
                     if (!compoundButton.isChecked()) {
                         for (ButtonActivity bt : listActivity) {
                             if (bt.name.equals(listActivity.get(position).name)) {
@@ -577,7 +593,7 @@ public class FragmentExport extends Fragment implements View.OnClickListener {
 
                 }
             });
-            ButtonActivity activity = listActivity.get(position);
+            ButtonActivity activity = filterActivityList.get(position);
             textView.setText(activity.name);
             textView.setBackgroundColor(activity.color);
             return v;
