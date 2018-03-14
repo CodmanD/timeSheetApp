@@ -276,6 +276,10 @@ public class ActivityEditPage extends AppCompatActivity implements View.OnClickL
                         REQUEST_PERMISSION_GET_CALENDAR);
         } else {
             //   Cursor cursor = contentResolver.query(Uri.parse("content://com.android.calendar/events"),
+               //CalendarContract cc=new CalendarContract.();
+              // Log.d(Cnst.TAG,"Calendar Name"+CalendarContract.)
+         //   CalendarProvider calendarProvider = new CalendarProvider(context);
+         //   List<Calendar> calendars = calendarProvider.getCalendars().getList();
                 Cursor cursor = contentResolver.query(CalendarContract.Events.CONTENT_URI,
                     (new String[]{"calendar_id", "title", "description", "dtstart", "dtend", "eventTimezone", "eventLocation"}),
                     "(" + dtstart + ">" + startTime + " and " + dtend + "<" + finishTime + ")",
@@ -299,7 +303,7 @@ public class ActivityEditPage extends AppCompatActivity implements View.OnClickL
                     while (cursor.moveToNext()) {
 
                         int calendar_id = cursor.getInt(0);
-
+                        Log.d(Cnst.TAG,"Cal_ID = "+calendar_id);
                         String title = cursor.getString(1);
 
                         String description = cursor.getString(2);

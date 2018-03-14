@@ -1337,6 +1337,8 @@ For actual time, update every 1000 ms
                 // Double[] cc=getCoordinates();
                 //  Toast.makeText(this,"coors = "+cc[0]+":"+cc[1],Toast.LENGTH_SHORT).show();
                 Intent intent = new Intent(MainActivity.this, ActivityEditPage.class);
+
+                Log.d(Cnst.TAG,"Main Cal_ID= "+mCalendarId+"|"+nameCalendar);
                 intent.putExtra(Cnst.CALENDAR_ID, mCalendarId);
                 startActivity(intent);
                 return true;
