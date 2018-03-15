@@ -71,6 +71,9 @@ import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.Date;
 import java.util.List;
 import java.util.TimeZone;
@@ -94,7 +97,10 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
     private int status = 0;
     private SharedPreferences mShared;
     private SharedPreferences.Editor mSharedEditor;
-    private ArrayList<ButtonActivity> listActivity = new ArrayList<>();//All buttons activity for current  time
+    private ArrayList<ButtonActivity> listActivity = new ArrayList<ButtonActivity>()
+    {
+
+    };//All buttons activity for current  time
     private ArrayList<ButtonActivity> listSubactivity = new ArrayList<>();
 
     private ArrayList<ButtonActivity> listLogActivity = new ArrayList<>();
@@ -138,6 +144,17 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
 
     //method UNDO
     public void undoClick(View view) {
+
+        /*
+        Collections.sort(listActivity, new Comparator<ButtonActivity>() {
+            @Override
+            public int compare(ButtonActivity buttonActivity, ButtonActivity t1) {
+
+                return 0;
+            }
+        });
+        */
+
         if (MainActivity.this.listLogActivity.size() == 0) return;
         if (!mIsCreateAvailable) {
             Toast.makeText(this, "Please wait.Previous operation is performed", Toast.LENGTH_SHORT).show();
@@ -583,6 +600,27 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
         gv.setAdapter(adapter);
     }
 
+//For sorting buttonActivity on Screen Home
+    private void sortActivitiesHome()
+    {
+        ArrayList<ButtonActivity> listTmp=new ArrayList<>();
+
+        for(int i=0;i<listLogActivity.size();i++)
+        {
+            String titleListLog=listLogActivity.get(i).name;
+            int contains=0;
+            for(int j=0;j<listTmp.size();j++)
+            {
+                String titleListTmp=listTmp.get(j).name;
+                if(titleListLog.toLowerCase().equals(titleListTmp.toLowerCase()))
+                {
+                    contains++;
+                }
+            }
+            //if()
+            //listTmp.add(listLogActivity.get(i))
+        }
+    }
 
     //Method for add Activity to Log
     private void createDialogSubactivity(final ButtonActivity ba) {
@@ -733,7 +771,7 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
         nameCalendar = sPref.getString(Cnst.NAME_CALENDAR, "");
 
 
-        //Log.d(TAG, "OnCREATE Initialzed list Activities");
+        Log.d(TAG, "OnCREATE Initialzed list Activities");
         //Initialized list Activities
         if (sPref.contains(Cnst.SIZE_LIST_ACTIVITY) && this.listActivity.size() == 0) {
             int size = sPref.getInt(Cnst.SIZE_LIST_ACTIVITY, 0);
@@ -1313,6 +1351,9 @@ For actual time, update every 1000 ms
     }
 
 
+
+
+
     //Action for menu
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
@@ -1338,7 +1379,11 @@ For actual time, update every 1000 ms
                 //  Toast.makeText(this,"coors = "+cc[0]+":"+cc[1],Toast.LENGTH_SHORT).show();
                 Intent intent = new Intent(MainActivity.this, ActivityEditPage.class);
 
-                Log.d(Cnst.TAG,"Main Cal_ID= "+mCalendarId+"|"+nameCalendar);
+                String accountName = getPreferences(Context.MODE_PRIVATE)
+                        .getString(Cnst.PREF_ACCOUNT_NAME, null);
+
+                Log.d(Cnst.TAG,"Main Cal_ID= "+mCalendarId+"|"+accountName);
+                intent.putExtra(Cnst.PREF_ACCOUNT_NAME, accountName);
                 intent.putExtra(Cnst.CALENDAR_ID, mCalendarId);
                 startActivity(intent);
                 return true;
@@ -1680,7 +1725,9 @@ For actual time, update every 1000 ms
         if (!isGooglePlayServicesAvailable()) {
             acquireGooglePlayServices();
         } else if (mCredential.getSelectedAccountName() == null) {
+            Log.d(Cnst.TAG,"ChooseAccount");
             chooseAccount();
+
         } else {
             new MakeRequestTask(mCredential, action).execute();
         }
@@ -1704,6 +1751,7 @@ For actual time, update every 1000 ms
             String accountName = getPreferences(Context.MODE_PRIVATE)
                     .getString(Cnst.PREF_ACCOUNT_NAME, null);
             if (accountName != null) {
+                Log.d(Cnst.TAG,"AccountName ="+accountName);
                 mCredential.setSelectedAccountName(accountName);
             } else {
                 // Start a dialog from which the user can choose an account
@@ -1758,6 +1806,8 @@ For actual time, update every 1000 ms
                         SharedPreferences.Editor editor = settings.edit();
                         editor.putString(Cnst.PREF_ACCOUNT_NAME, accountName);
                         editor.apply();
+                        editor.commit();
+                        Log.d(Cnst.TAG,"Activity Result back Account Name "+accountName);
                         mCredential.setSelectedAccountName(accountName);
                         callCalendarApi(3);
                         // need to change name from *.csv file

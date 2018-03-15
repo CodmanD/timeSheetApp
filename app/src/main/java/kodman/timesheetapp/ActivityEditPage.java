@@ -1,6 +1,7 @@
 package kodman.timesheetapp;
 
 import android.Manifest;
+import android.content.ContentProvider;
 import android.content.ContentResolver;
 import android.content.Context;
 import android.content.Intent;
@@ -199,11 +200,11 @@ public class ActivityEditPage extends AppCompatActivity implements View.OnClickL
 
         this.findViewById(R.id.ivLeft).setOnClickListener(this);
         this.findViewById(R.id.ivRight).setOnClickListener(this);
-        createListActivity();
+     //   createListActivity();
 
         createListEvents();
-        createListPhone();
-        createListGPS();
+    //    createListPhone();
+     //   createListGPS();
     }
 
 
@@ -268,22 +269,92 @@ public class ActivityEditPage extends AppCompatActivity implements View.OnClickL
 
 
 
-
+        Log.d(Cnst.TAG,"WorkCalendar ");
         if (ContextCompat.checkSelfPermission(this,
                 Manifest.permission.READ_CALENDAR) != PackageManager.PERMISSION_GRANTED) {
             if (Build.VERSION.SDK_INT >= 23)
                 requestPermissions(new String[]{Manifest.permission.READ_CALENDAR},
                         REQUEST_PERMISSION_GET_CALENDAR);
+            Log.d(Cnst.TAG,"No Permission");
         } else {
-            //   Cursor cursor = contentResolver.query(Uri.parse("content://com.android.calendar/events"),
-               //CalendarContract cc=new CalendarContract.();
-              // Log.d(Cnst.TAG,"Calendar Name"+CalendarContract.)
-         //   CalendarProvider calendarProvider = new CalendarProvider(context);
-         //   List<Calendar> calendars = calendarProvider.getCalendars().getList();
+
+
+            //Cursor managedCursor  = null;
+            if (android.os.Build.VERSION.SDK_INT >= Build.VERSION_CODES.ICE_CREAM_SANDWICH) {
+
+                //  String accountName = getPreferences(Context.MODE_PRIVATE)
+                //        .getString(Cnst.PREF_ACCOUNT_NAME, null);
+                String accountName = getIntent().getStringExtra(Cnst.PREF_ACCOUNT_NAME);
+                Log.d(Cnst.TAG, "Account Name = " + accountName);
+
+                //  managedCursor = contentResolver.query(Uri.parse("content://com.android.calendar/events"), new String[] {CalendarContract.Calendars.ACCOUNT_NAME },
+                String[] mProjection =
+                        {
+                                // CalendarContract.Calendars.ALLOWED_ATTENDEE_TYPES,
+                                CalendarContract.Calendars._ID,
+                                CalendarContract.Calendars.NAME,
+                                CalendarContract.Calendars.ACCOUNT_NAME,
+                                // CalendarContract.Calendars.CALENDAR_DISPLAY_NAME,
+                                // CalendarContract.Calendars.CALENDAR_LOCATION,
+                                // CalendarContract.Calendars.CALENDAR_TIME_ZONE
+                        };
+                Uri uri = CalendarContract.Calendars.CONTENT_URI;
+                Cursor mCursor = contentResolver.query(uri, mProjection,
+                        null, null, null);
+                //CalendarContract cc=new CalendarContract.();
+                // Log.d(Cnst.TAG,"Calendar Name"+CalendarContract.)
+                //  CalendarProvider calendarProvider = new CalendarProvider(context);
+                //   Uri calendars = Uri.parse("content://calendar/calendars");
+
+                // Cursor managedCursor = this.managedQuery(calendars, new String[] { "_id", "name" }, null, null, null);
+
+
+                Log.d(Cnst.TAG, "Calendars Cursor count = " + mCursor.getCount());
+
+                ArrayList<Integer> ids=new ArrayList<>();
+                String title;
+                String acc;
+                if (mCursor.moveToFirst())
+                    do {
+                        // int calendar_id = managedCursor.getInt(0);
+                        title = mCursor.getString(1);
+                        int id = mCursor.getInt(0);
+                        acc = mCursor.getString(2);
+                        if(acc.equals(accountName))
+                            ids.add(id);
+                        Log.d(Cnst.TAG, "Cal_ID = " + id + " : " + title + " || " + acc);
+                    }
+                    while (mCursor.moveToNext());
+
+                String wherId="(";
+                for(int i=0;i<ids.size();i++)
+                {
+
+                        wherId+=ids.get(i);
+                        if(i!=ids.size()-1)
+                            wherId+=",";
+                        else
+                            wherId+=")";
+                }
+                Log.d(Cnst.TAG," IDS = "+wherId);
+
+String sel=CalendarContract.Events.CALENDAR_ID +
+        " LIKE( " + "SELECT " + CalendarContract.Calendars._ID + " FROM " + CalendarContract.Calendars.CONTENT_URI + " WHERE " +
+        CalendarContract.Calendars.ACCOUNT_NAME + " = '" + accountName + "')";
+
+                Log.d(Cnst.TAG,sel);
+                String selection = "" + dtstart + ">" + startTime + " AND " + dtend + "<" + finishTime + " AND " + CalendarContract.Events.CALENDAR_ID +
+                        " IN " + wherId+ "";
+                //ContentProvider calendarProvider = new ContentProvider();
+                //List<Calendar> calendars = calendarProvider.getCalendars().getList();
+//                Cursor cursor = contentResolver.query(CalendarContract.Events.CONTENT_URI,
+//                        (new String[]{"calendar_id", "title", "description", "dtstart", "dtend", "eventTimezone", "eventLocation"}),
+//                        "(" + dtstart + ">" + startTime + " and " + dtend + "<" + finishTime + ")  ",
+//                        null, "dtstart ASC");
                 Cursor cursor = contentResolver.query(CalendarContract.Events.CONTENT_URI,
-                    (new String[]{"calendar_id", "title", "description", "dtstart", "dtend", "eventTimezone", "eventLocation"}),
-                    "(" + dtstart + ">" + startTime + " and " + dtend + "<" + finishTime + ")",
-                    null, "dtstart ASC");
+                        (new String[]{"calendar_id", "title", "description", "dtstart", "dtend", "eventTimezone", "eventLocation"}),
+                        selection,
+                        null, "dtstart ASC");
 
 
         /*String[] COLS={"calendar_id", "title", "description", "dtstart", "dtend","eventTimezone", "eventLocation"};
@@ -292,44 +363,43 @@ public class ActivityEditPage extends AppCompatActivity implements View.OnClickL
 
 
                 CalendarContract.Events.CONTENT_URI, COLS,null, null, null);*/
-                Log.d(Cnst.TAG,"Cursor count="+cursor.getCount());
+                Log.d(Cnst.TAG, "Cursor Evenbts count=" + cursor.getCount());
 
-            try {
-
-
-                if (cursor.getCount() > 0) {
+                try {
 
 
-                    while (cursor.moveToNext()) {
-
-                        int calendar_id = cursor.getInt(0);
-                        Log.d(Cnst.TAG,"Cal_ID = "+calendar_id);
-                        String title = cursor.getString(1);
-
-                        String description = cursor.getString(2);
-
-                        String dtstart1 = cursor.getString(3);
-
-                        String dtend1 = cursor.getString(4);
+                    if (cursor.moveToFirst()) {
 
 
+                        do {
 
-                        String eventTimeZone = cursor.getString(5);
+                            int calendar_id = cursor.getInt(0);
+                            Log.d(Cnst.TAG, "Cal_ID = " + calendar_id);
+                             title = cursor.getString(1);
 
-                        String eventlocation = cursor.getString(6);
+                            String description = cursor.getString(2);
 
-                        listEvents.add(0,new String[]{dtstart1,dtend1,title});
+                            String dtstart1 = cursor.getString(3);
+
+                            String dtend1 = cursor.getString(4);
+
+
+                            String eventTimeZone = cursor.getString(5);
+
+                            String eventlocation = cursor.getString(6);
+
+                            listEvents.add(0, new String[]{dtstart1, dtend1, title});
                             Log.d(Cnst.TAG, " Events =" + title);
 
+                        } while (cursor.moveToNext());
                     }
+                } catch (AssertionError ex) {
+                    ex.printStackTrace();
+                } catch (Exception e) {
+                    e.printStackTrace();
                 }
-            } catch (AssertionError ex) {
-                ex.printStackTrace();
-            } catch (Exception e) {
-                e.printStackTrace();
+
             }
-
-
         }
 
     }
@@ -621,7 +691,7 @@ public class ActivityEditPage extends AppCompatActivity implements View.OnClickL
                 do {
                     long _id = cursor.getLong(cursor.getColumnIndex(CallLog.Calls._ID));
                     String number = cursor.getString(cursor.getColumnIndex(CallLog.Calls.NUMBER));
-                    Log.d(Cnst.TAG,"Number = "+number);
+                  //  Log.d(Cnst.TAG,"Number = "+number);
                     String contact = cursor.getString(cursor.getColumnIndex(CallLog.Calls.CACHED_NAME));
 
                     long date = cursor.getLong(cursor.getColumnIndex(CallLog.Calls.DATE));
