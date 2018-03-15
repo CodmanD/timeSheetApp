@@ -145,15 +145,7 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
     //method UNDO
     public void undoClick(View view) {
 
-        /*
-        Collections.sort(listActivity, new Comparator<ButtonActivity>() {
-            @Override
-            public int compare(ButtonActivity buttonActivity, ButtonActivity t1) {
 
-                return 0;
-            }
-        });
-        */
 
         if (MainActivity.this.listLogActivity.size() == 0) return;
         if (!mIsCreateAvailable) {
@@ -553,6 +545,8 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
     // and assing listeners for their
     private void addButtonsActivityToHome() {
         GridView gv = this.findViewById(R.id.gridView);
+
+        sortActivitiesHome();
         ArrayAdapter<ButtonActivity> adapter =
                 new ArrayAdapter<ButtonActivity>(this, R.layout.gridview_item,
                         R.id.btnItem, this.listActivity) {
@@ -601,26 +595,34 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
     }
 
 //For sorting buttonActivity on Screen Home
-    private void sortActivitiesHome()
-    {
-        ArrayList<ButtonActivity> listTmp=new ArrayList<>();
+    private void sortActivitiesHome() {
+        // ArrayList<ButtonActivity> listTmp=new ArrayList<>();
 
-        for(int i=0;i<listLogActivity.size();i++)
-        {
-            String titleListLog=listLogActivity.get(i).name;
-            int contains=0;
-            for(int j=0;j<listTmp.size();j++)
-            {
-                String titleListTmp=listTmp.get(j).name;
-                if(titleListLog.toLowerCase().equals(titleListTmp.toLowerCase()))
-                {
-                    contains++;
-                }
+
+        Collections.sort(listActivity, new Comparator<ButtonActivity>() {
+            @Override
+            public int compare(ButtonActivity b1, ButtonActivity b2) {
+
+                if (b1.name.toLowerCase().equals("nothing"))
+                    return -1;
+                if (b2.name.toLowerCase().equals("nothing"))
+                    return 1;
+                return (int) (getTimeLastActivity(b2) - getTimeLastActivity(b1));
             }
-            //if()
-            //listTmp.add(listLogActivity.get(i))
-        }
+        });
     }
+
+    private  long getTimeLastActivity(ButtonActivity ba)
+    {
+       for(ButtonActivity b:listLogActivity)
+       {
+           if(b.name.equals(ba.name))
+               return b.ms;
+       }
+        return -1;
+    }
+
+
 
     //Method for add Activity to Log
     private void createDialogSubactivity(final ButtonActivity ba) {
@@ -804,8 +806,10 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
 
         //add  widgets with available ativities to Home Screen
         // and assing listeners for their
+        readAcivitiesFromDB();
+        this.createLog();
         this.addButtonsActivityToHome();
-
+        restartGetGPS();
         // Initialize credentials and service object.
         mCredential = GoogleAccountCredential.usingOAuth2(
                 getApplicationContext(), Arrays.asList(Cnst.SCOPES))
@@ -814,10 +818,11 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
 
 //Read From DataBase
         // dbHandler.showBase(Cnst.CALENDAR_TABLE);
-        readAcivitiesFromDB();
-        this.createLog();
+
+
+
         //Start service for get coordinates
-        restartGetGPS();
+
 /*
 For actual time, update every 1000 ms
  */
