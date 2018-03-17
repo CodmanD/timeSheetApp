@@ -3,7 +3,7 @@ package kodman.timesheetapp;
 import java.text.SimpleDateFormat;
 
 
-
+//Class for Model Calls
 public class mCall {
     String time;
     String duration;

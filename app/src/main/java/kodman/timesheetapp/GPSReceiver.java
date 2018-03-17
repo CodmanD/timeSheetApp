@@ -17,6 +17,8 @@ import kodman.timesheetapp.Database.DBHandler;
 import static android.content.Context.LOCATION_SERVICE;
 import static android.content.Context.MODE_PRIVATE;
 
+
+//Class for getting and saving coordinates
 public class GPSReceiver extends BroadcastReceiver {
 
     Context context;
@@ -48,8 +50,7 @@ public class GPSReceiver extends BroadcastReceiver {
                 return;
             Location.distanceBetween(location.getLatitude(), location.getLongitude(), curLat, curLong, res);
 
-            //Log.d(Cnst.TAG,"-------------Res = "+res[0]);
-            //when changing
+
             if (res[0] > 100) {
 
                 //write to Shared
@@ -63,9 +64,7 @@ public class GPSReceiver extends BroadcastReceiver {
 
                 //write to DataBase
                 long count = dbHandler.writeToGPS(System.currentTimeMillis(), -1, location.getLatitude(), location.getLongitude());
-                //if( count>0)
-                //Toast.makeText(context,"Added to DB",Toast.LENGTH_SHORT).show();
-                //Toast.makeText(context,"Cordinates changed",Toast.LENGTH_SHORT).show();
+
             }
 
         }

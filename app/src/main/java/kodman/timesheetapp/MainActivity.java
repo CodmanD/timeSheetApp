@@ -97,8 +97,7 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
     private int status = 0;
     private SharedPreferences mShared;
     private SharedPreferences.Editor mSharedEditor;
-    private ArrayList<ButtonActivity> listActivity = new ArrayList<ButtonActivity>()
-    {
+    private ArrayList<ButtonActivity> listActivity = new ArrayList<ButtonActivity>() {
 
     };//All buttons activity for current  time
     private ArrayList<ButtonActivity> listSubactivity = new ArrayList<>();
@@ -144,7 +143,6 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
 
     //method UNDO
     public void undoClick(View view) {
-
 
 
         if (MainActivity.this.listLogActivity.size() == 0) return;
@@ -295,9 +293,10 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
                             dialog.dismiss();
                             changeButtonAcivity(ba, btn, act);
                         } else {
+                            String oldName = ba.name;
                             ba.name = nameButton;
                             //add and set color for the button
-                            setColorFromDialog(ba, false, act);
+                            setColorFromDialog(ba, false, act, oldName);
                             dialog.dismiss();
                         }
                     }
@@ -328,7 +327,7 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
     }
 
 
-    //------For click on button +New
+    //------For click on button +New  .variable act  for distinction Activity from Subactivity
     private void clickNewButton(final View v, final boolean act) {
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
         LayoutInflater inflater = MainActivity.this.getLayoutInflater();
@@ -357,9 +356,11 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
                             clickNewButton(v, act);
                         } else {
                             final ButtonActivity ba = new ButtonActivity(nameButton);
+                            String oldName = ba.name;
+
                             ba.name = nameButton;
                             //add and set color for the button
-                            setColorFromDialog(ba, true, act);
+                            setColorFromDialog(ba, true, act, oldName);
                             dialog.dismiss();
                         }
                     }
@@ -377,7 +378,7 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
 
 
     //--------------------for color---------
-    private void setColorFromDialog(final ButtonActivity ba, final boolean add, final boolean act) {
+    private void setColorFromDialog(final ButtonActivity ba, final boolean add, final boolean act, final String oldName) {
         //create Alert for the set colour
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
         builder.setMessage("Choise the color");
@@ -456,13 +457,14 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
                 }
                 if (act) {
                     // Log.d(Cnst.TAG,"Change color"+ba.color);
-                    dbHandler.updateEventColor(ba.color, ba.name);
+                    dbHandler.updateEventColor(ba.color, ba.name, oldName);
+                    //dbHandler.updateEventColorInLog(ba.color, ba.name,);
                     addActivities();
                 } else
 
                 {
                     //Log.d(Cnst.TAG,"Change color"+ba.name);
-                    dbHandler.updateSubactivityColor(ba.color, ba.name);
+                    dbHandler.updateSubactivityColor(ba.color, ba.name, oldName);
 
                     addSubactivities();
                 }
@@ -594,7 +596,7 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
         gv.setAdapter(adapter);
     }
 
-//For sorting buttonActivity on Screen Home
+    //For sorting buttonActivity on Screen Home
     private void sortActivitiesHome() {
         // ArrayList<ButtonActivity> listTmp=new ArrayList<>();
 
@@ -612,16 +614,13 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
         });
     }
 
-    private  long getTimeLastActivity(ButtonActivity ba)
-    {
-       for(ButtonActivity b:listLogActivity)
-       {
-           if(b.name.equals(ba.name))
-               return b.ms;
-       }
+    private long getTimeLastActivity(ButtonActivity ba) {
+        for (ButtonActivity b : listLogActivity) {
+            if (b.name.equals(ba.name))
+                return b.ms;
+        }
         return -1;
     }
-
 
 
     //Method for add Activity to Log
@@ -818,7 +817,6 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
 
 //Read From DataBase
         // dbHandler.showBase(Cnst.CALENDAR_TABLE);
-
 
 
         //Start service for get coordinates
@@ -1356,9 +1354,6 @@ For actual time, update every 1000 ms
     }
 
 
-
-
-
     //Action for menu
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
@@ -1374,20 +1369,16 @@ For actual time, update every 1000 ms
                 this.setSupportActionBar(toolbar);
                 this.addButtonsActivityToHome();
                 this.createLog();
-                //MainActivity.this.lvActivity.setAdapter(MainActivity.this.adapterListLogActivity);
-
-
                 return true;
             case R.id.action_edit_page:
                 this.status = 1;
-                // Double[] cc=getCoordinates();
-                //  Toast.makeText(this,"coors = "+cc[0]+":"+cc[1],Toast.LENGTH_SHORT).show();
+
                 Intent intent = new Intent(MainActivity.this, ActivityEditPage.class);
 
                 String accountName = getPreferences(Context.MODE_PRIVATE)
                         .getString(Cnst.PREF_ACCOUNT_NAME, null);
 
-                Log.d(Cnst.TAG,"Main Cal_ID= "+mCalendarId+"|"+accountName);
+                //Log.d(Cnst.TAG, "Main Cal_ID= " + mCalendarId + "|" + accountName);
                 intent.putExtra(Cnst.PREF_ACCOUNT_NAME, accountName);
                 intent.putExtra(Cnst.CALENDAR_ID, mCalendarId);
                 startActivity(intent);
@@ -1588,16 +1579,7 @@ For actual time, update every 1000 ms
         }
         cursor.close();
         mDbHandler.closeDB();
-/*
-        for(int i=0;i<listActivity.size();i++)
-        {
-            if(listActivity.get(i).name.toLowerCase().equals("nothing"))
-            {
 
-                listActivity
-            }
-        }
-        */
     }
 
     //Clear all from  DataBase
@@ -1730,7 +1712,7 @@ For actual time, update every 1000 ms
         if (!isGooglePlayServicesAvailable()) {
             acquireGooglePlayServices();
         } else if (mCredential.getSelectedAccountName() == null) {
-            Log.d(Cnst.TAG,"ChooseAccount");
+            Log.d(Cnst.TAG, "ChooseAccount");
             chooseAccount();
 
         } else {
@@ -1756,7 +1738,7 @@ For actual time, update every 1000 ms
             String accountName = getPreferences(Context.MODE_PRIVATE)
                     .getString(Cnst.PREF_ACCOUNT_NAME, null);
             if (accountName != null) {
-                Log.d(Cnst.TAG,"AccountName ="+accountName);
+                Log.d(Cnst.TAG, "AccountName =" + accountName);
                 mCredential.setSelectedAccountName(accountName);
             } else {
                 // Start a dialog from which the user can choose an account
@@ -1812,7 +1794,7 @@ For actual time, update every 1000 ms
                         editor.putString(Cnst.PREF_ACCOUNT_NAME, accountName);
                         editor.apply();
                         editor.commit();
-                        Log.d(Cnst.TAG,"Activity Result back Account Name "+accountName);
+                        Log.d(Cnst.TAG, "Activity Result back Account Name " + accountName);
                         mCredential.setSelectedAccountName(accountName);
                         callCalendarApi(3);
                         // need to change name from *.csv file

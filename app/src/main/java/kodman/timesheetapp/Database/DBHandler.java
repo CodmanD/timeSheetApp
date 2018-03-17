@@ -257,15 +257,15 @@ public void updateLastEventEndTime(String endTime)
     }
 
     //updating event color  in local database
-    public void updateEventColor(int color, String name) {
+    public void updateEventColor(int color, String name,String oldName) {
 
        // Log.d("TAG"," time="+dateTimeStart+" /Notes="+notes);
         dbHelper = new DBHelper(mContext);
         db = dbHelper.getWritableDatabase();
         ContentValues values = new ContentValues();
         values.put("color", color);
-
-        int res= db.update("calendarTable",values," eventName = '"+name+"'",null);
+        values.put("eventName", name);
+        int res= db.update("calendarTable",values," eventName = '"+oldName+"'",null);
         //db.execSQL("UPDATE calendarTable SET notes = '" + notes + "' WHERE dateTimeStart = '" + dateTimeStart + "'");
         Log.d(Cnst.TAG,"DATABase = "+"---------------Update = "+res);
 
@@ -273,15 +273,15 @@ public void updateLastEventEndTime(String endTime)
         dbHelper.close();
     }
     //updating Subactivity color  in local database
-    public void updateSubactivityColor(int color, String name) {
+    public void updateSubactivityColor(int color, String name,String oldName) {
 
         // Log.d("TAG"," time="+dateTimeStart+" /Notes="+notes);
         dbHelper = new DBHelper(mContext);
         db = dbHelper.getWritableDatabase();
         ContentValues values = new ContentValues();
         values.put("subColor", color);
-
-        int res= db.update("calendarTable",values," subName = '"+name+"'",null);
+        values.put("subName", name);
+        int res= db.update("calendarTable",values," subName = '"+oldName+"'",null);
         //db.execSQL("UPDATE calendarTable SET notes = '" + notes + "' WHERE dateTimeStart = '" + dateTimeStart + "'");
         Log.d(Cnst.TAG,"DATABase = "+"---------------Update = "+res);
 
