@@ -3,7 +3,7 @@ package kodman.timesheetapp;
 import com.google.api.services.calendar.CalendarScopes;
 
 /**
- * Created by DI1 on 07.03.2018.
+ * Class for Constants app
  */
 
 public final class Cnst {

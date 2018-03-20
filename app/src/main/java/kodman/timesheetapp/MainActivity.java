@@ -7,7 +7,6 @@ import android.app.Dialog;
 import android.app.FragmentTransaction;
 import android.app.PendingIntent;
 import android.app.TimePickerDialog;
-import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
@@ -97,9 +96,7 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
     private int status = 0;
     private SharedPreferences mShared;
     private SharedPreferences.Editor mSharedEditor;
-    private ArrayList<ButtonActivity> listActivity = new ArrayList<ButtonActivity>() {
-
-    };//All buttons activity for current  time
+    private ArrayList<ButtonActivity> listActivity = new ArrayList<ButtonActivity>();
     private ArrayList<ButtonActivity> listSubactivity = new ArrayList<>();
 
     private ArrayList<ButtonActivity> listLogActivity = new ArrayList<>();
@@ -162,7 +159,7 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
         MainActivity.this.listLogActivity.remove(ba);
         MainActivity.this.adapterListLogActivity.notifyDataSetChanged();
 
-        //createLog();
+
         if (listLogActivity.size() == 0) {
             sPref = getSharedPreferences("tempData", MODE_PRIVATE);
             SharedPreferences.Editor editor = sPref.edit();
@@ -272,7 +269,7 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
 
     }
 
-    //For changer or remove Activity
+    //Create DIALOG For change or remove Activity
     private void changeButtonAcivity(final ButtonActivity ba, final Button btn, final boolean act) {
         AlertDialog.Builder builder = new AlertDialog.Builder(this, android.R.style.Theme_Holo_Light_Dialog);
         LayoutInflater inflater = MainActivity.this.getLayoutInflater();
@@ -598,8 +595,6 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
 
     //For sorting buttonActivity on Screen Home
     private void sortActivitiesHome() {
-        // ArrayList<ButtonActivity> listTmp=new ArrayList<>();
-
 
         Collections.sort(listActivity, new Comparator<ButtonActivity>() {
             @Override
@@ -614,6 +609,7 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
         });
     }
 
+    //getting time last activity
     private long getTimeLastActivity(ButtonActivity ba) {
         for (ButtonActivity b : listLogActivity) {
             if (b.name.equals(ba.name))
@@ -808,6 +804,8 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
         readAcivitiesFromDB();
         this.createLog();
         this.addButtonsActivityToHome();
+
+        //Start service for get coordinates
         restartGetGPS();
         // Initialize credentials and service object.
         mCredential = GoogleAccountCredential.usingOAuth2(
@@ -819,7 +817,7 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
         // dbHandler.showBase(Cnst.CALENDAR_TABLE);
 
 
-        //Start service for get coordinates
+
 
 /*
 For actual time, update every 1000 ms
@@ -1605,6 +1603,11 @@ For actual time, update every 1000 ms
         SharedPreferences.Editor ed = sPref.edit();
 
         //Log.d(TAG, "DESTROY SIZE=" + size);
+
+
+        /**
+         * Add in shareds allowable activities
+         */
         ed.putInt("sizeListActivity", this.listActivity.size());
         for (int i = 0; i < this.listActivity.size(); i++) {
             ed.putString("buttonAcivityName" + i, this.listActivity.get(i).name);
@@ -1626,9 +1629,7 @@ For actual time, update every 1000 ms
     @Override
     public void onDestroy() {
         Log.d(TAG, "OnDestroy");
-        /**
-         * Add in shareds allowable activities
-         */
+
 
         super.onDestroy();
         this.listActivity.clear();
@@ -2341,82 +2342,7 @@ For actual time, update every 1000 ms
 
     //----------------End Block For Google Service------------------------------------------------------------
 
-    //++++++++++++++++++++++++++++++++       END ==========================================
-
-    //add widgets to GridLayoutSetting
-    /*
-    private void createGridLayoutSettings() {
-        GridLayout GL = this.findViewById(R.id.gridLayoutSettings);
-        if (GL.getChildCount() > 0) {
-            GL.removeViews(0, GL.getChildCount());
-        }
-
-            Point size=new Point();
-            getWindowManager().getDefaultDisplay().getSize(size);
-                 int w=size.x;
-
-                int rowIndex = 0, columnIndex = 0;
-
-        //Add available  ButtonAcivity on the screen
-        for (int i = 0; i < this.listActivity.size(); i++, rowIndex++) {
-
-            if (rowIndex >= 7) {
-                columnIndex++;
-                rowIndex = 0;
-            }
-            final ButtonActivity ba = this.listActivity.get(i);
-            final Button btn = new Button(this);
-            btn.setWidth(w/3-10);
-            btn.setLines(1);
-            //assing listeners for Buttons
-            btn.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View v) {
-
-                    changeButtonAcivity(ba,btn);
-
-                }
-            });
-            btn.setText(ba.name);
-            btn.setBackgroundColor(ba.getColor(ba.name));
-            btn.setTextColor(getContrastColor(ba.color));
-
-            //Insert the Button in defined position
-            GridLayout.Spec row = GridLayout.spec(rowIndex, 1);
-            GridLayout.Spec column = GridLayout.spec(columnIndex, 1);
-            GridLayout.LayoutParams gridLayoutParam = new GridLayout.LayoutParams(row, column);
-            GL.addView(btn, gridLayoutParam);
-
-            GridLayout.LayoutParams lParams = (GridLayout.LayoutParams) btn.getLayoutParams();
-            lParams.setMargins(3, 0, 3, 10);
-        }
-
-        if (GL.getChildCount() >= 21) return;
-
-        Button btn = new Button(this);
-        //assing listener for the Button
-        btn.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                MainActivity.this.clickNewButton(v);
-            }
-        });
-
-        //add Last Button with title "+New"
-        if (rowIndex >= 7) {
-            columnIndex++;
-            rowIndex = 0;
-        }
-        btn.setText(R.string.newButton);
-        btn.setWidth(w/3-20);
-
-        GridLayout.Spec row = GridLayout.spec(rowIndex, 1);
-        GridLayout.Spec column = GridLayout.spec(columnIndex, 1);
-        GridLayout.LayoutParams gridLayoutParam = new GridLayout.LayoutParams(row, column);
-        GL.addView(btn, gridLayoutParam);
 
 
-    }
-*/
 
 }
